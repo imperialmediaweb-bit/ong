@@ -27,12 +27,12 @@ export default function UnsubscribePage({ params }: Props) {
         body: JSON.stringify({ donorId, ngoSlug: params.slug }),
       });
       if (!res.ok) {
-        setError("Failed to unsubscribe. Please try again.");
+        setError("Dezabonarea a esuat. Te rugam sa incerci din nou.");
       } else {
         setDone(true);
       }
     } catch {
-      setError("Something went wrong.");
+      setError("Ceva nu a functionat corect.");
     } finally {
       setLoading(false);
     }
@@ -46,9 +46,9 @@ export default function UnsubscribePage({ params }: Props) {
             <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
               <Check className="h-6 w-6 text-green-600" />
             </div>
-            <h3 className="text-lg font-semibold mb-2">Unsubscribed</h3>
+            <h3 className="text-lg font-semibold mb-2">Dezabonat</h3>
             <p className="text-sm text-muted-foreground">
-              You have been unsubscribed. You will no longer receive messages from this organization.
+              Ai fost dezabonat cu succes. Nu vei mai primi mesaje de la aceasta organizatie.
             </p>
           </CardContent>
         </Card>
@@ -61,9 +61,9 @@ export default function UnsubscribePage({ params }: Props) {
       <Card className="max-w-md w-full">
         <CardHeader className="text-center">
           <Heart className="h-8 w-8 text-primary mx-auto mb-2" />
-          <CardTitle>Unsubscribe</CardTitle>
+          <CardTitle>Dezabonare</CardTitle>
           <CardDescription>
-            Click below to stop receiving messages from this organization.
+            Apasa mai jos pentru a nu mai primi mesaje de la aceasta organizatie.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -71,10 +71,10 @@ export default function UnsubscribePage({ params }: Props) {
             <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">{error}</div>
           )}
           <Button onClick={handleUnsubscribe} className="w-full" disabled={loading}>
-            {loading ? "Processing..." : "Unsubscribe"}
+            {loading ? "Se proceseaza..." : "Dezaboneaza-ma"}
           </Button>
           <p className="text-xs text-center text-muted-foreground">
-            This action is in compliance with GDPR regulations.
+            Aceasta actiune este conforma cu regulamentul GDPR.
           </p>
         </CardContent>
       </Card>

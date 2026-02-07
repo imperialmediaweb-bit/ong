@@ -35,53 +35,53 @@ import {
 const TRIGGER_OPTIONS = [
   {
     value: "NEW_DONATION",
-    label: "New Donation",
-    description: "Runs when a donor makes a new donation.",
+    label: "Donatie noua",
+    description: "Se activeaza cand un donator face o donatie noua.",
   },
   {
     value: "DONOR_CREATED",
-    label: "New Donor Created",
-    description: "Runs when a new donor is added to the system.",
+    label: "Donator nou creat",
+    description: "Se activeaza cand un donator nou este adaugat in sistem.",
   },
   {
     value: "CAMPAIGN_GOAL_REACHED",
-    label: "Campaign Goal Reached",
-    description: "Runs when a campaign reaches its fundraising goal.",
+    label: "Obiectiv campanie atins",
+    description: "Se activeaza cand obiectivul de strangere de fonduri este atins.",
   },
   {
     value: "NO_DONATION_PERIOD",
-    label: "Donor Inactive",
-    description: "Runs when a donor has not donated for a specified period.",
+    label: "Donator inactiv",
+    description: "Se activeaza cand un donator nu a donat intr-o perioada specificata.",
   },
   {
     value: "NEW_SUBSCRIBER",
-    label: "New Subscriber",
-    description: "Runs when someone subscribes to communications.",
+    label: "Abonat nou",
+    description: "Se activeaza cand un abonat nou se inscrie prin mini-site.",
   },
   {
     value: "TAG_ADDED",
-    label: "Tag Added",
-    description: "Runs when a specific tag is added to a donor.",
+    label: "Eticheta adaugata",
+    description: "Se activeaza cand o eticheta este adaugata unui donator.",
   },
   {
     value: "CAMPAIGN_ENDED",
-    label: "Campaign Ended",
-    description: "Runs when a campaign finishes sending.",
+    label: "Campanie incheiata",
+    description: "Se activeaza cand o campanie se incheie.",
   },
   {
     value: "MANUAL",
-    label: "Manual Trigger",
-    description: "Triggered manually by an admin user.",
+    label: "Declansator manual",
+    description: "Declansat manual.",
   },
 ];
 
 const ACTION_TYPES = [
-  { value: "SEND_EMAIL", label: "Send Email", icon: "Mail" },
-  { value: "SEND_SMS", label: "Send SMS", icon: "MessageSquare" },
-  { value: "WAIT", label: "Wait / Delay", icon: "Clock" },
-  { value: "ADD_TAG", label: "Add Tag", icon: "Tag" },
-  { value: "REMOVE_TAG", label: "Remove Tag", icon: "Tag" },
-  { value: "SEND_NOTIFICATION", label: "Send Notification", icon: "Bell" },
+  { value: "SEND_EMAIL", label: "Trimite email", icon: "Mail" },
+  { value: "SEND_SMS", label: "Trimite SMS", icon: "MessageSquare" },
+  { value: "WAIT", label: "Asteapta / Intarziere", icon: "Clock" },
+  { value: "ADD_TAG", label: "Adauga eticheta", icon: "Tag" },
+  { value: "REMOVE_TAG", label: "Sterge eticheta", icon: "Tag" },
+  { value: "SEND_NOTIFICATION", label: "Trimite notificare", icon: "Bell" },
 ];
 
 const ACTION_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -93,10 +93,10 @@ const ACTION_ICON_MAP: Record<string, React.ComponentType<{ className?: string }
 };
 
 const DELAY_UNITS = [
-  { value: "minutes", label: "Minutes" },
-  { value: "hours", label: "Hours" },
-  { value: "days", label: "Days" },
-  { value: "weeks", label: "Weeks" },
+  { value: "minutes", label: "Minute" },
+  { value: "hours", label: "Ore" },
+  { value: "days", label: "Zile" },
+  { value: "weeks", label: "Saptamani" },
 ];
 
 interface AutomationStep {
@@ -138,7 +138,7 @@ export default function NewAutomationPage() {
       setLoading(true);
       try {
         const res = await fetch(`/api/automations/${editId}`);
-        if (!res.ok) throw new Error("Failed to load automation");
+        if (!res.ok) throw new Error("Nu s-a putut incarca automatizarea");
         const data = await res.json();
         setName(data.name || "");
         setDescription(data.description || "");
@@ -220,11 +220,11 @@ export default function NewAutomationPage() {
 
   const handleSave = async () => {
     if (!name.trim()) {
-      setError("Please provide a name for the automation.");
+      setError("Va rugam furnizati un nume pentru automatizare.");
       return;
     }
     if (!trigger) {
-      setError("Please select a trigger.");
+      setError("Va rugam selectati un declansator.");
       return;
     }
     setSaving(true);
@@ -253,7 +253,7 @@ export default function NewAutomationPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to save automation");
+        throw new Error(data.error || "Nu s-a putut salva automatizarea");
       }
       router.push("/dashboard/automations");
     } catch (err: any) {
@@ -280,10 +280,10 @@ export default function NewAutomationPage() {
         </Button>
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            {editId ? "Edit Automation" : "Create Automation"}
+            {editId ? "Editeaza automatizarea" : "Creeaza automatizare"}
           </h1>
           <p className="text-muted-foreground">
-            Build an automated workflow with triggers and sequential steps.
+            Construieste un flux automatizat cu declansatoare si pasi secventiali.
           </p>
         </div>
       </div>
@@ -299,24 +299,24 @@ export default function NewAutomationPage() {
       {/* Automation Details */}
       <Card>
         <CardHeader>
-          <CardTitle>Automation Details</CardTitle>
-          <CardDescription>Give your automation a name and description.</CardDescription>
+          <CardTitle>Detalii automatizare</CardTitle>
+          <CardDescription>Da automatizarii tale un nume si o descriere.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">Nume</Label>
             <Input
               id="name"
-              placeholder="e.g., Welcome New Donors"
+              placeholder="ex., Bun venit donatori noi"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="description">Description (optional)</Label>
+            <Label htmlFor="description">Descriere (optional)</Label>
             <Textarea
               id="description"
-              placeholder="Describe what this automation does..."
+              placeholder="Descrie ce face aceasta automatizare..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -329,9 +329,9 @@ export default function NewAutomationPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Zap className="h-5 w-5 text-amber-500" />
-            Trigger
+            Declansator
           </CardTitle>
-          <CardDescription>Choose what starts this automation.</CardDescription>
+          <CardDescription>Alege ce porneste aceasta automatizare.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -354,7 +354,7 @@ export default function NewAutomationPage() {
 
           {trigger === "NO_DONATION_PERIOD" && (
             <div className="grid gap-2 max-w-xs">
-              <Label>Inactive Period (days)</Label>
+              <Label>Perioada de inactivitate (zile)</Label>
               <Input
                 type="number"
                 placeholder="90"
@@ -368,9 +368,9 @@ export default function NewAutomationPage() {
 
           {trigger === "TAG_ADDED" && (
             <div className="grid gap-2 max-w-xs">
-              <Label>Tag Name</Label>
+              <Label>Numele etichetei</Label>
               <Input
-                placeholder="e.g., vip-donor"
+                placeholder="ex., donator-vip"
                 value={triggerConfig.tagName || ""}
                 onChange={(e) =>
                   setTriggerConfig({ ...triggerConfig, tagName: e.target.value })
@@ -388,13 +388,13 @@ export default function NewAutomationPage() {
             <div>
               <CardTitle className="flex items-center gap-2">
                 <GitBranch className="h-5 w-5 text-indigo-500" />
-                Steps ({steps.length})
+                Pasi ({steps.length})
               </CardTitle>
-              <CardDescription>Define the sequence of actions for this automation.</CardDescription>
+              <CardDescription>Defineste secventa de actiuni pentru aceasta automatizare.</CardDescription>
             </div>
             <Button onClick={addStep}>
               <Plus className="mr-2 h-4 w-4" />
-              Add Step
+              Adauga pas
             </Button>
           </div>
         </CardHeader>
@@ -403,11 +403,11 @@ export default function NewAutomationPage() {
             <div className="text-center py-12 border-2 border-dashed rounded-lg">
               <GitBranch className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
               <p className="text-sm text-muted-foreground">
-                No steps yet. Add your first step to build the workflow.
+                Niciun pas inca. Adauga primul pas pentru a construi fluxul.
               </p>
               <Button variant="outline" className="mt-3" onClick={addStep}>
                 <Plus className="mr-2 h-4 w-4" />
-                Add First Step
+                Adauga primul pas
               </Button>
             </div>
           ) : (
@@ -474,7 +474,7 @@ export default function NewAutomationPage() {
                             : step.delayMinutes >= 60
                             ? `${Math.round(step.delayMinutes / 60)}h`
                             : `${step.delayMinutes}m`}{" "}
-                          delay
+                          intarziere
                         </Badge>
                       )}
                       <Button
@@ -494,7 +494,7 @@ export default function NewAutomationPage() {
                     {isExpanded && (
                       <div className="border-t p-4 space-y-4 bg-muted/10">
                         <div className="grid gap-2">
-                          <Label>Action Type</Label>
+                          <Label>Selecteaza tipul actiunii</Label>
                           <Select
                             value={step.actionType}
                             onValueChange={(v) => updateStep(step.id, { actionType: v, config: {} })}
@@ -513,7 +513,7 @@ export default function NewAutomationPage() {
                         </div>
 
                         <div className="grid gap-2">
-                          <Label>Delay Before This Step</Label>
+                          <Label>Intarziere inainte de acest pas</Label>
                           <div className="flex gap-2">
                             <Input
                               type="number"
@@ -556,9 +556,9 @@ export default function NewAutomationPage() {
                         {step.actionType === "SEND_EMAIL" && (
                           <div className="space-y-3">
                             <div className="grid gap-2">
-                              <Label>Email Subject</Label>
+                              <Label>Subiect email</Label>
                               <Input
-                                placeholder="Subject line..."
+                                placeholder="Linia subiectului..."
                                 value={step.config.subject || ""}
                                 onChange={(e) =>
                                   updateStepConfig(step.id, { subject: e.target.value })
@@ -566,9 +566,9 @@ export default function NewAutomationPage() {
                               />
                             </div>
                             <div className="grid gap-2">
-                              <Label>Email Body (HTML)</Label>
+                              <Label>Corp email (HTML)</Label>
                               <Textarea
-                                placeholder={"<p>Hello {{donor_name}},</p>"}
+                                placeholder={"<p>Buna {{donor_name}},</p>"}
                                 className="min-h-[150px] font-mono text-sm"
                                 value={step.config.body || ""}
                                 onChange={(e) =>
@@ -583,13 +583,13 @@ export default function NewAutomationPage() {
                           <div className="space-y-3">
                             <div className="grid gap-2">
                               <div className="flex items-center justify-between">
-                                <Label>SMS Body</Label>
+                                <Label>Mesaj SMS</Label>
                                 <span className="text-xs text-muted-foreground">
                                   {(step.config.body || "").length}/160
                                 </span>
                               </div>
                               <Textarea
-                                placeholder={"Hi {{donor_name}}, ..."}
+                                placeholder={"Buna {{donor_name}}, ..."}
                                 className="min-h-[100px]"
                                 value={step.config.body || ""}
                                 onChange={(e) =>
@@ -602,9 +602,9 @@ export default function NewAutomationPage() {
 
                         {(step.actionType === "ADD_TAG" || step.actionType === "REMOVE_TAG") && (
                           <div className="grid gap-2">
-                            <Label>Tag Name</Label>
+                            <Label>Numele etichetei</Label>
                             <Input
-                              placeholder="e.g., engaged, vip"
+                              placeholder="ex., implicat, vip"
                               value={step.config.tagName || ""}
                               onChange={(e) =>
                                 updateStepConfig(step.id, { tagName: e.target.value })
@@ -615,9 +615,9 @@ export default function NewAutomationPage() {
 
                         {step.actionType === "SEND_NOTIFICATION" && (
                           <div className="grid gap-2">
-                            <Label>Notification Message</Label>
+                            <Label>Mesaj notificare</Label>
                             <Textarea
-                              placeholder="Alert: A donor just..."
+                              placeholder="Alerta: Un donator tocmai..."
                               value={step.config.notificationMessage || ""}
                               onChange={(e) =>
                                 updateStepConfig(step.id, {
@@ -630,8 +630,8 @@ export default function NewAutomationPage() {
 
                         {step.actionType === "WAIT" && (
                           <p className="text-sm text-muted-foreground">
-                            This step will pause the automation for the delay configured above
-                            before proceeding to the next step.
+                            Acest pas va pune in pauza automatizarea pentru intarzierea configurata mai sus
+                            inainte de a trece la pasul urmator.
                           </p>
                         )}
                       </div>
@@ -644,7 +644,7 @@ export default function NewAutomationPage() {
         </CardContent>
         <CardFooter className="border-t pt-6 flex justify-between">
           <Button variant="outline" onClick={() => router.push("/dashboard/automations")}>
-            Cancel
+            Anuleaza
           </Button>
           <Button onClick={handleSave} disabled={saving}>
             {saving ? (
@@ -652,7 +652,7 @@ export default function NewAutomationPage() {
             ) : (
               <Save className="mr-2 h-4 w-4" />
             )}
-            {editId ? "Update Automation" : "Save Automation"}
+            {editId ? "Actualizeaza automatizarea" : "Salveaza automatizarea"}
           </Button>
         </CardFooter>
       </Card>

@@ -53,11 +53,11 @@ interface DonationsResponse {
 }
 
 const STATUS_OPTIONS = [
-  { value: "all", label: "All Statuses" },
-  { value: "COMPLETED", label: "Completed" },
-  { value: "PENDING", label: "Pending" },
-  { value: "FAILED", label: "Failed" },
-  { value: "REFUNDED", label: "Refunded" },
+  { value: "all", label: "Toate statusurile" },
+  { value: "COMPLETED", label: "Finalizat" },
+  { value: "PENDING", label: "In asteptare" },
+  { value: "FAILED", label: "Esuat" },
+  { value: "REFUNDED", label: "Rambursat" },
 ];
 
 const statusBadgeVariant = (status: string) => {
@@ -163,10 +163,10 @@ export default function DonationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Donations</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Donatii</h1>
           <p className="text-muted-foreground">
-            Track and manage all donations.{" "}
-            {total > 0 && `${total} donation${total !== 1 ? "s" : ""} totaling ${formatCurrency(totalAmount)}.`}
+            Urmareste toate donatiile.{" "}
+            {total > 0 && `${total} donati${total !== 1 ? "i" : "e"} in total ${formatCurrency(totalAmount)}.`}
           </p>
         </div>
         <Button variant="outline" onClick={handleExport}>
@@ -181,7 +181,7 @@ export default function DonationsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Donations</p>
+                <p className="text-sm text-muted-foreground">Total donatii</p>
                 <p className="text-2xl font-bold">{total.toLocaleString()}</p>
               </div>
               <Heart className="h-8 w-8 text-muted-foreground/30" />
@@ -192,7 +192,7 @@ export default function DonationsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Total Amount</p>
+                <p className="text-sm text-muted-foreground">Suma totala</p>
                 <p className="text-2xl font-bold">{formatCurrency(totalAmount)}</p>
               </div>
               <DollarSign className="h-8 w-8 text-muted-foreground/30" />
@@ -203,7 +203,7 @@ export default function DonationsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Average Donation</p>
+                <p className="text-sm text-muted-foreground">Donatie medie</p>
                 <p className="text-2xl font-bold">
                   {total > 0 ? formatCurrency(totalAmount / total) : formatCurrency(0)}
                 </p>
@@ -221,7 +221,7 @@ export default function DonationsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by donor name, email..."
+                placeholder="Cauta dupa numele donatorului, email..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -235,7 +235,7 @@ export default function DonationsPage() {
               onClick={() => setFiltersOpen(!filtersOpen)}
             >
               <Filter className="mr-2 h-4 w-4" />
-              Filters
+              Filtre
               {hasActiveFilters && (
                 <Badge variant="default" className="ml-2 h-5 min-w-5 rounded-full p-0 text-[10px] flex items-center justify-center">
                   !
@@ -259,15 +259,15 @@ export default function DonationsPage() {
                 </Select>
               </div>
               <div className="w-48">
-                <Label className="text-xs mb-1 block">Campaign</Label>
+                <Label className="text-xs mb-1 block">Campanie</Label>
                 <Input
-                  placeholder="Campaign name..."
+                  placeholder="Numele campaniei..."
                   value={campaignFilter}
                   onChange={(e) => { setCampaignFilter(e.target.value); setPage(1); }}
                 />
               </div>
               <div className="w-40">
-                <Label className="text-xs mb-1 block">From Date</Label>
+                <Label className="text-xs mb-1 block">De la data</Label>
                 <Input
                   type="date"
                   value={dateFrom}
@@ -275,7 +275,7 @@ export default function DonationsPage() {
                 />
               </div>
               <div className="w-40">
-                <Label className="text-xs mb-1 block">To Date</Label>
+                <Label className="text-xs mb-1 block">Pana la data</Label>
                 <Input
                   type="date"
                   value={dateTo}
@@ -285,7 +285,7 @@ export default function DonationsPage() {
               {hasActiveFilters && (
                 <Button variant="ghost" size="sm" onClick={clearFilters}>
                   <X className="mr-1 h-3 w-3" />
-                  Clear All
+                  Sterge tot
                 </Button>
               )}
             </div>
@@ -311,11 +311,11 @@ export default function DonationsPage() {
           ) : donations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Heart className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold">No donations found</h3>
+              <h3 className="text-lg font-semibold">Nicio donatie gasita</h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm">
                 {hasActiveFilters
-                  ? "Try adjusting your search or filters."
-                  : "Donations will appear here once they are recorded."}
+                  ? "Incearca sa ajustezi cautarea sau filtrele."
+                  : "Donatiile vor aparea aici odata ce sunt inregistrate."}
               </p>
             </div>
           ) : (
@@ -323,13 +323,13 @@ export default function DonationsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="p-3 text-left font-medium">Date</th>
-                    <th className="p-3 text-left font-medium">Donor</th>
-                    <th className="p-3 text-right font-medium">Amount</th>
-                    <th className="p-3 text-left font-medium">Currency</th>
-                    <th className="p-3 text-left font-medium hidden md:table-cell">Campaign</th>
+                    <th className="p-3 text-left font-medium">Data</th>
+                    <th className="p-3 text-left font-medium">Donator</th>
+                    <th className="p-3 text-right font-medium">Suma</th>
+                    <th className="p-3 text-left font-medium">Moneda</th>
+                    <th className="p-3 text-left font-medium hidden md:table-cell">Campanie</th>
                     <th className="p-3 text-left font-medium">Status</th>
-                    <th className="p-3 text-left font-medium hidden lg:table-cell">Payment</th>
+                    <th className="p-3 text-left font-medium hidden lg:table-cell">Plata</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -340,7 +340,7 @@ export default function DonationsPage() {
                       </td>
                       <td className="p-3">
                         <div>
-                          <p className="font-medium">{donation.donorName || "Anonymous"}</p>
+                          <p className="font-medium">{donation.donorName || "Anonim"}</p>
                           {donation.donorEmail && (
                             <p className="text-xs text-muted-foreground">{donation.donorEmail}</p>
                           )}
@@ -376,7 +376,7 @@ export default function DonationsPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t">
               <p className="text-sm text-muted-foreground">
-                Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, total)} of {total}
+                Se afiseaza {(page - 1) * pageSize + 1} pana la {Math.min(page * pageSize, total)} din {total}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -386,10 +386,10 @@ export default function DonationsPage() {
                   onClick={() => setPage(page - 1)}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  Anterioara
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  Page {page} of {totalPages}
+                  Pagina {page} din {totalPages}
                 </span>
                 <Button
                   variant="outline"
@@ -397,7 +397,7 @@ export default function DonationsPage() {
                   disabled={page >= totalPages}
                   onClick={() => setPage(page + 1)}
                 >
-                  Next
+                  Urmatoarea
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

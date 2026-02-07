@@ -60,13 +60,13 @@ interface Automation {
 }
 
 const TRIGGER_OPTIONS = [
-  { value: "NEW_DONATION", label: "New Donation", icon: "heart", description: "Triggered when a donor makes a donation" },
-  { value: "CAMPAIGN_GOAL_REACHED", label: "Campaign Goal Reached", icon: "target", description: "Triggered when a campaign reaches its goal" },
-  { value: "NO_DONATION_PERIOD", label: "No Donation Period", icon: "clock", description: "Triggered when a donor has not donated for a while" },
-  { value: "NEW_SUBSCRIBER", label: "New Subscriber", icon: "user-plus", description: "Triggered when a new donor subscribes" },
-  { value: "CAMPAIGN_ENDED", label: "Campaign Ended", icon: "flag", description: "Triggered when a campaign ends" },
-  { value: "LOW_PERFORMANCE", label: "Low Performance", icon: "trending-down", description: "Triggered when a campaign underperforms" },
-  { value: "MANUAL", label: "Manual", icon: "hand", description: "Triggered manually by a user" },
+  { value: "NEW_DONATION", label: "Donatie noua", icon: "heart", description: "Se activeaza cand un donator face o donatie noua" },
+  { value: "CAMPAIGN_GOAL_REACHED", label: "Obiectiv campanie atins", icon: "target", description: "Se activeaza cand obiectivul de strangere de fonduri este atins" },
+  { value: "NO_DONATION_PERIOD", label: "Perioada fara donatii", icon: "clock", description: "Se activeaza cand un donator nu a donat intr-o perioada specificata" },
+  { value: "NEW_SUBSCRIBER", label: "Abonat nou", icon: "user-plus", description: "Se activeaza cand un abonat nou se inscrie" },
+  { value: "CAMPAIGN_ENDED", label: "Campanie incheiata", icon: "flag", description: "Se activeaza cand o campanie se incheie" },
+  { value: "LOW_PERFORMANCE", label: "Performanta scazuta", icon: "trending-down", description: "Se activeaza cand o campanie are performanta scazuta" },
+  { value: "MANUAL", label: "Manual", icon: "hand", description: "Declansat manual" },
 ];
 
 const triggerBadgeColor = (trigger: string) => {
@@ -111,7 +111,7 @@ export default function AutomationsPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       const res = await fetch(`/api/automations?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch automations");
+      if (!res.ok) throw new Error("Nu s-au putut incarca automatizarile");
       const data = await res.json();
       setAutomations(data.automations || []);
     } catch (err: any) {
@@ -133,7 +133,7 @@ export default function AutomationsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isActive: !currentState }),
       });
-      if (!res.ok) throw new Error("Failed to toggle automation");
+      if (!res.ok) throw new Error("Nu s-a putut comuta automatizarea");
       setAutomations((prev) =>
         prev.map((a) => (a.id === id ? { ...a, isActive: !a.isActive } : a))
       );
@@ -151,7 +151,7 @@ export default function AutomationsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newAutomation),
       });
-      if (!res.ok) throw new Error("Failed to create automation");
+      if (!res.ok) throw new Error("Nu s-a putut crea automatizarea");
       setCreateDialogOpen(false);
       setNewAutomation({ name: "", description: "", trigger: "" });
       fetchAutomations();
@@ -166,9 +166,9 @@ export default function AutomationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Automations</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Automatizari</h1>
           <p className="text-muted-foreground">
-            Create automated workflows to engage your donors.
+            Creeaza fluxuri automate pentru a interactiona cu donatorii.
           </p>
         </div>
         <div className="flex gap-2">
@@ -176,43 +176,43 @@ export default function AutomationsPage() {
             <DialogTrigger asChild>
               <Button variant="outline">
                 <Plus className="mr-2 h-4 w-4" />
-                Quick Create
+                Creare rapida
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Create Automation</DialogTitle>
+                <DialogTitle>Creeaza automatizare</DialogTitle>
                 <DialogDescription>
-                  Set up a new automated workflow. You can add steps later.
+                  Configureaza un flux automatizat nou. Poti adauga pasi ulterior.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="auto-name">Name *</Label>
+                  <Label htmlFor="auto-name">Nume *</Label>
                   <Input
                     id="auto-name"
-                    placeholder="e.g., Welcome New Donors"
+                    placeholder="ex., Bun venit donatori noi"
                     value={newAutomation.name}
                     onChange={(e) => setNewAutomation({ ...newAutomation, name: e.target.value })}
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="auto-desc">Description</Label>
+                  <Label htmlFor="auto-desc">Descriere</Label>
                   <Textarea
                     id="auto-desc"
-                    placeholder="What does this automation do?"
+                    placeholder="Ce face aceasta automatizare?"
                     value={newAutomation.description}
                     onChange={(e) => setNewAutomation({ ...newAutomation, description: e.target.value })}
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label>Trigger *</Label>
+                  <Label>Declansator *</Label>
                   <Select
                     value={newAutomation.trigger}
                     onValueChange={(v) => setNewAutomation({ ...newAutomation, trigger: v })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select a trigger..." />
+                      <SelectValue placeholder="Selecteaza un declansator..." />
                     </SelectTrigger>
                     <SelectContent>
                       {TRIGGER_OPTIONS.map((opt) => (
@@ -230,13 +230,13 @@ export default function AutomationsPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Cancel</Button>
+                <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>Anuleaza</Button>
                 <Button
                   onClick={handleCreate}
                   disabled={createLoading || !newAutomation.name || !newAutomation.trigger}
                 >
                   {createLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Create
+                  Creeaza
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -244,7 +244,7 @@ export default function AutomationsPage() {
           <Link href="/dashboard/automations/new">
             <Button>
               <Zap className="mr-2 h-4 w-4" />
-              Build Automation
+              Construieste automatizare
             </Button>
           </Link>
         </div>
@@ -254,7 +254,7 @@ export default function AutomationsPage() {
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Search automations..."
+          placeholder="Cauta automatizari..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
@@ -278,14 +278,14 @@ export default function AutomationsPage() {
         <Card>
           <CardContent className="py-20 text-center">
             <Zap className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold">No automations yet</h3>
+            <h3 className="text-lg font-semibold">Nicio automatizare inca</h3>
             <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-              Create your first automation to automatically engage with your donors.
+              Creeaza prima automatizare pentru a interactiona automat cu donatorii.
             </p>
             <Link href="/dashboard/automations/new">
               <Button className="mt-4">
                 <Zap className="mr-2 h-4 w-4" />
-                Build Automation
+                Construieste automatizare
               </Button>
             </Link>
           </CardContent>
@@ -319,7 +319,7 @@ export default function AutomationsPage() {
                           variant={automation.isActive ? "success" : "secondary"}
                           className="shrink-0"
                         >
-                          {automation.isActive ? "Active" : "Inactive"}
+                          {automation.isActive ? "Activ" : "Inactiv"}
                         </Badge>
                       </div>
                       {automation.description && (
@@ -338,14 +338,14 @@ export default function AutomationsPage() {
                         </span>
                         <span className="flex items-center gap-1">
                           <GitBranch className="h-3 w-3" />
-                          {automation._count.steps} step{automation._count.steps !== 1 ? "s" : ""}
+                          {automation._count.steps} {automation._count.steps !== 1 ? "pasi" : "pas"}
                         </span>
                         <span className="flex items-center gap-1">
                           <Activity className="h-3 w-3" />
-                          {automation._count.executions} execution{automation._count.executions !== 1 ? "s" : ""}
+                          {automation._count.executions} {automation._count.executions !== 1 ? "executii" : "executie"}
                         </span>
                         <span className="hidden sm:inline">
-                          Updated {formatDate(automation.updatedAt)}
+                          Actualizat {formatDate(automation.updatedAt)}
                         </span>
                       </div>
                     </div>
@@ -354,7 +354,7 @@ export default function AutomationsPage() {
                   <div className="flex items-center gap-2 shrink-0 ml-4">
                     <Link href={`/dashboard/automations/new?edit=${automation.id}`}>
                       <Button variant="outline" size="sm">
-                        Edit Flow
+                        Editeaza flux
                       </Button>
                     </Link>
                   </div>

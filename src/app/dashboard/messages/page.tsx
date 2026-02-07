@@ -50,19 +50,19 @@ interface MessagesResponse {
 }
 
 const CHANNEL_OPTIONS = [
-  { value: "all", label: "All Channels" },
+  { value: "all", label: "Toate canalele" },
   { value: "EMAIL", label: "Email" },
   { value: "SMS", label: "SMS" },
 ];
 
 const STATUS_OPTIONS = [
-  { value: "all", label: "All Statuses" },
-  { value: "PENDING", label: "Pending" },
-  { value: "SENDING", label: "Sending" },
-  { value: "SENT", label: "Sent" },
-  { value: "DELIVERED", label: "Delivered" },
-  { value: "FAILED", label: "Failed" },
-  { value: "BOUNCED", label: "Bounced" },
+  { value: "all", label: "Toate statusurile" },
+  { value: "PENDING", label: "In asteptare" },
+  { value: "SENDING", label: "Se trimite" },
+  { value: "SENT", label: "Trimis" },
+  { value: "DELIVERED", label: "Livrat" },
+  { value: "FAILED", label: "Esuat" },
+  { value: "BOUNCED", label: "Respins" },
 ];
 
 const statusBadgeVariant = (status: string) => {
@@ -143,9 +143,9 @@ export default function MessagesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Messages</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Mesaje</h1>
         <p className="text-muted-foreground">
-          View all sent messages across campaigns. {total > 0 && `${total} message${total !== 1 ? "s" : ""} total.`}
+          Vezi toate mesajele trimise. {total > 0 && `${total} mesaj${total !== 1 ? "e" : ""} total.`}
         </p>
       </div>
 
@@ -156,7 +156,7 @@ export default function MessagesPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by campaign name or subject..."
+                placeholder="Cauta dupa numele campaniei sau subiect..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -170,7 +170,7 @@ export default function MessagesPage() {
               onClick={() => setFiltersOpen(!filtersOpen)}
             >
               <Filter className="mr-2 h-4 w-4" />
-              Filters
+              Filtre
             </Button>
           </div>
           {filtersOpen && (
@@ -178,7 +178,7 @@ export default function MessagesPage() {
               <div className="w-48">
                 <Select value={channelFilter} onValueChange={(v) => { setChannelFilter(v); setPage(1); }}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Channel" />
+                    <SelectValue placeholder="Canal" />
                   </SelectTrigger>
                   <SelectContent>
                     {CHANNEL_OPTIONS.map((opt) => (
@@ -222,11 +222,11 @@ export default function MessagesPage() {
           ) : messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Inbox className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold">No messages found</h3>
+              <h3 className="text-lg font-semibold">Niciun mesaj gasit</h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm">
                 {search || channelFilter !== "all" || statusFilter !== "all"
-                  ? "Try adjusting your search or filters."
-                  : "Messages will appear here once campaigns are sent."}
+                  ? "Incearca sa ajustezi cautarea sau filtrele."
+                  : "Mesajele vor aparea aici odata ce campaniile sunt trimise."}
               </p>
             </div>
           ) : (
@@ -234,13 +234,13 @@ export default function MessagesPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="p-3 text-left font-medium">Date</th>
-                    <th className="p-3 text-left font-medium">Campaign</th>
-                    <th className="p-3 text-left font-medium hidden md:table-cell">Subject</th>
-                    <th className="p-3 text-left font-medium">Channel</th>
+                    <th className="p-3 text-left font-medium">Data</th>
+                    <th className="p-3 text-left font-medium">Campanie</th>
+                    <th className="p-3 text-left font-medium hidden md:table-cell">Subiect</th>
+                    <th className="p-3 text-left font-medium">Canal</th>
                     <th className="p-3 text-left font-medium">Status</th>
-                    <th className="p-3 text-right font-medium">Recipients</th>
-                    <th className="p-3 text-right font-medium hidden md:table-cell">Delivered</th>
+                    <th className="p-3 text-right font-medium">Destinatari</th>
+                    <th className="p-3 text-right font-medium hidden md:table-cell">Livrate</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -250,7 +250,7 @@ export default function MessagesPage() {
                         {msg.sentAt ? formatDateTime(msg.sentAt) : formatDateTime(msg.createdAt)}
                       </td>
                       <td className="p-3 font-medium max-w-[200px] truncate">
-                        {msg.campaignName || "Direct Message"}
+                        {msg.campaignName || "Mesaj direct"}
                       </td>
                       <td className="p-3 text-muted-foreground hidden md:table-cell max-w-[200px] truncate">
                         {msg.subject || "-"}
@@ -286,7 +286,7 @@ export default function MessagesPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t">
               <p className="text-sm text-muted-foreground">
-                Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, total)} of {total}
+                Se afiseaza {(page - 1) * pageSize + 1} pana la {Math.min(page * pageSize, total)} din {total}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -296,10 +296,10 @@ export default function MessagesPage() {
                   onClick={() => setPage(page - 1)}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  Anterioara
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  Page {page} of {totalPages}
+                  Pagina {page} din {totalPages}
                 </span>
                 <Button
                   variant="outline"
@@ -307,7 +307,7 @@ export default function MessagesPage() {
                   disabled={page >= totalPages}
                   onClick={() => setPage(page + 1)}
                 >
-                  Next
+                  Urmatoarea
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

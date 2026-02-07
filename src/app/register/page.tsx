@@ -30,14 +30,14 @@ export default function RegisterPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Registration failed");
+        setError(data.error || "Inregistrarea a esuat");
         setLoading(false);
         return;
       }
 
       router.push("/login?registered=true");
     } catch {
-      setError("Something went wrong");
+      setError("Ceva nu a functionat corect");
       setLoading(false);
     }
   };
@@ -49,8 +49,8 @@ export default function RegisterPage() {
           <div className="flex justify-center mb-2">
             <Heart className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle>Register your NGO</CardTitle>
-          <CardDescription>Create an account to start managing your donors</CardDescription>
+          <CardTitle>Inregistreaza ONG-ul</CardTitle>
+          <CardDescription>Creeaza un cont pentru a gestiona donatorii si campaniile</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -58,20 +58,20 @@ export default function RegisterPage() {
               <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">{error}</div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="ngoName">NGO Name</Label>
+              <Label htmlFor="ngoName">Numele ONG-ului</Label>
               <Input
                 id="ngoName"
-                placeholder="Your NGO"
+                placeholder="ONG-ul tau"
                 value={form.ngoName}
                 onChange={(e) => setForm({ ...form, ngoName: e.target.value })}
                 required
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="name">Your Name</Label>
+              <Label htmlFor="name">Numele tau</Label>
               <Input
                 id="name"
-                placeholder="John Doe"
+                placeholder="Ion Popescu"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
@@ -89,11 +89,11 @@ export default function RegisterPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Parola</Label>
               <Input
                 id="password"
                 type="password"
-                placeholder="Min 8 characters"
+                placeholder="Minim 8 caractere"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
                 required
@@ -101,12 +101,12 @@ export default function RegisterPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Create Account"}
+              {loading ? "Se creeaza contul..." : "Creeaza cont"}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
+              Ai deja cont?{" "}
               <Link href="/login" className="text-primary hover:underline">
-                Sign in
+                Autentificare
               </Link>
             </p>
           </form>

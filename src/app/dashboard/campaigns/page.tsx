@@ -50,31 +50,31 @@ interface Campaign {
 }
 
 const TYPE_OPTIONS = [
-  { value: "all", label: "All Types" },
-  { value: "THANK_YOU", label: "Thank You" },
-  { value: "UPDATE", label: "Update" },
-  { value: "EMERGENCY_APPEAL", label: "Emergency Appeal" },
+  { value: "all", label: "Toate tipurile" },
+  { value: "THANK_YOU", label: "Multumire" },
+  { value: "UPDATE", label: "Actualizare" },
+  { value: "EMERGENCY_APPEAL", label: "Apel de urgenta" },
   { value: "NEWSLETTER", label: "Newsletter" },
-  { value: "REACTIVATION", label: "Reactivation" },
-  { value: "CORPORATE_OUTREACH", label: "Corporate Outreach" },
-  { value: "CUSTOM", label: "Custom" },
+  { value: "REACTIVATION", label: "Reactivare" },
+  { value: "CORPORATE_OUTREACH", label: "Parteneriate corporate" },
+  { value: "CUSTOM", label: "Personalizat" },
 ];
 
 const STATUS_OPTIONS = [
-  { value: "all", label: "All Statuses" },
-  { value: "DRAFT", label: "Draft" },
-  { value: "SCHEDULED", label: "Scheduled" },
-  { value: "SENDING", label: "Sending" },
-  { value: "SENT", label: "Sent" },
-  { value: "PAUSED", label: "Paused" },
-  { value: "CANCELLED", label: "Cancelled" },
+  { value: "all", label: "Toate statusurile" },
+  { value: "DRAFT", label: "Ciorna" },
+  { value: "SCHEDULED", label: "Programat" },
+  { value: "SENDING", label: "Se trimite" },
+  { value: "SENT", label: "Trimis" },
+  { value: "PAUSED", label: "In pauza" },
+  { value: "CANCELLED", label: "Anulat" },
 ];
 
 const CHANNEL_OPTIONS = [
-  { value: "all", label: "All Channels" },
+  { value: "all", label: "Toate canalele" },
   { value: "EMAIL", label: "Email" },
   { value: "SMS", label: "SMS" },
-  { value: "BOTH", label: "Both" },
+  { value: "BOTH", label: "Ambele" },
 ];
 
 const statusBadgeVariant = (status: string) => {
@@ -153,13 +153,13 @@ export default function CampaignsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Campaigns</h1>
-          <p className="text-muted-foreground">Create and manage email and SMS campaigns.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Campanii</h1>
+          <p className="text-muted-foreground">Creeaza si gestioneaza campanii email si SMS.</p>
         </div>
         <Link href="/dashboard/campaigns/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
-            New Campaign
+            Campanie noua
           </Button>
         </Link>
       </div>
@@ -171,7 +171,7 @@ export default function CampaignsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search campaigns..."
+                placeholder="Cauta campanii..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -182,7 +182,7 @@ export default function CampaignsPage() {
               onClick={() => setFiltersOpen(!filtersOpen)}
             >
               <Filter className="mr-2 h-4 w-4" />
-              Filters
+              Filtre
             </Button>
           </div>
           {filtersOpen && (
@@ -190,7 +190,7 @@ export default function CampaignsPage() {
               <div className="w-48">
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Type" />
+                    <SelectValue placeholder="Tip" />
                   </SelectTrigger>
                   <SelectContent>
                     {TYPE_OPTIONS.map((opt) => (
@@ -214,7 +214,7 @@ export default function CampaignsPage() {
               <div className="w-48">
                 <Select value={channelFilter} onValueChange={setChannelFilter}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Channel" />
+                    <SelectValue placeholder="Canal" />
                   </SelectTrigger>
                   <SelectContent>
                     {CHANNEL_OPTIONS.map((opt) => (
@@ -246,16 +246,16 @@ export default function CampaignsPage() {
         <Card>
           <CardContent className="py-20 text-center">
             <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold">No campaigns found</h3>
+            <h3 className="text-lg font-semibold">Nicio campanie gasita</h3>
             <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
               {search || typeFilter !== "all"
-                ? "Try adjusting your search or filters."
-                : "Create your first campaign to start engaging with your donors."}
+                ? "Incercati sa ajustati cautarea sau filtrele."
+                : "Creati prima campanie pentru a interactiona cu donatorii."}
             </p>
             <Link href="/dashboard/campaigns/new">
               <Button className="mt-4">
                 <Plus className="mr-2 h-4 w-4" />
-                Create Campaign
+                Creeaza campanie
               </Button>
             </Link>
           </CardContent>
@@ -286,7 +286,7 @@ export default function CampaignsPage() {
                   <CardContent className="space-y-4">
                     {campaign.subject && (
                       <p className="text-sm text-muted-foreground truncate">
-                        Subject: {campaign.subject}
+                        Subiect: {campaign.subject}
                       </p>
                     )}
 
@@ -299,21 +299,21 @@ export default function CampaignsPage() {
                               <Send className="h-3 w-3" />
                             </div>
                             <p className="text-lg font-bold">{campaign.totalSent}</p>
-                            <p className="text-[10px] text-muted-foreground">Sent</p>
+                            <p className="text-[10px] text-muted-foreground">Trimise</p>
                           </div>
                           <div>
                             <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                               <Eye className="h-3 w-3" />
                             </div>
                             <p className="text-lg font-bold">{openRate.toFixed(1)}%</p>
-                            <p className="text-[10px] text-muted-foreground">Opened</p>
+                            <p className="text-[10px] text-muted-foreground">Deschise</p>
                           </div>
                           <div>
                             <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
                               <MousePointerClick className="h-3 w-3" />
                             </div>
                             <p className="text-lg font-bold">{clickRate.toFixed(1)}%</p>
-                            <p className="text-[10px] text-muted-foreground">Clicked</p>
+                            <p className="text-[10px] text-muted-foreground">Click</p>
                           </div>
                         </div>
                         <Progress value={openRate} className="h-1.5" />
@@ -322,8 +322,8 @@ export default function CampaignsPage() {
                       <div className="text-center py-2">
                         <p className="text-xs text-muted-foreground">
                           {campaign.recipientCount > 0
-                            ? `${campaign.recipientCount} recipients`
-                            : "No recipients yet"}
+                            ? `${campaign.recipientCount} destinatari`
+                            : "Niciun destinatar inca"}
                         </p>
                       </div>
                     )}
@@ -332,10 +332,10 @@ export default function CampaignsPage() {
                     <div className="flex items-center gap-1 text-xs text-muted-foreground pt-2 border-t">
                       <Calendar className="h-3 w-3" />
                       {campaign.sentAt
-                        ? `Sent ${formatDate(campaign.sentAt)}`
+                        ? `Trimis ${formatDate(campaign.sentAt)}`
                         : campaign.scheduledAt
-                        ? `Scheduled for ${formatDate(campaign.scheduledAt)}`
-                        : `Created ${formatDate(campaign.createdAt)}`}
+                        ? `Programat pentru ${formatDate(campaign.scheduledAt)}`
+                        : `Creat ${formatDate(campaign.createdAt)}`}
                     </div>
                   </CardContent>
                 </Card>

@@ -73,10 +73,10 @@ interface TeamMember {
 }
 
 const ROLE_OPTIONS = [
-  { value: "ADMIN", label: "Admin" },
+  { value: "ADMIN", label: "Administrator" },
   { value: "MANAGER", label: "Manager" },
-  { value: "MEMBER", label: "Member" },
-  { value: "VIEWER", label: "Viewer" },
+  { value: "MEMBER", label: "Membru" },
+  { value: "VIEWER", label: "Vizualizator" },
 ];
 
 const roleBadgeVariant = (role: string) => {
@@ -248,7 +248,7 @@ export default function SettingsPage() {
         body: JSON.stringify(profile),
       });
       if (!res.ok) throw new Error("Failed to save profile settings");
-      setSuccess("Profile settings saved successfully.");
+      setSuccess("Setarile profilului au fost salvate cu succes.");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -273,7 +273,7 @@ export default function SettingsPage() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Failed to save email settings");
-      setSuccess("Email settings saved successfully.");
+      setSuccess("Setarile email au fost salvate cu succes.");
       setEditingApiKey(false);
       setNewApiKey("");
       fetchEmail();
@@ -302,7 +302,7 @@ export default function SettingsPage() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Failed to save SMS settings");
-      setSuccess("SMS settings saved successfully.");
+      setSuccess("Setarile SMS au fost salvate cu succes.");
       setEditingTwilio(false);
       setNewTwilioSid("");
       setNewTwilioToken("");
@@ -328,7 +328,7 @@ export default function SettingsPage() {
         const data = await res.json();
         throw new Error(data.error || "Failed to send invitation");
       }
-      setSuccess("Invitation sent successfully.");
+      setSuccess("Invitatia a fost trimisa cu succes.");
       setInviteOpen(false);
       setInviteEmail("");
       setInviteRole("MEMBER");
@@ -341,7 +341,7 @@ export default function SettingsPage() {
   };
 
   const handleRemoveMember = async (memberId: string) => {
-    if (!confirm("Are you sure you want to remove this team member?")) return;
+    if (!confirm("Esti sigur ca vrei sa stergi acest membru din echipa?")) return;
     clearMessages();
     try {
       const res = await fetch(`/api/settings/team/${memberId}`, {
@@ -349,7 +349,7 @@ export default function SettingsPage() {
       });
       if (!res.ok) throw new Error("Failed to remove team member");
       fetchTeam();
-      setSuccess("Team member removed.");
+      setSuccess("Membru echipa sters.");
     } catch (err: any) {
       setError(err.message);
     }
@@ -358,9 +358,9 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Setari</h1>
         <p className="text-muted-foreground">
-          Manage your organization profile, integrations, and team.
+          Gestioneaza organizatia, integrarile si echipa.
         </p>
       </div>
 
@@ -368,7 +368,7 @@ export default function SettingsPage() {
         <Card className="border-destructive">
           <CardContent className="py-4 flex items-center justify-between">
             <p className="text-sm text-destructive">{error}</p>
-            <Button variant="ghost" size="sm" onClick={() => setError(null)}>Dismiss</Button>
+            <Button variant="ghost" size="sm" onClick={() => setError(null)}>Inchide</Button>
           </CardContent>
         </Card>
       )}
@@ -380,7 +380,7 @@ export default function SettingsPage() {
               <CheckCircle2 className="h-4 w-4" />
               <p className="text-sm">{success}</p>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => setSuccess(null)}>Dismiss</Button>
+            <Button variant="ghost" size="sm" onClick={() => setSuccess(null)}>Inchide</Button>
           </CardContent>
         </Card>
       )}
@@ -389,19 +389,19 @@ export default function SettingsPage() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="profile" className="gap-1">
             <Building className="h-3 w-3" />
-            Profile
+            Profil
           </TabsTrigger>
           <TabsTrigger value="email" className="gap-1">
             <Mail className="h-3 w-3" />
-            Email Provider
+            Furnizor email
           </TabsTrigger>
           <TabsTrigger value="sms" className="gap-1">
             <MessageSquare className="h-3 w-3" />
-            SMS Provider
+            Furnizor SMS
           </TabsTrigger>
           <TabsTrigger value="team" className="gap-1">
             <Users className="h-3 w-3" />
-            Team
+            Echipa
           </TabsTrigger>
         </TabsList>
 
@@ -411,10 +411,10 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building className="h-5 w-5" />
-                Organization Profile
+                Profilul organizatiei
               </CardTitle>
               <CardDescription>
-                Basic information about your NGO displayed across the platform.
+                Informatii de baza despre ONG-ul tau afisate pe platforma.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -425,26 +425,26 @@ export default function SettingsPage() {
               ) : (
                 <>
                   <div className="grid gap-2">
-                    <Label htmlFor="ngoName">NGO Name</Label>
+                    <Label htmlFor="ngoName">Numele organizatiei</Label>
                     <Input
                       id="ngoName"
-                      placeholder="Your Organization Name"
+                      placeholder="Numele organizatiei tale"
                       value={profile.ngoName}
                       onChange={(e) => setProfile({ ...profile, ngoName: e.target.value })}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">Descriere</Label>
                     <Textarea
                       id="description"
-                      placeholder="Brief description of your organization..."
+                      placeholder="Scurta descriere a organizatiei tale..."
                       value={profile.description}
                       onChange={(e) => setProfile({ ...profile, description: e.target.value })}
                       className="min-h-[100px]"
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="logoUrl">Logo URL</Label>
+                    <Label htmlFor="logoUrl">URL Logo</Label>
                     <div className="flex gap-3">
                       <Input
                         id="logoUrl"
@@ -458,7 +458,7 @@ export default function SettingsPage() {
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={profile.logoUrl}
-                            alt="Logo preview"
+                            alt="Previzualizare logo"
                             className="h-full w-full object-contain"
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = "none";
@@ -469,7 +469,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="website">Website</Label>
+                    <Label htmlFor="website">Site web</Label>
                     <div className="flex items-center gap-2">
                       <Globe className="h-4 w-4 text-muted-foreground shrink-0" />
                       <Input
@@ -490,7 +490,7 @@ export default function SettingsPage() {
                 ) : (
                   <Save className="mr-2 h-4 w-4" />
                 )}
-                Save Profile
+                Salveaza profilul
               </Button>
             </CardFooter>
           </Card>
@@ -502,10 +502,10 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Mail className="h-5 w-5" />
-                SendGrid Configuration
+                Configurare SendGrid
               </CardTitle>
               <CardDescription>
-                Configure your SendGrid integration for sending email campaigns.
+                Configureaza integrarea SendGrid pentru trimiterea campaniilor email.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -522,11 +522,11 @@ export default function SettingsPage() {
                         <div className="flex-1 flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
                           <Key className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm font-mono">
-                            {email.sendgridApiKey ? maskKey(email.sendgridApiKey) : "Not configured"}
+                            {email.sendgridApiKey ? maskKey(email.sendgridApiKey) : "Neconfigurat"}
                           </span>
                         </div>
                         <Button variant="outline" onClick={() => setEditingApiKey(true)}>
-                          Change Key
+                          Schimba cheia
                         </Button>
                       </div>
                     ) : (
@@ -538,13 +538,13 @@ export default function SettingsPage() {
                           onChange={(e) => setNewApiKey(e.target.value)}
                         />
                         <Button variant="ghost" onClick={() => { setEditingApiKey(false); setNewApiKey(""); }}>
-                          Cancel
+                          Anuleaza
                         </Button>
                       </div>
                     )}
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="senderEmail">Sender Email</Label>
+                    <Label htmlFor="senderEmail">Email expeditor</Label>
                     <Input
                       id="senderEmail"
                       type="email"
@@ -554,10 +554,10 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="senderName">Sender Name</Label>
+                    <Label htmlFor="senderName">Nume expeditor</Label>
                     <Input
                       id="senderName"
-                      placeholder="Your NGO Name"
+                      placeholder="Numele ONG-ului tau"
                       value={email.senderName}
                       onChange={(e) => setEmail({ ...email, senderName: e.target.value })}
                     />
@@ -572,7 +572,7 @@ export default function SettingsPage() {
                 ) : (
                   <Save className="mr-2 h-4 w-4" />
                 )}
-                Save Email Settings
+                Salveaza setarile email
               </Button>
             </CardFooter>
           </Card>
@@ -584,10 +584,10 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                Twilio Configuration
+                Configurare Twilio
               </CardTitle>
               <CardDescription>
-                Configure your Twilio integration for sending SMS campaigns.
+                Configureaza integrarea Twilio pentru trimiterea campaniilor SMS.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -604,7 +604,7 @@ export default function SettingsPage() {
                         <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
                           <Key className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm font-mono">
-                            {sms.twilioSid ? maskKey(sms.twilioSid) : "Not configured"}
+                            {sms.twilioSid ? maskKey(sms.twilioSid) : "Neconfigurat"}
                           </span>
                         </div>
                       </div>
@@ -613,18 +613,18 @@ export default function SettingsPage() {
                         <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
                           <Key className="h-4 w-4 text-muted-foreground" />
                           <span className="text-sm font-mono">
-                            {sms.twilioAuthToken ? maskKey(sms.twilioAuthToken) : "Not configured"}
+                            {sms.twilioAuthToken ? maskKey(sms.twilioAuthToken) : "Neconfigurat"}
                           </span>
                         </div>
                       </div>
                       <Button variant="outline" onClick={() => setEditingTwilio(true)}>
-                        Update Credentials
+                        Actualizeaza credentialele
                       </Button>
                     </div>
                   ) : (
                     <div className="space-y-3 p-4 border rounded-lg bg-muted/20">
                       <div className="grid gap-2">
-                        <Label>New Twilio Account SID</Label>
+                        <Label>Noul Twilio Account SID</Label>
                         <Input
                           type="password"
                           placeholder="ACxxxxx..."
@@ -633,7 +633,7 @@ export default function SettingsPage() {
                         />
                       </div>
                       <div className="grid gap-2">
-                        <Label>New Auth Token</Label>
+                        <Label>Noul Auth Token</Label>
                         <Input
                           type="password"
                           placeholder="Auth token..."
@@ -649,12 +649,12 @@ export default function SettingsPage() {
                           setNewTwilioToken("");
                         }}
                       >
-                        Cancel
+                        Anuleaza
                       </Button>
                     </div>
                   )}
                   <div className="grid gap-2">
-                    <Label htmlFor="twilioPhone">Twilio Phone Number</Label>
+                    <Label htmlFor="twilioPhone">Numar telefon Twilio</Label>
                     <div className="flex items-center gap-2">
                       <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
                       <Input
@@ -666,7 +666,7 @@ export default function SettingsPage() {
                     </div>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="smsSenderId">SMS Sender ID</Label>
+                    <Label htmlFor="smsSenderId">ID expeditor SMS</Label>
                     <Input
                       id="smsSenderId"
                       placeholder="YourNGO"
@@ -674,7 +674,7 @@ export default function SettingsPage() {
                       onChange={(e) => setSms({ ...sms, smsSenderId: e.target.value })}
                     />
                     <p className="text-xs text-muted-foreground">
-                      Alphanumeric sender ID shown as the SMS sender (max 11 characters).
+                      ID alfanumeric afisat ca expeditor SMS (maxim 11 caractere).
                     </p>
                   </div>
                 </>
@@ -687,7 +687,7 @@ export default function SettingsPage() {
                 ) : (
                   <Save className="mr-2 h-4 w-4" />
                 )}
-                Save SMS Settings
+                Salveaza setarile SMS
               </Button>
             </CardFooter>
           </Card>
@@ -701,29 +701,29 @@ export default function SettingsPage() {
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="h-5 w-5" />
-                    Team Members
+                    Membri echipa
                   </CardTitle>
                   <CardDescription>
-                    Manage who has access to your CRM dashboard.
+                    Gestioneaza cine are acces la panoul de control CRM.
                   </CardDescription>
                 </div>
                 <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
                   <DialogTrigger asChild>
                     <Button>
                       <UserPlus className="mr-2 h-4 w-4" />
-                      Invite User
+                      Invita utilizator
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
                     <DialogHeader>
-                      <DialogTitle>Invite Team Member</DialogTitle>
+                      <DialogTitle>Invita membru in echipa</DialogTitle>
                       <DialogDescription>
-                        Send an invitation email to add a new member to your team.
+                        Trimite un email de invitatie pentru a adauga un nou membru in echipa.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                       <div className="grid gap-2">
-                        <Label htmlFor="inviteEmail">Email Address</Label>
+                        <Label htmlFor="inviteEmail">Adresa email</Label>
                         <Input
                           id="inviteEmail"
                           type="email"
@@ -733,7 +733,7 @@ export default function SettingsPage() {
                         />
                       </div>
                       <div className="grid gap-2">
-                        <Label>Role</Label>
+                        <Label>Rol</Label>
                         <Select value={inviteRole} onValueChange={setInviteRole}>
                           <SelectTrigger>
                             <SelectValue />
@@ -747,16 +747,16 @@ export default function SettingsPage() {
                           </SelectContent>
                         </Select>
                         <p className="text-xs text-muted-foreground">
-                          {inviteRole === "ADMIN" && "Full access to all settings and data."}
-                          {inviteRole === "MANAGER" && "Can manage campaigns, donors, and automations."}
-                          {inviteRole === "MEMBER" && "Can create and edit campaigns and manage donors."}
-                          {inviteRole === "VIEWER" && "Read-only access to dashboards and reports."}
+                          {inviteRole === "ADMIN" && "Acces complet la toate setarile si datele."}
+                          {inviteRole === "MANAGER" && "Poate gestiona campanii, donatori si automatizari."}
+                          {inviteRole === "MEMBER" && "Poate crea si edita campanii si gestiona donatori."}
+                          {inviteRole === "VIEWER" && "Acces doar pentru citire la panouri si rapoarte."}
                         </p>
                       </div>
                     </div>
                     <DialogFooter>
                       <Button variant="outline" onClick={() => setInviteOpen(false)}>
-                        Cancel
+                        Anuleaza
                       </Button>
                       <Button onClick={handleInvite} disabled={inviteLoading || !inviteEmail.trim()}>
                         {inviteLoading ? (
@@ -764,7 +764,7 @@ export default function SettingsPage() {
                         ) : (
                           <Mail className="mr-2 h-4 w-4" />
                         )}
-                        Send Invitation
+                        Trimite invitatia
                       </Button>
                     </DialogFooter>
                   </DialogContent>
@@ -779,24 +779,24 @@ export default function SettingsPage() {
               ) : team.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">No team members found.</p>
+                  <p className="text-sm text-muted-foreground">Niciun membru in echipa inca.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th className="p-3 text-left font-medium">Name</th>
+                        <th className="p-3 text-left font-medium">Nume</th>
                         <th className="p-3 text-left font-medium">Email</th>
-                        <th className="p-3 text-left font-medium">Role</th>
+                        <th className="p-3 text-left font-medium">Rol</th>
                         <th className="p-3 text-left font-medium hidden md:table-cell">Status</th>
-                        <th className="p-3 text-right font-medium">Actions</th>
+                        <th className="p-3 text-right font-medium">Actiuni</th>
                       </tr>
                     </thead>
                     <tbody>
                       {team.map((member) => (
                         <tr key={member.id} className="border-b hover:bg-muted/30 transition-colors">
-                          <td className="p-3 font-medium">{member.name || "Pending"}</td>
+                          <td className="p-3 font-medium">{member.name || "In asteptare"}</td>
                           <td className="p-3 text-muted-foreground">{member.email}</td>
                           <td className="p-3">
                             <Badge variant={roleBadgeVariant(member.role)}>

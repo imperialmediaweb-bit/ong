@@ -231,7 +231,7 @@ export default function DonorDetailPage() {
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        if (!confirm("This will permanently anonymize this donor's personal data. This cannot be undone. Continue?")) return;
+        if (!confirm("Aceasta actiune va anonimiza permanent datele personale ale donatorului. Nu poate fi anulata. Continuati?")) return;
         const res = await fetch(`/api/donors/${donorId}/anonymize`, {
           method: "POST",
         });
@@ -274,17 +274,17 @@ export default function DonorDetailPage() {
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+          Inapoi
         </Button>
         <Card className="max-w-md mx-auto">
           <CardContent className="py-10 text-center">
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <h3 className="text-lg font-semibold">{error || "Donor not found"}</h3>
+            <h3 className="text-lg font-semibold">{error || "Donator negasit"}</h3>
             <p className="text-sm text-muted-foreground mt-1">
-              The donor you are looking for does not exist or you do not have access.
+              Donatorul pe care il cautati nu exista sau nu aveti acces.
             </p>
             <Link href="/dashboard/donors">
-              <Button className="mt-4">Back to Donors</Button>
+              <Button className="mt-4">Inapoi la donatori</Button>
             </Link>
           </CardContent>
         </Card>
@@ -310,7 +310,7 @@ export default function DonorDetailPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold tracking-tight">
-                {donor.isAnonymized ? "Anonymized Donor" : donor.name || "Unknown Donor"}
+                {donor.isAnonymized ? "Donator anonimizat" : donor.name || "Donator necunoscut"}
               </h1>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 {donor.email && (
@@ -334,18 +334,18 @@ export default function DonorDetailPage() {
             <>
               <Button variant="outline" onClick={() => setEditing(false)}>
                 <X className="mr-2 h-4 w-4" />
-                Cancel
+                Anuleaza
               </Button>
               <Button onClick={handleSave} disabled={saving}>
                 {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                Save
+                Salveaza
               </Button>
             </>
           ) : (
             <>
               <Button variant="outline" onClick={() => setEditing(true)}>
                 <Edit2 className="mr-2 h-4 w-4" />
-                Edit
+                Editeaza
               </Button>
               <Dialog open={gdprDialogOpen} onOpenChange={setGdprDialogOpen}>
                 <DialogTrigger asChild>
@@ -356,9 +356,9 @@ export default function DonorDetailPage() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>GDPR Actions</DialogTitle>
+                    <DialogTitle>Actiuni GDPR</DialogTitle>
                     <DialogDescription>
-                      Manage this donor&apos;s personal data in compliance with GDPR.
+                      Gestioneaza datele personale ale acestui donator in conformitate cu GDPR.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
@@ -370,10 +370,10 @@ export default function DonorDetailPage() {
                     >
                       <div className="flex items-center gap-2 font-medium">
                         <Download className="h-4 w-4" />
-                        Export Personal Data
+                        Exporta date personale
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Download all personal data associated with this donor as a JSON file (Art. 20 GDPR).
+                        Descarca toate datele personale asociate acestui donator ca fisier JSON (Art. 20 GDPR).
                       </p>
                     </div>
                     <div
@@ -384,22 +384,22 @@ export default function DonorDetailPage() {
                     >
                       <div className="flex items-center gap-2 font-medium text-destructive">
                         <Trash2 className="h-4 w-4" />
-                        Delete / Anonymize Data
+                        Sterge / Anonimizeaza date
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Permanently anonymize all personal data. Donation records are preserved with anonymized references (Art. 17 GDPR).
+                        Anonimizeaza permanent toate datele personale. Inregistrarile donatiilor sunt pastrate cu referinte anonimizate (Art. 17 GDPR).
                       </p>
                     </div>
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setGdprDialogOpen(false)}>
-                      Cancel
+                      Anuleaza
                     </Button>
                     <Button
                       variant={gdprAction === "delete" ? "destructive" : "default"}
                       onClick={handleGdprAction}
                     >
-                      {gdprAction === "export" ? "Export Data" : "Anonymize Donor"}
+                      {gdprAction === "export" ? "Exporta date" : "Anonimizeaza donator"}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
@@ -415,7 +415,7 @@ export default function DonorDetailPage() {
           <CardContent className="py-3 flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-yellow-600" />
             <span className="text-sm text-yellow-800">
-              This donor&apos;s personal data has been anonymized per GDPR request.
+              Datele personale ale acestui donator au fost anonimizate conform solicitarii GDPR.
             </span>
           </CardContent>
         </Card>
@@ -427,13 +427,13 @@ export default function DonorDetailPage() {
           {/* Profile Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Profile Information</CardTitle>
+              <CardTitle className="text-base">Informatii profil</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {editing ? (
                 <>
                   <div className="grid gap-2">
-                    <Label>Name</Label>
+                    <Label>Nume</Label>
                     <Input
                       value={editForm.name}
                       onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
@@ -447,14 +447,14 @@ export default function DonorDetailPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label>Phone</Label>
+                    <Label>Telefon</Label>
                     <Input
                       value={editForm.phone}
                       onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label>Preferred Channel</Label>
+                    <Label>Canal preferat</Label>
                     <Select
                       value={editForm.preferredChannel}
                       onValueChange={(v) => setEditForm({ ...editForm, preferredChannel: v })}
@@ -465,7 +465,7 @@ export default function DonorDetailPage() {
                       <SelectContent>
                         <SelectItem value="EMAIL">Email</SelectItem>
                         <SelectItem value="SMS">SMS</SelectItem>
-                        <SelectItem value="BOTH">Both</SelectItem>
+                        <SelectItem value="BOTH">Ambele</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -479,9 +479,9 @@ export default function DonorDetailPage() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="ACTIVE">Active</SelectItem>
-                        <SelectItem value="INACTIVE">Inactive</SelectItem>
-                        <SelectItem value="UNSUBSCRIBED">Unsubscribed</SelectItem>
+                        <SelectItem value="ACTIVE">Activ</SelectItem>
+                        <SelectItem value="INACTIVE">Inactiv</SelectItem>
+                        <SelectItem value="UNSUBSCRIBED">Dezabonat</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -490,6 +490,7 @@ export default function DonorDetailPage() {
                 <>
                   <div className="flex justify-between">
                     <span className="text-sm text-muted-foreground">Status</span>
+
                     <Badge
                       variant={
                         donor.status === "ACTIVE"
@@ -503,27 +504,27 @@ export default function DonorDetailPage() {
                     </Badge>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Channel</span>
+                    <span className="text-sm text-muted-foreground">Canal</span>
                     <span className="text-sm font-medium">{donor.preferredChannel}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Total Donated</span>
+                    <span className="text-sm text-muted-foreground">Total donat</span>
                     <span className="text-sm font-semibold text-green-600">
                       {formatCurrency(donor.totalDonated)}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Donations</span>
+                    <span className="text-sm text-muted-foreground">Donatii</span>
                     <span className="text-sm font-medium">{donor.donationCount}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Last Donation</span>
+                    <span className="text-sm text-muted-foreground">Ultima donatie</span>
                     <span className="text-sm">
-                      {donor.lastDonationAt ? formatDate(donor.lastDonationAt) : "Never"}
+                      {donor.lastDonationAt ? formatDate(donor.lastDonationAt) : "Niciodata"}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm text-muted-foreground">Joined</span>
+                    <span className="text-sm text-muted-foreground">Inregistrat</span>
                     <span className="text-sm">{formatDate(donor.createdAt)}</span>
                   </div>
                 </>
@@ -534,23 +535,23 @@ export default function DonorDetailPage() {
           {/* Tags Card */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-              <CardTitle className="text-base">Tags</CardTitle>
+              <CardTitle className="text-base">Etichete</CardTitle>
               <Dialog open={addTagDialogOpen} onOpenChange={setAddTagDialogOpen}>
                 <DialogTrigger asChild>
                   <Button variant="ghost" size="sm">
                     <Plus className="mr-1 h-3 w-3" />
-                    Add
+                    Adauga
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="sm:max-w-sm">
                   <DialogHeader>
-                    <DialogTitle>Add Tag</DialogTitle>
-                    <DialogDescription>Select an existing tag or create a new one.</DialogDescription>
+                    <DialogTitle>Adauga eticheta</DialogTitle>
+                    <DialogDescription>Selecteaza o eticheta existenta sau creeaza una noua.</DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4 py-4">
                     {unassignedTags.length > 0 && (
                       <div>
-                        <Label className="text-xs mb-2 block">Existing Tags</Label>
+                        <Label className="text-xs mb-2 block">Etichete existente</Label>
                         <div className="flex flex-wrap gap-2">
                           {unassignedTags.map((tag) => (
                             <Badge
@@ -568,15 +569,15 @@ export default function DonorDetailPage() {
                       </div>
                     )}
                     <div className="grid gap-2">
-                      <Label className="text-xs">Create New Tag</Label>
+                      <Label className="text-xs">Creeaza eticheta noua</Label>
                       <div className="flex gap-2">
                         <Input
-                          placeholder="Tag name"
+                          placeholder="Nume eticheta"
                           value={newTagName}
                           onChange={(e) => setNewTagName(e.target.value)}
                         />
                         <Button onClick={() => handleAddTag()} disabled={!newTagName.trim()}>
-                          Add
+                          Adauga
                         </Button>
                       </div>
                     </div>
@@ -586,7 +587,7 @@ export default function DonorDetailPage() {
             </CardHeader>
             <CardContent>
               {donorTags.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No tags assigned.</p>
+                <p className="text-sm text-muted-foreground">Nicio eticheta atribuita.</p>
               ) : (
                 <div className="flex flex-wrap gap-2">
                   {donorTags.map((tag) => (
@@ -613,48 +614,48 @@ export default function DonorDetailPage() {
           {/* Consent Card */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Consent Status</CardTitle>
+              <CardTitle className="text-base">Status consimtamant</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm">Email Marketing</span>
+                <span className="text-sm">Marketing email</span>
                 {donor.emailConsent ? (
                   <Badge variant="success">
                     <CheckCircle2 className="mr-1 h-3 w-3" />
-                    Granted
+                    Acordat
                   </Badge>
                 ) : (
                   <Badge variant="destructive">
                     <XCircle className="mr-1 h-3 w-3" />
-                    Not Granted
+                    Neacordat
                   </Badge>
                 )}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">SMS Marketing</span>
+                <span className="text-sm">Marketing SMS</span>
                 {donor.smsConsent ? (
                   <Badge variant="success">
                     <CheckCircle2 className="mr-1 h-3 w-3" />
-                    Granted
+                    Acordat
                   </Badge>
                 ) : (
                   <Badge variant="destructive">
                     <XCircle className="mr-1 h-3 w-3" />
-                    Not Granted
+                    Neacordat
                   </Badge>
                 )}
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-sm">Privacy Policy</span>
+                <span className="text-sm">Politica de confidentialitate</span>
                 {donor.privacyConsent ? (
                   <Badge variant="success">
                     <CheckCircle2 className="mr-1 h-3 w-3" />
-                    Accepted
+                    Acceptat
                   </Badge>
                 ) : (
                   <Badge variant="destructive">
                     <XCircle className="mr-1 h-3 w-3" />
-                    Not Accepted
+                    Neacceptat
                   </Badge>
                 )}
               </div>
@@ -668,19 +669,19 @@ export default function DonorDetailPage() {
             <TabsList>
               <TabsTrigger value="donations" className="gap-1">
                 <Heart className="h-3 w-3" />
-                Donations
+                Donatii
               </TabsTrigger>
               <TabsTrigger value="messages" className="gap-1">
                 <MessageSquare className="h-3 w-3" />
-                Messages
+                Mesaje
               </TabsTrigger>
               <TabsTrigger value="consent" className="gap-1">
                 <Shield className="h-3 w-3" />
-                Consent History
+                Istoric consimtamant
               </TabsTrigger>
               <TabsTrigger value="notes" className="gap-1">
                 <FileText className="h-3 w-3" />
-                Notes
+                Notite
               </TabsTrigger>
             </TabsList>
 
@@ -688,13 +689,13 @@ export default function DonorDetailPage() {
             <TabsContent value="donations">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Donation History</CardTitle>
-                  <CardDescription>All donations from this donor</CardDescription>
+                  <CardTitle className="text-base">Istoric donatii</CardTitle>
+                  <CardDescription>Toate donatiile de la acest donator</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {donor.donations.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-8">
-                      No donations recorded yet.
+                      Nicio donatie inregistrata inca.
                     </p>
                   ) : (
                     <div className="space-y-3">
@@ -708,7 +709,7 @@ export default function DonorDetailPage() {
                               {formatCurrency(donation.amount, donation.currency)}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              {donation.campaign?.name || "Direct donation"} &middot;{" "}
+                              {donation.campaign?.name || "Donatie directa"} &middot;{" "}
                               {formatDateTime(donation.createdAt)}
                             </p>
                           </div>
@@ -735,13 +736,13 @@ export default function DonorDetailPage() {
             <TabsContent value="messages">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Communication History</CardTitle>
-                  <CardDescription>Messages sent to this donor</CardDescription>
+                  <CardTitle className="text-base">Istoric comunicare</CardTitle>
+                  <CardDescription>Mesaje trimise catre acest donator</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {donor.messageRecipients.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-8">
-                      No messages sent yet.
+                      Niciun mesaj trimis inca.
                     </p>
                   ) : (
                     <div className="space-y-3">
@@ -760,11 +761,11 @@ export default function DonorDetailPage() {
                             </div>
                             <div>
                               <p className="text-sm font-medium">
-                                {mr.message?.subject || mr.message?.campaign?.name || "Message"}
+                                {mr.message?.subject || mr.message?.campaign?.name || "Mesaj"}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {formatDateTime(mr.createdAt)}
-                                {mr.openedAt && " - Opened"}
+                                {mr.openedAt && " - Deschis"}
                               </p>
                             </div>
                           </div>
@@ -791,13 +792,13 @@ export default function DonorDetailPage() {
             <TabsContent value="consent">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Consent History</CardTitle>
-                  <CardDescription>Full audit trail of consent changes</CardDescription>
+                  <CardTitle className="text-base">Istoric consimtamant</CardTitle>
+                  <CardDescription>Traseu complet de audit al modificarilor de consimtamant</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {donor.consents.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-8">
-                      No consent records found.
+                      Nicio inregistrare de consimtamant gasita.
                     </p>
                   ) : (
                     <div className="space-y-3">
@@ -825,7 +826,7 @@ export default function DonorDetailPage() {
                             </div>
                           </div>
                           <Badge variant={consent.granted ? "success" : "destructive"}>
-                            {consent.granted ? "Granted" : "Revoked"}
+                            {consent.granted ? "Acordat" : "Revocat"}
                           </Badge>
                         </div>
                       ))}
@@ -839,13 +840,13 @@ export default function DonorDetailPage() {
             <TabsContent value="notes">
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Notes</CardTitle>
-                  <CardDescription>Internal notes about this donor</CardDescription>
+                  <CardTitle className="text-base">Notite</CardTitle>
+                  <CardDescription>Notite interne despre acest donator</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex gap-2">
                     <Textarea
-                      placeholder="Add a note..."
+                      placeholder="Adauga o notita..."
                       value={newNote}
                       onChange={(e) => setNewNote(e.target.value)}
                       className="min-h-[80px]"
@@ -853,7 +854,7 @@ export default function DonorDetailPage() {
                   </div>
                   <Button onClick={handleSaveNote} disabled={!newNote.trim()} size="sm">
                     <Plus className="mr-1 h-3 w-3" />
-                    Add Note
+                    Adauga notita
                   </Button>
                   {donor.notes ? (
                     <div className="mt-4 p-4 bg-muted/50 rounded-lg">
@@ -861,7 +862,7 @@ export default function DonorDetailPage() {
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground text-center py-4">
-                      No notes yet.
+                      Nicio notita inca.
                     </p>
                   )}
                 </CardContent>

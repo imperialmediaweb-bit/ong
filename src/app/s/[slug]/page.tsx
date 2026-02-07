@@ -64,10 +64,10 @@ export default async function MiniSitePage({ params }: Props) {
         )}
 
         <footer className="text-center text-xs text-muted-foreground mt-10 pb-8">
-          <p>Powered by NGO HUB. Your data is protected under GDPR.</p>
+          <p>Construit cu NGO HUB. Datele tale sunt protejate conform GDPR.</p>
           {ngo.websiteUrl && (
             <a href={ngo.websiteUrl} className="text-primary hover:underline" target="_blank" rel="noopener">
-              {ngo.name} website
+              Site-ul {ngo.name}
             </a>
           )}
         </footer>
