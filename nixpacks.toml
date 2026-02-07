@@ -8,4 +8,4 @@ cmds = ["npm ci"]
 cmds = ["npx prisma generate", "npm run build"]
 
 [start]
-cmd = "npx prisma db push --skip-generate && npm start"
+cmd = "npx prisma db push --skip-generate && npx tsx prisma/seed.ts && npm start"
