@@ -23,6 +23,7 @@ model User {
   isActive       Boolean   @default(true)
   auditLogs      AuditLog[]
   sessions       Session[]
+  blogPosts      BlogPost[]
 
   @@index([ngoId])
   @@index([email])
@@ -68,6 +69,18 @@ model Ngo {
   consentTexts      ConsentText[]
   auditLogs         AuditLog[]
   donations         Donation[]
+  verification      NgoVerification?
+
+  // Stripe subscription
+  stripeCustomerId    String?   @unique
+  stripeSubscriptionId String?
+  stripePriceId       String?
+  subscriptionStatus  String?   @default("active") // active, past_due, canceled, trialing
+  currentPeriodEnd    DateTime?
+  trialEndsAt         DateTime?
+
+  // Notifications
+  notifications     Notification[]
 
   // Provider settings (encrypted)
   sendgridApiKey    String?
@@ -515,4 +528,159 @@ model SmsOptOut {
 
   @@unique([phoneNumber, ngoId])
   @@index([phoneNumber])
+}
+
+// ─── NGO Verification ────────────────────────────────────────────
+
+model NgoVerification {
+  id                String             @id @default(cuid())
+  ngoId             String             @unique
+  ngo               Ngo                @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  status            VerificationStatus @default(PENDING)
+
+  // Organization details
+  registrationNumber String?           // CUI / CIF
+  registrationDate   DateTime?
+  legalForm          String?           // Asociatie, Fundatie, Federatie
+  fiscalCode         String?
+  address            String?
+  county             String?
+  city               String?
+  representativeName String?
+  representativeRole String?
+
+  // Documents
+  registrationCertUrl  String?         // Certificat de inregistrare
+  statuteDocUrl        String?         // Statut / Act constitutiv
+  fiscalCertUrl        String?         // Certificat fiscal
+  courtDecisionUrl     String?         // Hotarare judecatoreasca
+
+  // AI Verification
+  aiScore            Float?            // 0-100 confidence score
+  aiAnalysis         Json?             // AI analysis details
+  aiFlags            Json?             // Potential issues flagged by AI
+
+  // Review
+  reviewedBy         String?
+  reviewedAt         DateTime?
+  reviewNotes        String?
+  rejectionReason    String?
+
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@index([status])
+}
+
+enum VerificationStatus {
+  PENDING
+  IN_REVIEW
+  AI_CHECKED
+  APPROVED
+  REJECTED
+  SUSPENDED
+}
+
+// ─── Blog ────────────────────────────────────────────────────────
+
+model BlogPost {
+  id          String        @id @default(cuid())
+  slug        String        @unique
+  title       String
+  excerpt     String?
+  content     String        // HTML content
+  coverImage  String?
+  authorId    String
+  author      User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  status      PostStatus    @default(DRAFT)
+  category    String?
+  tags        String[]      @default([])
+  publishedAt DateTime?
+  featured    Boolean       @default(false)
+  viewCount   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status])
+  @@index([slug])
+  @@index([publishedAt])
+  @@index([category])
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ─── Site Pages (CMS) ────────────────────────────────────────────
+
+model SitePage {
+  id          String     @id @default(cuid())
+  slug        String     @unique
+  title       String
+  content     Json       // Structured content blocks
+  metaTitle   String?
+  metaDesc    String?
+  isPublished Boolean    @default(false)
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([slug])
+  @@index([isPublished])
+}
+
+// ─── Platform Settings ───────────────────────────────────────────
+
+model PlatformSettings {
+  id              String   @id @default("platform")
+  siteName        String   @default("NGO HUB")
+  siteDescription String?
+  logoUrl         String?
+  primaryColor    String   @default("#6366f1")
+  heroTitle       String?
+  heroSubtitle    String?
+  heroCtaText     String?
+  statsEnabled    Boolean  @default(true)
+  featuresJson    Json?    // Homepage features config
+  plansJson       Json?    // Pricing plans config
+  footerText      String?
+  contactEmail    String?
+  socialLinks     Json?    // { facebook, twitter, linkedin, etc }
+  updatedAt       DateTime @updatedAt
+}
+
+// ─── Notifications ───────────────────────────────────────────────
+
+model Notification {
+  id          String           @id @default(cuid())
+  ngoId       String
+  ngo         Ngo              @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  type        NotificationType
+  title       String
+  message     String
+  isRead      Boolean          @default(false)
+  actionUrl   String?
+  metadata    Json?
+  createdAt   DateTime         @default(now())
+
+  @@index([ngoId])
+  @@index([isRead])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  SUBSCRIPTION_EXPIRING
+  SUBSCRIPTION_EXPIRED
+  SUBSCRIPTION_RENEWED
+  SUBSCRIPTION_UPGRADED
+  SUBSCRIPTION_DOWNGRADED
+  PAYMENT_FAILED
+  VERIFICATION_APPROVED
+  VERIFICATION_REJECTED
+  SYSTEM
+  CAMPAIGN_COMPLETED
+  DONATION_RECEIVED
 }
