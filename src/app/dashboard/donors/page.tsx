@@ -1,0 +1,698 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { formatCurrency, formatDate, getInitials } from "@/lib/utils";
+import {
+  Search,
+  Plus,
+  Download,
+  Trash2,
+  Tag,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+  Filter,
+  X,
+  Loader2,
+  Users,
+  MoreHorizontal,
+} from "lucide-react";
+import { useForm } from "react-hook-form";
+
+interface Donor {
+  id: string;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  status: string;
+  totalDonated: number;
+  donationCount: number;
+  lastDonationAt: string | null;
+  createdAt: string;
+  preferredChannel: string;
+  emailConsent: boolean;
+  smsConsent: boolean;
+  tags: { tag: { id: string; name: string; color: string } }[];
+}
+
+interface DonorsResponse {
+  donors: Donor[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+interface AddDonorForm {
+  name: string;
+  email: string;
+  phone: string;
+  preferredChannel: string;
+  emailConsent: boolean;
+  smsConsent: boolean;
+  privacyConsent: boolean;
+}
+
+const STATUS_OPTIONS = [
+  { value: "all", label: "All Statuses" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "INACTIVE", label: "Inactive" },
+  { value: "UNSUBSCRIBED", label: "Unsubscribed" },
+];
+
+const CHANNEL_OPTIONS = [
+  { value: "all", label: "All Channels" },
+  { value: "EMAIL", label: "Email" },
+  { value: "SMS", label: "SMS" },
+  { value: "BOTH", label: "Both" },
+];
+
+const statusBadgeVariant = (status: string) => {
+  switch (status) {
+    case "ACTIVE":
+      return "success" as const;
+    case "INACTIVE":
+      return "warning" as const;
+    case "UNSUBSCRIBED":
+      return "destructive" as const;
+    default:
+      return "secondary" as const;
+  }
+};
+
+export default function DonorsPage() {
+  const router = useRouter();
+
+  const [donors, setDonors] = useState<Donor[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [channelFilter, setChannelFilter] = useState("all");
+  const [sortField, setSortField] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
+  const [selectedDonors, setSelectedDonors] = useState<Set<string>>(new Set());
+  const [addDialogOpen, setAddDialogOpen] = useState(
+    false
+  );
+  const [addLoading, setAddLoading] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<AddDonorForm>({
+    defaultValues: {
+      preferredChannel: "EMAIL",
+      emailConsent: false,
+      smsConsent: false,
+      privacyConsent: false,
+    },
+  });
+
+  const fetchDonors = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      if (channelFilter !== "all") params.set("channel", channelFilter);
+      params.set("sort", sortField);
+      params.set("order", sortOrder);
+      params.set("page", page.toString());
+      params.set("pageSize", pageSize.toString());
+
+      const res = await fetch(`/api/donors?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch donors");
+      const data: DonorsResponse = await res.json();
+      setDonors(data.donors);
+      setTotal(data.total);
+      setTotalPages(data.totalPages);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [search, statusFilter, channelFilter, sortField, sortOrder, page]);
+
+  useEffect(() => {
+    const timeout = setTimeout(fetchDonors, 300);
+    return () => clearTimeout(timeout);
+  }, [fetchDonors]);
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("desc");
+    }
+    setPage(1);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedDonors.size === donors.length) {
+      setSelectedDonors(new Set());
+    } else {
+      setSelectedDonors(new Set(donors.map((d) => d.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedDonors);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedDonors(next);
+  };
+
+  const handleAddDonor = async (data: AddDonorForm) => {
+    setAddLoading(true);
+    try {
+      const res = await fetch("/api/donors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to add donor");
+      }
+      setAddDialogOpen(false);
+      reset();
+      fetchDonors();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setAddLoading(false);
+    }
+  };
+
+  const handleBulkExport = async () => {
+    const ids = Array.from(selectedDonors);
+    try {
+      const res = await fetch("/api/donors/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ donorIds: ids }),
+      });
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "donors-export.csv";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (!confirm(`Are you sure you want to delete ${selectedDonors.size} donor(s)? This action cannot be undone.`)) return;
+    const ids = Array.from(selectedDonors);
+    try {
+      const res = await fetch("/api/donors/bulk", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ donorIds: ids }),
+      });
+      if (!res.ok) throw new Error("Bulk delete failed");
+      setSelectedDonors(new Set());
+      fetchDonors();
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Donors</h1>
+          <p className="text-muted-foreground">
+            Manage your donor database. {total > 0 && `${total} donor${total !== 1 ? "s" : ""} total.`}
+          </p>
+        </div>
+        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Donor
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <form onSubmit={handleSubmit(handleAddDonor)}>
+              <DialogHeader>
+                <DialogTitle>Add New Donor</DialogTitle>
+                <DialogDescription>
+                  Register a new donor in your CRM. They will receive a consent confirmation.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    placeholder="John Doe"
+                    {...register("name", { required: "Name is required" })}
+                  />
+                  {errors.name && (
+                    <p className="text-xs text-destructive">{errors.name.message}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="john@example.com"
+                    {...register("email", { required: "Email is required" })}
+                  />
+                  {errors.email && (
+                    <p className="text-xs text-destructive">{errors.email.message}</p>
+                  )}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    placeholder="+40 712 345 678"
+                    {...register("phone")}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="channel">Preferred Channel</Label>
+                  <select
+                    id="channel"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    {...register("preferredChannel")}
+                  >
+                    <option value="EMAIL">Email</option>
+                    <option value="SMS">SMS</option>
+                    <option value="BOTH">Both</option>
+                  </select>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="emailConsent" {...register("emailConsent")} className="rounded" />
+                    <Label htmlFor="emailConsent" className="text-sm">Email marketing consent</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" id="smsConsent" {...register("smsConsent")} className="rounded" />
+                    <Label htmlFor="smsConsent" className="text-sm">SMS marketing consent</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="privacyConsent"
+                      {...register("privacyConsent", { required: "Privacy consent is required" })}
+                      className="rounded"
+                    />
+                    <Label htmlFor="privacyConsent" className="text-sm">Privacy policy consent *</Label>
+                  </div>
+                  {errors.privacyConsent && (
+                    <p className="text-xs text-destructive">{errors.privacyConsent.message}</p>
+                  )}
+                </div>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={addLoading}>
+                  {addLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Add Donor
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Search & Filters */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, email, or phone..."
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant={filtersOpen ? "secondary" : "outline"}
+                onClick={() => setFiltersOpen(!filtersOpen)}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Filters
+                {(statusFilter !== "all" || channelFilter !== "all") && (
+                  <Badge variant="default" className="ml-2 h-5 w-5 rounded-full p-0 text-[10px] flex items-center justify-center">
+                    {(statusFilter !== "all" ? 1 : 0) + (channelFilter !== "all" ? 1 : 0)}
+                  </Badge>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {filtersOpen && (
+            <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t">
+              <div className="w-48">
+                <Label className="text-xs mb-1 block">Status</Label>
+                <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="w-48">
+                <Label className="text-xs mb-1 block">Channel</Label>
+                <Select value={channelFilter} onValueChange={(v) => { setChannelFilter(v); setPage(1); }}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CHANNEL_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setStatusFilter("all");
+                    setChannelFilter("all");
+                    setSearch("");
+                    setPage(1);
+                  }}
+                >
+                  <X className="mr-1 h-3 w-3" />
+                  Clear All
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Bulk Actions */}
+      {selectedDonors.size > 0 && (
+        <Card>
+          <CardContent className="py-3">
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium">
+                {selectedDonors.size} donor{selectedDonors.size !== 1 ? "s" : ""} selected
+              </span>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={handleBulkExport}>
+                  <Download className="mr-1 h-3 w-3" />
+                  Export
+                </Button>
+                <Button variant="outline" size="sm">
+                  <Tag className="mr-1 h-3 w-3" />
+                  Tag
+                </Button>
+                <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
+                  <Trash2 className="mr-1 h-3 w-3" />
+                  Delete
+                </Button>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedDonors(new Set())}
+                className="ml-auto"
+              >
+                Clear Selection
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <Card className="border-destructive">
+          <CardContent className="py-4">
+            <p className="text-sm text-destructive">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Table */}
+      <Card>
+        <CardContent className="p-0">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : donors.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center">
+              <Users className="h-12 w-12 text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold">No donors found</h3>
+              <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+                {search || statusFilter !== "all"
+                  ? "Try adjusting your search or filters."
+                  : "Add your first donor to get started."}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="p-3 w-10">
+                      <Checkbox
+                        checked={selectedDonors.size === donors.length && donors.length > 0}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </th>
+                    <th className="p-3 text-left">
+                      <button
+                        className="flex items-center gap-1 font-medium hover:text-foreground"
+                        onClick={() => handleSort("name")}
+                      >
+                        Name
+                        <ArrowUpDown className="h-3 w-3" />
+                      </button>
+                    </th>
+                    <th className="p-3 text-left hidden md:table-cell">Email</th>
+                    <th className="p-3 text-left hidden lg:table-cell">Phone</th>
+                    <th className="p-3 text-left">
+                      <button
+                        className="flex items-center gap-1 font-medium hover:text-foreground"
+                        onClick={() => handleSort("status")}
+                      >
+                        Status
+                        <ArrowUpDown className="h-3 w-3" />
+                      </button>
+                    </th>
+                    <th className="p-3 text-right">
+                      <button
+                        className="flex items-center gap-1 font-medium hover:text-foreground ml-auto"
+                        onClick={() => handleSort("totalDonated")}
+                      >
+                        Total Donated
+                        <ArrowUpDown className="h-3 w-3" />
+                      </button>
+                    </th>
+                    <th className="p-3 text-left hidden xl:table-cell">
+                      <button
+                        className="flex items-center gap-1 font-medium hover:text-foreground"
+                        onClick={() => handleSort("lastDonationAt")}
+                      >
+                        Last Donation
+                        <ArrowUpDown className="h-3 w-3" />
+                      </button>
+                    </th>
+                    <th className="p-3 text-left hidden lg:table-cell">Tags</th>
+                    <th className="p-3 w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {donors.map((donor) => (
+                    <tr
+                      key={donor.id}
+                      className="border-b hover:bg-muted/30 transition-colors cursor-pointer"
+                      onClick={() => router.push(`/dashboard/donors/${donor.id}`)}
+                    >
+                      <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedDonors.has(donor.id)}
+                          onCheckedChange={() => toggleSelect(donor.id)}
+                        />
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-medium shrink-0">
+                            {donor.name ? getInitials(donor.name) : "?"}
+                          </div>
+                          <span className="font-medium truncate max-w-[150px]">
+                            {donor.name || "Unknown"}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-3 hidden md:table-cell text-muted-foreground">
+                        {donor.email || "-"}
+                      </td>
+                      <td className="p-3 hidden lg:table-cell text-muted-foreground">
+                        {donor.phone || "-"}
+                      </td>
+                      <td className="p-3">
+                        <Badge variant={statusBadgeVariant(donor.status)}>
+                          {donor.status}
+                        </Badge>
+                      </td>
+                      <td className="p-3 text-right font-medium">
+                        {formatCurrency(donor.totalDonated)}
+                      </td>
+                      <td className="p-3 hidden xl:table-cell text-muted-foreground">
+                        {donor.lastDonationAt ? formatDate(donor.lastDonationAt) : "Never"}
+                      </td>
+                      <td className="p-3 hidden lg:table-cell">
+                        <div className="flex flex-wrap gap-1">
+                          {donor.tags?.slice(0, 3).map((ta) => (
+                            <Badge
+                              key={ta.tag.id}
+                              variant="outline"
+                              className="text-[10px]"
+                              style={{ borderColor: ta.tag.color, color: ta.tag.color }}
+                            >
+                              {ta.tag.name}
+                            </Badge>
+                          ))}
+                          {donor.tags?.length > 3 && (
+                            <Badge variant="outline" className="text-[10px]">
+                              +{donor.tags.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3" onClick={(e) => e.stopPropagation()}>
+                        <Link href={`/dashboard/donors/${donor.id}`}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing {(page - 1) * pageSize + 1} to{" "}
+                {Math.min(page * pageSize, total)} of {total}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage(page - 1)}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Previous
+                </Button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNum: number;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (page <= 3) {
+                      pageNum = i + 1;
+                    } else if (page >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = page - 2 + i;
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={page === pageNum ? "default" : "outline"}
+                        size="sm"
+                        className="w-9"
+                        onClick={() => setPage(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

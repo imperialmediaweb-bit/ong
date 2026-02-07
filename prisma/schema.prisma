@@ -1,0 +1,518 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Authentication & Users ───────────────────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  passwordHash   String
+  name           String?
+  role           UserRole  @default(STAFF)
+  ngoId          String?
+  ngo            Ngo?      @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  lastLoginAt    DateTime?
+  isActive       Boolean   @default(true)
+  auditLogs      AuditLog[]
+  sessions       Session[]
+
+  @@index([ngoId])
+  @@index([email])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires      DateTime
+
+  @@index([userId])
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  NGO_ADMIN
+  STAFF
+  VIEWER
+}
+
+// ─── NGO ──────────────────────────────────────────────────────────
+
+model Ngo {
+  id                String          @id @default(cuid())
+  name              String
+  slug              String          @unique
+  description       String?
+  logoUrl           String?
+  websiteUrl        String?
+  subscriptionPlan  SubscriptionPlan @default(BASIC)
+  isActive          Boolean         @default(true)
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  users             User[]
+  donors            Donor[]
+  campaigns         Campaign[]
+  automations       Automation[]
+  donorTags         DonorTag[]
+  miniSiteConfig    MiniSiteConfig?
+  consentTexts      ConsentText[]
+  auditLogs         AuditLog[]
+  donations         Donation[]
+
+  // Provider settings (encrypted)
+  sendgridApiKey    String?
+  twilioAccountSid  String?
+  twilioAuthToken   String?
+  twilioPhoneNumber String?
+  senderEmail       String?
+  senderName        String?
+  smsSenderId       String?
+
+  @@index([slug])
+}
+
+enum SubscriptionPlan {
+  BASIC
+  PRO
+  ELITE
+}
+
+// ─── Donor CRM ────────────────────────────────────────────────────
+
+model Donor {
+  id                String          @id @default(cuid())
+  ngoId             String
+  ngo               Ngo             @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+
+  // Contact (encrypted at app level)
+  email             String?
+  emailEncrypted    String?
+  phone             String?
+  phoneEncrypted    String?
+  name              String?
+
+  // Preferences
+  preferredChannel  ContactChannel  @default(EMAIL)
+
+  // Consent
+  emailConsent      Boolean         @default(false)
+  smsConsent        Boolean         @default(false)
+  privacyConsent    Boolean         @default(false)
+
+  // Status
+  status            DonorStatus     @default(ACTIVE)
+  isAnonymized      Boolean         @default(false)
+  notes             String?
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  lastDonationAt    DateTime?
+  totalDonated      Float           @default(0)
+  donationCount     Int             @default(0)
+
+  // Relations
+  donations         Donation[]
+  consents          ConsentRecord[]
+  tags              DonorTagAssignment[]
+  messageRecipients MessageRecipient[]
+
+  @@unique([ngoId, email])
+  @@index([ngoId])
+  @@index([email])
+  @@index([phone])
+  @@index([status])
+  @@index([createdAt])
+  @@index([lastDonationAt])
+  @@index([totalDonated])
+}
+
+enum ContactChannel {
+  EMAIL
+  SMS
+  BOTH
+}
+
+enum DonorStatus {
+  ACTIVE
+  INACTIVE
+  UNSUBSCRIBED
+  DELETED
+}
+
+// ─── Tags ─────────────────────────────────────────────────────────
+
+model DonorTag {
+  id          String               @id @default(cuid())
+  ngoId       String
+  ngo         Ngo                  @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  name        String
+  color       String               @default("#6366f1")
+  createdAt   DateTime             @default(now())
+  assignments DonorTagAssignment[]
+
+  @@unique([ngoId, name])
+  @@index([ngoId])
+}
+
+model DonorTagAssignment {
+  id        String   @id @default(cuid())
+  donorId   String
+  donor     Donor    @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  tagId     String
+  tag       DonorTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([donorId, tagId])
+  @@index([donorId])
+  @@index([tagId])
+}
+
+// ─── Donations ────────────────────────────────────────────────────
+
+model Donation {
+  id          String        @id @default(cuid())
+  ngoId       String
+  ngo         Ngo           @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  donorId     String?
+  donor       Donor?        @relation(fields: [donorId], references: [id], onDelete: SetNull)
+  amount      Float
+  currency    String        @default("RON")
+  campaignId  String?
+  campaign    Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  isRecurring Boolean       @default(false)
+  status      DonationStatus @default(COMPLETED)
+  source      String?
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+
+  @@index([ngoId])
+  @@index([donorId])
+  @@index([campaignId])
+  @@index([createdAt])
+}
+
+enum DonationStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// ─── Consent ──────────────────────────────────────────────────────
+
+model ConsentRecord {
+  id          String        @id @default(cuid())
+  donorId     String
+  donor       Donor         @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  type        ConsentType
+  granted     Boolean
+  ipAddress   String?
+  userAgent   String?
+  source      String?       // "donation_form", "newsletter", "minisite"
+  campaignId  String?
+  consentText String?       // snapshot of the consent text at time of consent
+  createdAt   DateTime      @default(now())
+
+  @@index([donorId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum ConsentType {
+  EMAIL_MARKETING
+  SMS_MARKETING
+  PRIVACY_POLICY
+  TERMS_OF_SERVICE
+}
+
+model ConsentText {
+  id        String   @id @default(cuid())
+  ngoId     String
+  ngo       Ngo      @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  type      ConsentType
+  text      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ngoId, type])
+}
+
+// ─── Campaigns ────────────────────────────────────────────────────
+
+model Campaign {
+  id              String          @id @default(cuid())
+  ngoId           String
+  ngo             Ngo             @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  name            String
+  type            CampaignType
+  channel         CampaignChannel
+  status          CampaignStatus  @default(DRAFT)
+
+  // Email fields
+  subject         String?
+  emailBody       String?         // HTML
+  previewText     String?
+
+  // SMS fields
+  smsBody         String?
+
+  // Targeting
+  segmentQuery    Json?           // Stored segment filter
+  recipientCount  Int             @default(0)
+
+  // Scheduling
+  scheduledAt     DateTime?
+  sentAt          DateTime?
+  completedAt     DateTime?
+
+  // Fundraising goal
+  goalAmount      Float?
+  currentAmount   Float           @default(0)
+
+  // A/B testing
+  isAbTest        Boolean         @default(false)
+  variantA        Json?
+  variantB        Json?
+
+  // Stats
+  totalSent       Int             @default(0)
+  totalDelivered  Int             @default(0)
+  totalOpened     Int             @default(0)
+  totalClicked    Int             @default(0)
+  totalBounced    Int             @default(0)
+  totalComplaints Int             @default(0)
+  totalUnsubscribed Int           @default(0)
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  messages        Message[]
+  donations       Donation[]
+  automationSteps AutomationStep[]
+
+  @@index([ngoId])
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum CampaignType {
+  THANK_YOU
+  UPDATE
+  EMERGENCY_APPEAL
+  NEWSLETTER
+  REACTIVATION
+  CORPORATE_OUTREACH
+  CUSTOM
+}
+
+enum CampaignChannel {
+  EMAIL
+  SMS
+  BOTH
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  SENDING
+  SENT
+  PAUSED
+  CANCELLED
+}
+
+// ─── Messages ─────────────────────────────────────────────────────
+
+model Message {
+  id          String          @id @default(cuid())
+  campaignId  String?
+  campaign    Campaign?       @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  channel     CampaignChannel
+  subject     String?
+  body        String
+  status      MessageStatus   @default(QUEUED)
+  createdAt   DateTime        @default(now())
+  sentAt      DateTime?
+
+  recipients  MessageRecipient[]
+
+  @@index([campaignId])
+  @@index([status])
+}
+
+model MessageRecipient {
+  id          String              @id @default(cuid())
+  messageId   String
+  message     Message             @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  donorId     String
+  donor       Donor               @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  channel     CampaignChannel
+  address     String              // email or phone
+  status      DeliveryStatus      @default(PENDING)
+  deliveredAt DateTime?
+  openedAt    DateTime?
+  clickedAt   DateTime?
+  bouncedAt   DateTime?
+  errorMsg    String?
+  createdAt   DateTime            @default(now())
+
+  @@index([messageId])
+  @@index([donorId])
+  @@index([status])
+}
+
+enum MessageStatus {
+  QUEUED
+  SENDING
+  SENT
+  FAILED
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  DELIVERED
+  OPENED
+  CLICKED
+  BOUNCED
+  FAILED
+  COMPLAINED
+  UNSUBSCRIBED
+}
+
+// ─── Automations ──────────────────────────────────────────────────
+
+model Automation {
+  id          String            @id @default(cuid())
+  ngoId       String
+  ngo         Ngo               @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  trigger     AutomationTrigger
+  triggerConfig Json?
+  isActive    Boolean           @default(false)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  steps       AutomationStep[]
+  executions  AutomationExecution[]
+
+  @@index([ngoId])
+  @@index([trigger])
+  @@index([isActive])
+}
+
+enum AutomationTrigger {
+  NEW_DONATION
+  CAMPAIGN_GOAL_REACHED
+  NO_DONATION_PERIOD
+  NEW_SUBSCRIBER
+  CAMPAIGN_ENDED
+  LOW_PERFORMANCE
+  MANUAL
+}
+
+model AutomationStep {
+  id            String          @id @default(cuid())
+  automationId  String
+  automation    Automation      @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  order         Int
+  action        AutomationAction
+  config        Json            // Action-specific config
+  delayMinutes  Int             @default(0)
+  campaignId    String?
+  campaign      Campaign?       @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdAt     DateTime        @default(now())
+
+  @@index([automationId])
+  @@unique([automationId, order])
+}
+
+enum AutomationAction {
+  SEND_EMAIL
+  SEND_SMS
+  ADD_TAG
+  REMOVE_TAG
+  NOTIFY_ADMIN
+  AI_SUGGESTION
+  WAIT
+  CONDITION
+}
+
+model AutomationExecution {
+  id            String    @id @default(cuid())
+  automationId  String
+  automation    Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  donorId       String?
+  status        String    @default("running") // running, completed, failed
+  currentStep   Int       @default(0)
+  data          Json?
+  startedAt     DateTime  @default(now())
+  completedAt   DateTime?
+  error         String?
+
+  @@index([automationId])
+  @@index([status])
+}
+
+// ─── Mini-Site ────────────────────────────────────────────────────
+
+model MiniSiteConfig {
+  id              String   @id @default(cuid())
+  ngoId           String   @unique
+  ngo             Ngo      @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  heroTitle       String?
+  heroDescription String?
+  primaryColor    String   @default("#6366f1")
+  showNewsletter  Boolean  @default(true)
+  showDonation    Boolean  @default(true)
+  showUpdates     Boolean  @default(true)
+  customCss       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ─── Audit Log ────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  ngoId       String?
+  ngo         Ngo?     @relation(fields: [ngoId], references: [id], onDelete: SetNull)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action      String
+  entityType  String?
+  entityId    String?
+  details     Json?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([ngoId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@index([entityType, entityId])
+}
+
+// ─── SMS Opt-Out List ─────────────────────────────────────────────
+
+model SmsOptOut {
+  id          String   @id @default(cuid())
+  phoneNumber String
+  ngoId       String?
+  createdAt   DateTime @default(now())
+
+  @@unique([phoneNumber, ngoId])
+  @@index([phoneNumber])
+}
