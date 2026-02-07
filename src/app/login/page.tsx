@@ -32,7 +32,18 @@ export default function LoginPage() {
       setError("Email sau parola incorecta");
       setLoading(false);
     } else {
-      router.push("/dashboard");
+      // Fetch session to determine role-based redirect
+      try {
+        const sessionRes = await fetch("/api/auth/session");
+        const session = await sessionRes.json();
+        if (session?.user?.role === "SUPER_ADMIN") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
+      } catch {
+        router.push("/dashboard");
+      }
     }
   };
 
