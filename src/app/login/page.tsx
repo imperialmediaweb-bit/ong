@@ -29,7 +29,7 @@ export default function LoginPage() {
     });
 
     if (result?.error) {
-      setError("Invalid email or password");
+      setError("Email sau parola incorecta");
       setLoading(false);
     } else {
       router.push("/dashboard");
@@ -43,8 +43,8 @@ export default function LoginPage() {
           <div className="flex justify-center mb-2">
             <Heart className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle>Sign in to NGO HUB</CardTitle>
-          <CardDescription>Enter your credentials to access your dashboard</CardDescription>
+          <CardTitle>Autentificare NGO HUB</CardTitle>
+          <CardDescription>Introdu datele de acces pentru a accesa panoul de control</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -63,7 +63,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Parola</Label>
               <Input
                 id="password"
                 type="password"
@@ -73,12 +73,12 @@ export default function LoginPage() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? "Se autentifica..." : "Autentificare"}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              No account?{" "}
+              Nu ai cont?{" "}
               <Link href="/register" className="text-primary hover:underline">
-                Register your NGO
+                Inregistreaza ONG-ul
               </Link>
             </p>
           </form>

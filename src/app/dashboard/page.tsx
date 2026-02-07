@@ -71,12 +71,12 @@ export default async function DashboardPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card className="max-w-md w-full">
           <CardHeader className="text-center">
-            <CardTitle>Welcome to NGO HUB</CardTitle>
-            <CardDescription>Please sign in to access your dashboard.</CardDescription>
+            <CardTitle>Bine ati venit la NGO HUB</CardTitle>
+            <CardDescription>Va rugam sa va autentificati pentru a accesa panoul principal.</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
             <Link href="/login">
-              <Button>Sign In</Button>
+              <Button>Autentificare</Button>
             </Link>
           </CardContent>
         </Card>
@@ -88,36 +88,36 @@ export default async function DashboardPage() {
 
   const statCards = [
     {
-      title: "Total Donors",
+      title: "Total Donatori",
       value: stats.totalDonors.toLocaleString(),
-      description: "Active donors in CRM",
+      description: "Donatori activi in CRM",
       icon: Users,
       color: "text-blue-600",
       bgColor: "bg-blue-50",
       href: "/dashboard/donors",
     },
     {
-      title: "Active Campaigns",
+      title: "Campanii Active",
       value: stats.activeCampaigns.toString(),
-      description: "Running or scheduled",
+      description: "In desfasurare sau programate",
       icon: Mail,
       color: "text-purple-600",
       bgColor: "bg-purple-50",
       href: "/dashboard/campaigns",
     },
     {
-      title: "Total Donations",
+      title: "Total Donatii",
       value: stats.totalDonations.toLocaleString(),
-      description: "All-time donations received",
+      description: "Toate donatiile primite",
       icon: Heart,
       color: "text-red-600",
       bgColor: "bg-red-50",
       href: "/dashboard/donations",
     },
     {
-      title: "Revenue",
+      title: "Venituri",
       value: formatCurrency(stats.totalRevenue),
-      description: `${formatCurrency(stats.monthlyRevenue)} this month`,
+      description: `${formatCurrency(stats.monthlyRevenue)} luna aceasta`,
       icon: TrendingUp,
       color: "text-green-600",
       bgColor: "bg-green-50",
@@ -129,14 +129,14 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Welcome back. Here is an overview of your NGO.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Panou principal</h1>
+          <p className="text-muted-foreground">Bine ati revenit. Iata o prezentare generala a ONG-ului dumneavoastra.</p>
         </div>
         <div className="flex gap-2">
           <Link href="/dashboard/campaigns/new">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              New Campaign
+              Campanie noua
             </Button>
           </Link>
         </div>
@@ -169,12 +169,12 @@ export default async function DashboardPage() {
         <Card className="lg:col-span-4">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-lg">Recent Donations</CardTitle>
-              <CardDescription>Latest donations received</CardDescription>
+              <CardTitle className="text-lg">Donatii recente</CardTitle>
+              <CardDescription>Ultimele donatii primite</CardDescription>
             </div>
             <Link href="/dashboard/donations">
               <Button variant="ghost" size="sm">
-                View All
+                Vezi toate
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
@@ -182,7 +182,7 @@ export default async function DashboardPage() {
           <CardContent>
             {recentDonations.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
-                No donations yet. Start a campaign to receive donations.
+                Nicio donatie inca. Porniti o campanie pentru a primi donatii.
               </p>
             ) : (
               <div className="space-y-3">
@@ -199,10 +199,10 @@ export default async function DashboardPage() {
                       </div>
                       <div>
                         <p className="text-sm font-medium">
-                          {donation.donor?.name || "Anonymous"}
+                          {donation.donor?.name || "Anonim"}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {donation.campaign?.name || "Direct donation"} &middot;{" "}
+                          {donation.campaign?.name || "Donatie directa"} &middot;{" "}
                           {formatDate(donation.createdAt)}
                         </p>
                       </div>
@@ -235,12 +235,12 @@ export default async function DashboardPage() {
         <Card className="lg:col-span-3">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-lg">Campaign Performance</CardTitle>
-              <CardDescription>Top performing campaigns</CardDescription>
+              <CardTitle className="text-lg">Performanta campaniilor</CardTitle>
+              <CardDescription>Campaniile cu cele mai bune rezultate</CardDescription>
             </div>
             <Link href="/dashboard/campaigns">
               <Button variant="ghost" size="sm">
-                View All
+                Vezi toate
                 <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </Link>
@@ -248,7 +248,7 @@ export default async function DashboardPage() {
           <CardContent>
             {topCampaigns.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-8">
-                No campaigns have been sent yet.
+                Nicio campanie nu a fost trimisa inca.
               </p>
             ) : (
               <div className="space-y-4">
@@ -276,9 +276,9 @@ export default async function DashboardPage() {
                         </Badge>
                       </div>
                       <div className="flex gap-4 text-xs text-muted-foreground">
-                        <span>Sent: {campaign.totalSent}</span>
-                        <span>Opened: {percentage(campaign.totalOpened, campaign.totalSent)}</span>
-                        <span>Clicked: {percentage(campaign.totalClicked, campaign.totalSent)}</span>
+                        <span>Trimise: {campaign.totalSent}</span>
+                        <span>Deschise: {percentage(campaign.totalOpened, campaign.totalSent)}</span>
+                        <span>Click: {percentage(campaign.totalClicked, campaign.totalSent)}</span>
                       </div>
                       <div className="w-full bg-secondary rounded-full h-1.5">
                         <div
@@ -300,8 +300,8 @@ export default async function DashboardPage() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Quick Actions</CardTitle>
-          <CardDescription>Common tasks to get things done fast</CardDescription>
+          <CardTitle className="text-lg">Actiuni rapide</CardTitle>
+          <CardDescription>Sarcini uzuale pentru a actiona rapid</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -309,8 +309,8 @@ export default async function DashboardPage() {
               <Button variant="outline" className="w-full justify-start h-auto py-3">
                 <Users className="mr-2 h-4 w-4 text-blue-600" />
                 <div className="text-left">
-                  <p className="font-medium">Add Donor</p>
-                  <p className="text-xs text-muted-foreground">Register a new donor</p>
+                  <p className="font-medium">Adauga donator</p>
+                  <p className="text-xs text-muted-foreground">Inregistreaza un donator nou</p>
                 </div>
               </Button>
             </Link>
@@ -318,8 +318,8 @@ export default async function DashboardPage() {
               <Button variant="outline" className="w-full justify-start h-auto py-3">
                 <Send className="mr-2 h-4 w-4 text-purple-600" />
                 <div className="text-left">
-                  <p className="font-medium">Create Campaign</p>
-                  <p className="text-xs text-muted-foreground">Email or SMS campaign</p>
+                  <p className="font-medium">Creeaza campanie</p>
+                  <p className="text-xs text-muted-foreground">Campanie email sau SMS</p>
                 </div>
               </Button>
             </Link>
@@ -327,8 +327,8 @@ export default async function DashboardPage() {
               <Button variant="outline" className="w-full justify-start h-auto py-3">
                 <Zap className="mr-2 h-4 w-4 text-yellow-600" />
                 <div className="text-left">
-                  <p className="font-medium">New Automation</p>
-                  <p className="text-xs text-muted-foreground">Automate workflows</p>
+                  <p className="font-medium">Automatizare noua</p>
+                  <p className="text-xs text-muted-foreground">Automatizeaza fluxurile de lucru</p>
                 </div>
               </Button>
             </Link>
@@ -336,8 +336,8 @@ export default async function DashboardPage() {
               <Button variant="outline" className="w-full justify-start h-auto py-3">
                 <TrendingUp className="mr-2 h-4 w-4 text-green-600" />
                 <div className="text-left">
-                  <p className="font-medium">View Analytics</p>
-                  <p className="text-xs text-muted-foreground">Performance insights</p>
+                  <p className="font-medium">Vezi analitica</p>
+                  <p className="text-xs text-muted-foreground">Perspective performanta</p>
                 </div>
               </Button>
             </Link>

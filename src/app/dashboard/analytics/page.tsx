@@ -81,11 +81,11 @@ interface DonorGrowth {
 const PIE_COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#3b82f6", "#8b5cf6", "#ec4899"];
 
 const PERIOD_OPTIONS = [
-  { value: "7d", label: "Last 7 Days" },
-  { value: "30d", label: "Last 30 Days" },
-  { value: "90d", label: "Last 90 Days" },
-  { value: "1y", label: "Last Year" },
-  { value: "all", label: "All Time" },
+  { value: "7d", label: "Ultimele 7 zile" },
+  { value: "30d", label: "Ultimele 30 zile" },
+  { value: "90d", label: "Ultimele 90 zile" },
+  { value: "1y", label: "Ultimul an" },
+  { value: "all", label: "Tot timpul" },
 ];
 
 export default function AnalyticsPage() {
@@ -137,9 +137,9 @@ export default function AnalyticsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Analitica</h1>
           <p className="text-muted-foreground">
-            Track campaign performance, donor engagement, and fundraising metrics.
+            Performanta campaniilor, perspective si tendinte.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export default function AnalyticsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Total Sent</p>
+                  <p className="text-sm text-muted-foreground">Total trimise</p>
                   <p className="text-2xl font-bold">{summary.totalSent.toLocaleString()}</p>
                 </div>
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
@@ -182,7 +182,7 @@ export default function AnalyticsPage() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                {summary.totalDelivered.toLocaleString()} delivered
+                {summary.totalDelivered.toLocaleString()} livrate
               </p>
             </CardContent>
           </Card>
@@ -190,7 +190,7 @@ export default function AnalyticsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Avg Open Rate</p>
+                  <p className="text-sm text-muted-foreground">Rata medie deschidere</p>
                   <p className="text-2xl font-bold">{summary.avgOpenRate.toFixed(1)}%</p>
                 </div>
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 text-blue-600">
@@ -198,7 +198,7 @@ export default function AnalyticsPage() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                {summary.totalOpened.toLocaleString()} total opens
+                {summary.totalOpened.toLocaleString()} total deschise
               </p>
             </CardContent>
           </Card>
@@ -206,7 +206,7 @@ export default function AnalyticsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Avg Click Rate</p>
+                  <p className="text-sm text-muted-foreground">Rata medie click</p>
                   <p className="text-2xl font-bold">{summary.avgClickRate.toFixed(1)}%</p>
                 </div>
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
@@ -214,7 +214,7 @@ export default function AnalyticsPage() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                {summary.totalClicked.toLocaleString()} total clicks
+                {summary.totalClicked.toLocaleString()} total clickuri
               </p>
             </CardContent>
           </Card>
@@ -222,7 +222,7 @@ export default function AnalyticsPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Donor Growth</p>
+                  <p className="text-sm text-muted-foreground">Crestere donatori</p>
                   <p className="text-2xl font-bold">{summary.donorCount.toLocaleString()}</p>
                 </div>
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-green-600">
@@ -232,7 +232,7 @@ export default function AnalyticsPage() {
               <div className="flex items-center gap-1 mt-2">
                 <ArrowUpRight className="h-3 w-3 text-green-600" />
                 <p className="text-xs text-green-600">
-                  +{summary.newDonorsThisPeriod} new this period
+                  +{summary.newDonorsThisPeriod} noi in aceasta perioada
                 </p>
               </div>
             </CardContent>
@@ -243,13 +243,13 @@ export default function AnalyticsPage() {
       {/* Sends Over Time - Line Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Sends Over Time</CardTitle>
-          <CardDescription>Message delivery trends over the selected period.</CardDescription>
+          <CardTitle>Performanta campaniilor in timp</CardTitle>
+          <CardDescription>Tendintele de livrare in perioada selectata.</CardDescription>
         </CardHeader>
         <CardContent>
           {sendsOverTime.length === 0 ? (
             <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-              No data available for this period.
+              Nu sunt date disponibile pentru aceasta perioada.
             </div>
           ) : (
             <div className="h-[350px]">
@@ -274,9 +274,9 @@ export default function AnalyticsPage() {
                     labelFormatter={(label) => formatDate(label)}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="sent" stroke="#6366f1" strokeWidth={2} dot={false} name="Sent" />
-                  <Line type="monotone" dataKey="delivered" stroke="#22c55e" strokeWidth={2} dot={false} name="Delivered" />
-                  <Line type="monotone" dataKey="opened" stroke="#3b82f6" strokeWidth={2} dot={false} name="Opened" />
+                  <Line type="monotone" dataKey="sent" stroke="#6366f1" strokeWidth={2} dot={false} name="Trimise" />
+                  <Line type="monotone" dataKey="delivered" stroke="#22c55e" strokeWidth={2} dot={false} name="Livrate" />
+                  <Line type="monotone" dataKey="opened" stroke="#3b82f6" strokeWidth={2} dot={false} name="Deschise" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -288,13 +288,13 @@ export default function AnalyticsPage() {
         {/* Open/Click Rates by Campaign - Bar Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Open & Click Rates by Campaign</CardTitle>
-            <CardDescription>Compare engagement across campaigns.</CardDescription>
+            <CardTitle>Rata deschidere si click pe campanie</CardTitle>
+            <CardDescription>Compara engagement-ul campaniilor.</CardDescription>
           </CardHeader>
           <CardContent>
             {campaignPerformance.length === 0 ? (
               <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                No campaign data available.
+                Nicio data campanie inca.
               </div>
             ) : (
               <div className="h-[300px]">
@@ -315,8 +315,8 @@ export default function AnalyticsPage() {
                       }}
                     />
                     <Legend />
-                    <Bar dataKey="openRate" name="Open Rate %" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="clickRate" name="Click Rate %" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="openRate" name="Rata deschidere %" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="clickRate" name="Rata click %" fill="#f59e0b" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -327,13 +327,13 @@ export default function AnalyticsPage() {
         {/* Donations by Campaign - Pie Chart */}
         <Card>
           <CardHeader>
-            <CardTitle>Donations by Campaign</CardTitle>
-            <CardDescription>Revenue distribution across campaigns.</CardDescription>
+            <CardTitle>Donatii pe campanie</CardTitle>
+            <CardDescription>Distributia veniturilor pe campanii.</CardDescription>
           </CardHeader>
           <CardContent>
             {donationsByCampaign.length === 0 ? (
               <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                No donation data available.
+                Nu sunt date de donatii disponibile.
               </div>
             ) : (
               <div className="h-[300px]">
@@ -375,13 +375,13 @@ export default function AnalyticsPage() {
       {/* Donor Growth - Line Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Donor Growth</CardTitle>
-          <CardDescription>Track how your donor base is growing over time.</CardDescription>
+          <CardTitle>Crestere donatori</CardTitle>
+          <CardDescription>Urmareste cresterea bazei de donatori in timp.</CardDescription>
         </CardHeader>
         <CardContent>
           {donorGrowth.length === 0 ? (
             <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-              No growth data available.
+              Nu sunt date de crestere disponibile.
             </div>
           ) : (
             <div className="h-[300px]">
@@ -406,8 +406,8 @@ export default function AnalyticsPage() {
                     labelFormatter={(label) => formatDate(label)}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="total" stroke="#6366f1" strokeWidth={2} name="Total Donors" />
-                  <Line type="monotone" dataKey="new" stroke="#22c55e" strokeWidth={2} name="New Donors" />
+                  <Line type="monotone" dataKey="total" stroke="#6366f1" strokeWidth={2} name="Total donatori" />
+                  <Line type="monotone" dataKey="new" stroke="#22c55e" strokeWidth={2} name="Donatori noi" />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -418,26 +418,26 @@ export default function AnalyticsPage() {
       {/* Top Campaigns Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Top Campaigns by Performance</CardTitle>
-          <CardDescription>Ranked by engagement and revenue generation.</CardDescription>
+          <CardTitle>Campaniile cu cele mai bune rezultate</CardTitle>
+          <CardDescription>Clasificate dupa engagement si generare de venituri.</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {campaignPerformance.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              No campaign data to display.
+              Nicio data campanie de afisat.
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="p-3 text-left font-medium">Campaign</th>
-                    <th className="p-3 text-left font-medium">Type</th>
-                    <th className="p-3 text-right font-medium">Sent</th>
-                    <th className="p-3 text-right font-medium">Open Rate</th>
-                    <th className="p-3 text-right font-medium">Click Rate</th>
-                    <th className="p-3 text-right font-medium hidden md:table-cell">Donations</th>
-                    <th className="p-3 text-right font-medium hidden md:table-cell">Revenue</th>
+                    <th className="p-3 text-left font-medium">Campanie</th>
+                    <th className="p-3 text-left font-medium">Tip</th>
+                    <th className="p-3 text-right font-medium">Trimise</th>
+                    <th className="p-3 text-right font-medium">Rata deschidere</th>
+                    <th className="p-3 text-right font-medium">Rata click</th>
+                    <th className="p-3 text-right font-medium hidden md:table-cell">Donatii</th>
+                    <th className="p-3 text-right font-medium hidden md:table-cell">Venituri</th>
                   </tr>
                 </thead>
                 <tbody>

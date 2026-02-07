@@ -62,23 +62,23 @@ interface AuditEvent {
 }
 
 const CONSENT_TYPES = [
-  { value: "EMAIL_MARKETING", label: "Email Marketing" },
-  { value: "SMS_MARKETING", label: "SMS Marketing" },
-  { value: "DATA_PROCESSING", label: "Data Processing" },
-  { value: "PRIVACY_POLICY", label: "Privacy Policy" },
-  { value: "TERMS_OF_SERVICE", label: "Terms of Service" },
-  { value: "COOKIE_POLICY", label: "Cookie Policy" },
+  { value: "EMAIL_MARKETING", label: "Marketing email" },
+  { value: "SMS_MARKETING", label: "Marketing SMS" },
+  { value: "DATA_PROCESSING", label: "Procesare date" },
+  { value: "PRIVACY_POLICY", label: "Politica de confidentialitate" },
+  { value: "TERMS_OF_SERVICE", label: "Termeni si conditii" },
+  { value: "COOKIE_POLICY", label: "Politica cookie" },
 ];
 
 const AUDIT_ACTION_FILTER = [
-  { value: "all", label: "All Actions" },
-  { value: "DONOR_CREATED", label: "Donor Created" },
-  { value: "DONOR_UPDATED", label: "Donor Updated" },
-  { value: "DONOR_DELETED", label: "Donor Deleted" },
-  { value: "DATA_EXPORTED", label: "Data Exported" },
-  { value: "DATA_ANONYMIZED", label: "Data Anonymized" },
-  { value: "CONSENT_UPDATED", label: "Consent Updated" },
-  { value: "LOGIN", label: "Login" },
+  { value: "all", label: "Toate actiunile" },
+  { value: "DONOR_CREATED", label: "Donator creat" },
+  { value: "DONOR_UPDATED", label: "Donator actualizat" },
+  { value: "DONOR_DELETED", label: "Donator sters" },
+  { value: "DATA_EXPORTED", label: "Date exportate" },
+  { value: "DATA_ANONYMIZED", label: "Date anonimizate" },
+  { value: "CONSENT_UPDATED", label: "Consimtamant actualizat" },
+  { value: "LOGIN", label: "Autentificare" },
 ];
 
 const actionBadgeVariant = (action: string) => {
@@ -214,9 +214,9 @@ export default function PrivacyPage() {
       const data = await res.json();
       if (data.donors && data.donors.length > 0) {
         const d = data.donors[0];
-        setDonorPreview({ id: d.id, name: d.name || "Unknown", email: d.email || deleteEmail });
+        setDonorPreview({ id: d.id, name: d.name || "Necunoscut", email: d.email || deleteEmail });
       } else {
-        setError("No donor found with that email address.");
+        setError("Niciun donator gasit cu aceasta adresa de email.");
       }
     } catch (err: any) {
       setError(err.message);
@@ -252,10 +252,10 @@ export default function PrivacyPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <Shield className="h-8 w-8 text-primary" />
-          GDPR & Privacy
+          Confidentialitate si GDPR
         </h1>
         <p className="text-muted-foreground">
-          Manage consent texts, data exports, data deletion, and audit logs.
+          Gestioneaza consimtamantul, protectia datelor si conformitate.
         </p>
       </div>
 
@@ -264,7 +264,7 @@ export default function PrivacyPage() {
           <CardContent className="py-4">
             <p className="text-sm text-destructive">{error}</p>
             <Button variant="ghost" size="sm" className="mt-2" onClick={() => setError(null)}>
-              Dismiss
+              Inchide
             </Button>
           </CardContent>
         </Card>
@@ -274,19 +274,19 @@ export default function PrivacyPage() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="consent" className="gap-1">
             <FileText className="h-3 w-3" />
-            Consent Texts
+            Texte consimtamant
           </TabsTrigger>
           <TabsTrigger value="export" className="gap-1">
             <Download className="h-3 w-3" />
-            Data Export
+            Exporta date
           </TabsTrigger>
           <TabsTrigger value="delete" className="gap-1">
             <Trash2 className="h-3 w-3" />
-            Data Deletion
+            Stergere date
           </TabsTrigger>
           <TabsTrigger value="audit" className="gap-1">
             <ScrollText className="h-3 w-3" />
-            Audit Log
+            Jurnal audit
           </TabsTrigger>
         </TabsList>
 
@@ -300,9 +300,9 @@ export default function PrivacyPage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold">No consent texts configured</h3>
+                <h3 className="text-lg font-semibold">Niciun text de consimtamant configurat</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Consent texts will appear here once configured by the system.
+                  Textele de consimtamant vor aparea aici odata configurate de sistem.
                 </p>
               </CardContent>
             </Card>
@@ -316,11 +316,11 @@ export default function PrivacyPage() {
                         {CONSENT_TYPES.find((t) => t.value === ct.type)?.label || ct.type}
                       </CardTitle>
                       <CardDescription>
-                        Version {ct.version} - Last updated {formatDateTime(ct.updatedAt)}
+                        Versiunea {ct.version} - Ultima actualizare {formatDateTime(ct.updatedAt)}
                       </CardDescription>
                     </div>
                     <Badge variant={ct.isActive ? "success" : "secondary"}>
-                      {ct.isActive ? "Active" : "Inactive"}
+                      {ct.isActive ? "Activ" : "Inactiv"}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -343,7 +343,7 @@ export default function PrivacyPage() {
                     ) : (
                       <Save className="mr-2 h-4 w-4" />
                     )}
-                    Save Changes
+                    Salveaza modificarile
                   </Button>
                 </CardFooter>
               </Card>
@@ -357,10 +357,10 @@ export default function PrivacyPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Download className="h-5 w-5" />
-                Export Donor Data
+                Exporta date donator
               </CardTitle>
               <CardDescription>
-                Search for a donor by email and export all their personal data as required by GDPR Article 20 (Right to Data Portability).
+                Cauta un donator dupa email si exporta toate datele personale conform GDPR Articolul 20 (Dreptul la portabilitatea datelor).
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -386,13 +386,13 @@ export default function PrivacyPage() {
                   ) : (
                     <Download className="mr-2 h-4 w-4" />
                   )}
-                  Export Data
+                  Exporta date
                 </Button>
               </div>
               {exportSuccess && (
                 <div className="flex items-center gap-2 text-green-600 text-sm">
                   <CheckCircle2 className="h-4 w-4" />
-                  Data exported successfully. The download should have started.
+                  Date exportate cu succes. Descarcarea ar fi trebuit sa inceapa.
                 </div>
               )}
             </CardContent>
@@ -405,10 +405,10 @@ export default function PrivacyPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trash2 className="h-5 w-5 text-destructive" />
-                Data Deletion / Anonymization
+                Stergere / Anonimizare date
               </CardTitle>
               <CardDescription>
-                Search for a donor and anonymize their personal data as required by GDPR Article 17 (Right to Erasure). This action is irreversible.
+                Cauta un donator si anonimizeaza datele personale conform GDPR Articolul 17 (Dreptul la stergere). Aceasta actiune este ireversibila.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -436,7 +436,7 @@ export default function PrivacyPage() {
                   ) : (
                     <Search className="mr-2 h-4 w-4" />
                   )}
-                  Search Donor
+                  Cauta donator
                 </Button>
               </div>
 
@@ -457,7 +457,7 @@ export default function PrivacyPage() {
                     onClick={() => setDeleteConfirmOpen(true)}
                   >
                     <Trash2 className="mr-2 h-4 w-4" />
-                    Anonymize This Donor
+                    Anonimizeaza acest donator
                   </Button>
                 </div>
               )}
@@ -465,7 +465,7 @@ export default function PrivacyPage() {
               {deleteSuccess && (
                 <div className="flex items-center gap-2 text-green-600 text-sm">
                   <CheckCircle2 className="h-4 w-4" />
-                  Donor data has been anonymized successfully.
+                  Datele donatorului au fost anonimizate cu succes.
                 </div>
               )}
             </CardContent>
@@ -477,18 +477,18 @@ export default function PrivacyPage() {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-destructive">
                   <AlertTriangle className="h-5 w-5" />
-                  Confirm Data Anonymization
+                  Confirma anonimizarea datelor
                 </DialogTitle>
                 <DialogDescription>
-                  This will permanently anonymize all personal data for{" "}
-                  <strong>{donorPreview?.name}</strong> ({donorPreview?.email}). Their name, email,
-                  phone, and other identifying information will be replaced with anonymized values.
-                  This action cannot be undone.
+                  Aceasta va anonimiza permanent toate datele personale pentru{" "}
+                  <strong>{donorPreview?.name}</strong> ({donorPreview?.email}). Numele, emailul,
+                  telefonul si alte informatii de identificare vor fi inlocuite cu valori anonimizate.
+                  Aceasta actiune nu poate fi anulata.
                 </DialogDescription>
               </DialogHeader>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
-                  Cancel
+                  Anuleaza
                 </Button>
                 <Button
                   variant="destructive"
@@ -500,7 +500,7 @@ export default function PrivacyPage() {
                   ) : (
                     <Trash2 className="mr-2 h-4 w-4" />
                   )}
-                  Yes, Anonymize Data
+                  Da, anonimizeaza datele
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -513,10 +513,10 @@ export default function PrivacyPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ScrollText className="h-5 w-5" />
-                Audit Log
+                Jurnal audit
               </CardTitle>
               <CardDescription>
-                Complete log of data access and modifications for GDPR compliance.
+                Jurnal complet al accesului si modificarilor datelor pentru conformitate GDPR.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -524,7 +524,7 @@ export default function PrivacyPage() {
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by user, entity, or details..."
+                    placeholder="Cauta dupa utilizator, entitate sau detalii..."
                     value={auditSearch}
                     onChange={(e) => setAuditSearch(e.target.value)}
                     className="pl-9"
@@ -548,7 +548,7 @@ export default function PrivacyPage() {
                   ) : (
                     <Search className="mr-2 h-4 w-4" />
                   )}
-                  Search
+                  Cauta
                 </Button>
               </div>
             </CardContent>
@@ -562,7 +562,7 @@ export default function PrivacyPage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <ScrollText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-sm text-muted-foreground">No audit events found.</p>
+                <p className="text-sm text-muted-foreground">Nicio inregistrare audit gasita.</p>
               </CardContent>
             </Card>
           ) : (
@@ -572,11 +572,11 @@ export default function PrivacyPage() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th className="p-3 text-left font-medium">Timestamp</th>
-                        <th className="p-3 text-left font-medium">Action</th>
-                        <th className="p-3 text-left font-medium">User</th>
-                        <th className="p-3 text-left font-medium hidden md:table-cell">Entity</th>
-                        <th className="p-3 text-left font-medium hidden lg:table-cell">Details</th>
+                        <th className="p-3 text-left font-medium">Data</th>
+                        <th className="p-3 text-left font-medium">Actiune</th>
+                        <th className="p-3 text-left font-medium">Utilizator</th>
+                        <th className="p-3 text-left font-medium hidden md:table-cell">Entitate</th>
+                        <th className="p-3 text-left font-medium hidden lg:table-cell">Detalii</th>
                         <th className="p-3 text-left font-medium hidden lg:table-cell">IP</th>
                       </tr>
                     </thead>
@@ -595,7 +595,7 @@ export default function PrivacyPage() {
                             </Badge>
                           </td>
                           <td className="p-3">
-                            {event.userName || event.userId || "System"}
+                            {event.userName || event.userId || "Sistem"}
                           </td>
                           <td className="p-3 hidden md:table-cell text-muted-foreground">
                             {event.entityType} {event.entityId ? `#${event.entityId.slice(0, 8)}` : ""}

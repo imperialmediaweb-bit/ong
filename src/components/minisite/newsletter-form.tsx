@@ -25,7 +25,7 @@ export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!emailConsent || !privacyConsent) {
-      setError("You must consent to email updates and accept the privacy policy");
+      setError("Trebuie sa accepti primirea de email-uri si politica de confidentialitate");
       return;
     }
     setError("");
@@ -40,12 +40,12 @@ export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Subscription failed");
+        setError(data.error || "Abonarea a esuat");
       } else {
         setSuccess(true);
       }
     } catch {
-      setError("Something went wrong");
+      setError("Ceva nu a functionat corect");
     } finally {
       setLoading(false);
     }
@@ -58,8 +58,8 @@ export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
           <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-4">
             <Check className="h-6 w-6 text-green-600" />
           </div>
-          <h3 className="text-lg font-semibold">You&apos;re subscribed!</h3>
-          <p className="text-sm text-muted-foreground mt-1">You&apos;ll receive updates at {email}</p>
+          <h3 className="text-lg font-semibold">Te-ai abonat cu succes!</h3>
+          <p className="text-sm text-muted-foreground mt-1">Vei primi actualizari la {email}</p>
         </CardContent>
       </Card>
     );
@@ -70,9 +70,9 @@ export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Mail className="h-5 w-5 text-primary" />
-          Stay Updated
+          Ramai la curent
         </CardTitle>
-        <CardDescription>Subscribe to our newsletter for updates and impact reports</CardDescription>
+        <CardDescription>Aboneaza-te la newsletter pentru actualizari si rapoarte de impact</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -81,12 +81,12 @@ export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
           )}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="sub-name">Name (optional)</Label>
-              <Input id="sub-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+              <Label htmlFor="sub-name">Nume (optional)</Label>
+              <Input id="sub-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Numele tau" />
             </div>
             <div>
               <Label htmlFor="sub-email">Email *</Label>
-              <Input id="sub-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required />
+              <Input id="sub-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@exemplu.ro" required />
             </div>
           </div>
 
@@ -98,7 +98,7 @@ export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
                 onCheckedChange={(v) => setEmailConsent(v === true)}
               />
               <Label htmlFor="sub-email-consent" className="text-sm leading-snug">
-                {consentTexts.EMAIL_MARKETING || "I agree to receive updates by email"} *
+                {consentTexts.EMAIL_MARKETING || "Sunt de acord sa primesc actualizari prin email"} *
               </Label>
             </div>
             <div className="flex items-start gap-2">
@@ -108,13 +108,13 @@ export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
                 onCheckedChange={(v) => setPrivacyConsent(v === true)}
               />
               <Label htmlFor="sub-privacy-consent" className="text-sm leading-snug">
-                {consentTexts.PRIVACY_POLICY || "I agree to the Privacy Policy & Terms"} *
+                {consentTexts.PRIVACY_POLICY || "Sunt de acord cu Politica de Confidentialitate si Termenii"} *
               </Label>
             </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Subscribing..." : "Subscribe"}
+            {loading ? "Se aboneaza..." : "Aboneaza-te"}
           </Button>
         </form>
       </CardContent>

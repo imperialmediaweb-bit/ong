@@ -36,23 +36,23 @@ import {
 } from "lucide-react";
 
 const STEPS = [
-  { id: "type", label: "Type", icon: Mail },
-  { id: "content", label: "Content", icon: MessageSquare },
-  { id: "audience", label: "Audience", icon: Users },
-  { id: "schedule", label: "Schedule", icon: Calendar },
-  { id: "review", label: "Review", icon: CheckCircle2 },
+  { id: "type", label: "Tip", icon: Mail },
+  { id: "content", label: "Continut", icon: MessageSquare },
+  { id: "audience", label: "Audienta", icon: Users },
+  { id: "schedule", label: "Programare", icon: Calendar },
+  { id: "review", label: "Revizuire", icon: CheckCircle2 },
 ] as const;
 
 type StepId = typeof STEPS[number]["id"];
 
 const CAMPAIGN_TYPES = [
-  { value: "THANK_YOU", label: "Thank You", description: "Send gratitude to your donors after a donation" },
-  { value: "UPDATE", label: "Update", description: "Share news and progress on your projects" },
-  { value: "EMERGENCY_APPEAL", label: "Emergency Appeal", description: "Urgent fundraising for critical needs" },
-  { value: "NEWSLETTER", label: "Newsletter", description: "Regular updates and engagement" },
-  { value: "REACTIVATION", label: "Reactivation", description: "Re-engage dormant donors" },
-  { value: "CORPORATE_OUTREACH", label: "Corporate Outreach", description: "Reach out to corporate partners" },
-  { value: "CUSTOM", label: "Custom", description: "Create a fully customized campaign" },
+  { value: "THANK_YOU", label: "Multumire", description: "Trimite recunostinta donatorilor dupa o donatie" },
+  { value: "UPDATE", label: "Actualizare", description: "Distribuie noutati si progresul proiectelor" },
+  { value: "EMERGENCY_APPEAL", label: "Apel de urgenta", description: "Strangere urgenta de fonduri pentru nevoi critice" },
+  { value: "NEWSLETTER", label: "Newsletter", description: "Actualizari regulate si implicare" },
+  { value: "REACTIVATION", label: "Reactivare", description: "Reangajeaza donatorii inactivi" },
+  { value: "CORPORATE_OUTREACH", label: "Parteneriate corporate", description: "Contacteaza partenerii corporativi" },
+  { value: "CUSTOM", label: "Personalizat", description: "Creeaza o campanie complet personalizata" },
 ];
 
 interface CampaignForm {
@@ -236,8 +236,8 @@ export default function NewCampaignPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">New Campaign</h1>
-          <p className="text-muted-foreground">Create and send a new email or SMS campaign.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Campanie noua</h1>
+          <p className="text-muted-foreground">Creeaza si trimite o campanie noua de email sau SMS.</p>
         </div>
       </div>
 
@@ -284,22 +284,22 @@ export default function NewCampaignPage() {
           {currentStep === "type" && (
             <Card>
               <CardHeader>
-                <CardTitle>Campaign Details</CardTitle>
-                <CardDescription>Choose the type and channel for your campaign.</CardDescription>
+                <CardTitle>Detalii campanie</CardTitle>
+                <CardDescription>Alege tipul si canalul pentru campanie.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="name">Campaign Name *</Label>
+                  <Label htmlFor="name">Nume campanie *</Label>
                   <Input
                     id="name"
-                    placeholder="e.g., Monthly Newsletter - January"
+                    placeholder="ex., Newsletter lunar - Ianuarie"
                     value={form.name}
                     onChange={(e) => updateForm({ name: e.target.value })}
                   />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Campaign Type *</Label>
+                  <Label>Tip campanie *</Label>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {CAMPAIGN_TYPES.map((type) => (
                       <div
@@ -319,12 +319,12 @@ export default function NewCampaignPage() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Channel *</Label>
+                  <Label>Canal *</Label>
                   <div className="flex gap-3">
                     {[
                       { value: "EMAIL", label: "Email", icon: Mail },
                       { value: "SMS", label: "SMS", icon: MessageSquare },
-                      { value: "BOTH", label: "Both", icon: Send },
+                      { value: "BOTH", label: "Ambele", icon: Send },
                     ].map((ch) => (
                       <div
                         key={ch.value}
@@ -343,11 +343,11 @@ export default function NewCampaignPage() {
                 </div>
 
                 <div className="grid gap-2">
-                  <Label htmlFor="goal">Fundraising Goal (optional)</Label>
+                  <Label htmlFor="goal">Obiectiv de strangere de fonduri (optional)</Label>
                   <Input
                     id="goal"
                     type="number"
-                    placeholder="e.g., 5000"
+                    placeholder="ex., 5000"
                     value={form.goalAmount}
                     onChange={(e) => updateForm({ goalAmount: e.target.value })}
                   />
@@ -364,8 +364,8 @@ export default function NewCampaignPage() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
-                        <CardTitle>Email Content</CardTitle>
-                        <CardDescription>Compose your email message.</CardDescription>
+                        <CardTitle>Continut email</CardTitle>
+                        <CardDescription>Compune mesajul email.</CardDescription>
                       </div>
                       <Button
                         variant="outline"
@@ -373,32 +373,32 @@ export default function NewCampaignPage() {
                         onClick={() => setAiSidebarOpen(!aiSidebarOpen)}
                       >
                         <Sparkles className="mr-2 h-4 w-4" />
-                        AI Assistant
+                        Asistent AI
                       </Button>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="subject">Subject Line *</Label>
+                      <Label htmlFor="subject">Linie subiect *</Label>
                       <Input
                         id="subject"
-                        placeholder="Your email subject..."
+                        placeholder="Subiectul emailului..."
                         value={form.subject}
                         onChange={(e) => updateForm({ subject: e.target.value })}
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="preview">Preview Text</Label>
+                      <Label htmlFor="preview">Text previzualizare</Label>
                       <Input
                         id="preview"
-                        placeholder="Text shown in inbox preview..."
+                        placeholder="Text afisat in previzualizarea inbox-ului..."
                         value={form.previewText}
                         onChange={(e) => updateForm({ previewText: e.target.value })}
                       />
                     </div>
                     <div className="grid gap-2">
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="emailBody">Email Body (HTML) *</Label>
+                        <Label htmlFor="emailBody">Continut email (HTML) *</Label>
                         <div className="flex items-center gap-1 border rounded-md">
                           <Button
                             variant={previewMode === "desktop" ? "secondary" : "ghost"}
@@ -420,19 +420,19 @@ export default function NewCampaignPage() {
                       </div>
                       <Tabs defaultValue="edit">
                         <TabsList className="w-full">
-                          <TabsTrigger value="edit" className="flex-1">Edit</TabsTrigger>
-                          <TabsTrigger value="preview" className="flex-1">Preview</TabsTrigger>
+                          <TabsTrigger value="edit" className="flex-1">Editeaza</TabsTrigger>
+                          <TabsTrigger value="preview" className="flex-1">Previzualizare</TabsTrigger>
                         </TabsList>
                         <TabsContent value="edit">
                           <Textarea
                             id="emailBody"
-                            placeholder="<h1>Hello {{donor.name}}</h1><p>Your email content here...</p>"
+                            placeholder="<h1>Buna {{donor.name}}</h1><p>Continutul emailului aici...</p>"
                             value={form.emailBody}
                             onChange={(e) => updateForm({ emailBody: e.target.value })}
                             className="min-h-[300px] font-mono text-sm"
                           />
                           <p className="text-xs text-muted-foreground mt-1">
-                            Use {"{{donor.name}}"}, {"{{donor.email}}"}, {"{{ngo.name}}"} as merge tags.
+                            Folositi {"{{donor.name}}"}, {"{{donor.email}}"}, {"{{ngo.name}}"} ca etichete de imbinare.
                           </p>
                         </TabsContent>
                         <TabsContent value="preview">
@@ -448,7 +448,7 @@ export default function NewCampaignPage() {
                               />
                             ) : (
                               <p className="text-muted-foreground text-center py-12">
-                                Start writing to see a preview.
+                                Incepe sa scrii pentru a vedea previzualizarea.
                               </p>
                             )}
                           </div>
@@ -462,15 +462,15 @@ export default function NewCampaignPage() {
               {(form.channel === "SMS" || form.channel === "BOTH") && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>SMS Content</CardTitle>
-                    <CardDescription>Compose your SMS message.</CardDescription>
+                    <CardTitle>Continut SMS</CardTitle>
+                    <CardDescription>Compune mesajul SMS.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="smsBody">SMS Message *</Label>
+                      <Label htmlFor="smsBody">Mesaj SMS *</Label>
                       <Textarea
                         id="smsBody"
-                        placeholder="Your SMS message here..."
+                        placeholder="Mesajul SMS aici..."
                         value={form.smsBody}
                         onChange={(e) => updateForm({ smsBody: e.target.value })}
                         className="min-h-[120px]"
@@ -478,11 +478,11 @@ export default function NewCampaignPage() {
                       />
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>
-                          {smsCharCount} / 480 characters ({smsSegments} segment{smsSegments !== 1 ? "s" : ""})
+                          {smsCharCount} / 480 caractere ({smsSegments} segment{smsSegments !== 1 ? "e" : ""})
                         </span>
                         {smsCharCount > 160 && (
                           <span className="text-yellow-600">
-                            Multiple segments will increase cost
+                            Segmentele multiple vor creste costul
                           </span>
                         )}
                       </div>
@@ -497,12 +497,12 @@ export default function NewCampaignPage() {
           {currentStep === "audience" && (
             <Card>
               <CardHeader>
-                <CardTitle>Select Audience</CardTitle>
-                <CardDescription>Define who will receive this campaign.</CardDescription>
+                <CardTitle>Selecteaza audienta</CardTitle>
+                <CardDescription>Defineste cine va primi aceasta campanie.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-2">
-                  <Label>Donor Status</Label>
+                  <Label>Status donator</Label>
                   <Select
                     value={form.segmentStatus}
                     onValueChange={(v) => updateForm({ segmentStatus: v })}
@@ -511,27 +511,27 @@ export default function NewCampaignPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="ACTIVE">Active donors only</SelectItem>
-                      <SelectItem value="INACTIVE">Inactive donors only</SelectItem>
-                      <SelectItem value="ALL">All donors</SelectItem>
+                      <SelectItem value="ACTIVE">Doar donatori activi</SelectItem>
+                      <SelectItem value="INACTIVE">Doar donatori inactivi</SelectItem>
+                      <SelectItem value="ALL">Toti donatorii</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Minimum Total Donation (optional)</Label>
+                  <Label>Donatie totala minima (optional)</Label>
                   <Input
                     type="number"
-                    placeholder="e.g., 100"
+                    placeholder="ex., 100"
                     value={form.segmentMinDonation}
                     onChange={(e) => updateForm({ segmentMinDonation: e.target.value })}
                   />
                 </div>
 
                 <div className="grid gap-2">
-                  <Label>Filter by Tags (optional)</Label>
+                  <Label>Filtreaza dupa etichete (optional)</Label>
                   <Input
-                    placeholder="Enter tag names separated by commas"
+                    placeholder="Introduceti numele etichetelor separate prin virgula"
                     value={form.segmentTags.join(", ")}
                     onChange={(e) =>
                       updateForm({
@@ -543,7 +543,7 @@ export default function NewCampaignPage() {
                     }
                   />
                   <p className="text-xs text-muted-foreground">
-                    Leave empty to include all donors matching other criteria.
+                    Lasati gol pentru a include toti donatorii care corespund celorlalte criterii.
                   </p>
                 </div>
 
@@ -554,17 +554,17 @@ export default function NewCampaignPage() {
                     ) : (
                       <Users className="mr-2 h-4 w-4" />
                     )}
-                    Estimate Audience
+                    Estimeaza audienta
                   </Button>
                   {audienceCount !== null && (
                     <div>
                       <span className="text-2xl font-bold">{audienceCount}</span>
                       <span className="text-sm text-muted-foreground ml-2">
                         {form.channel === "EMAIL"
-                          ? "recipients with email consent"
+                          ? "destinatari cu consimtamant email"
                           : form.channel === "SMS"
-                          ? "recipients with SMS consent"
-                          : "recipients"}
+                          ? "destinatari cu consimtamant SMS"
+                          : "destinatari"}
                       </span>
                     </div>
                   )}
@@ -577,8 +577,8 @@ export default function NewCampaignPage() {
           {currentStep === "schedule" && (
             <Card>
               <CardHeader>
-                <CardTitle>Schedule Campaign</CardTitle>
-                <CardDescription>Choose when to send your campaign.</CardDescription>
+                <CardTitle>Programeaza campania</CardTitle>
+                <CardDescription>Alege cand sa trimiti campania.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid gap-3 sm:grid-cols-2">
@@ -592,10 +592,10 @@ export default function NewCampaignPage() {
                   >
                     <div className="flex items-center gap-2 font-medium">
                       <Send className="h-4 w-4" />
-                      Send Now
+                      Trimite acum
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Campaign will be sent immediately after creation.
+                      Campania va fi trimisa imediat dupa creare.
                     </p>
                   </div>
                   <div
@@ -608,17 +608,17 @@ export default function NewCampaignPage() {
                   >
                     <div className="flex items-center gap-2 font-medium">
                       <Calendar className="h-4 w-4" />
-                      Schedule for Later
+                      Programeaza pentru mai tarziu
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Pick a date and time to send the campaign.
+                      Alege o data si ora pentru trimiterea campaniei.
                     </p>
                   </div>
                 </div>
 
                 {form.scheduleType === "later" && (
                   <div className="grid gap-2">
-                    <Label htmlFor="scheduledAt">Send Date & Time</Label>
+                    <Label htmlFor="scheduledAt">Data si ora trimiterii</Label>
                     <Input
                       id="scheduledAt"
                       type="datetime-local"
@@ -637,40 +637,40 @@ export default function NewCampaignPage() {
             <div className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Review Campaign</CardTitle>
-                  <CardDescription>Review your campaign before sending.</CardDescription>
+                  <CardTitle>Revizuire campanie</CardTitle>
+                  <CardDescription>Revizuieste campania inainte de trimitere.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <Label className="text-xs text-muted-foreground">Campaign Name</Label>
+                      <Label className="text-xs text-muted-foreground">Nume campanie</Label>
                       <p className="font-medium">{form.name}</p>
                     </div>
                     <div>
-                      <Label className="text-xs text-muted-foreground">Type</Label>
+                      <Label className="text-xs text-muted-foreground">Tip</Label>
                       <p className="font-medium">{form.type.replace(/_/g, " ")}</p>
                     </div>
                     <div>
-                      <Label className="text-xs text-muted-foreground">Channel</Label>
+                      <Label className="text-xs text-muted-foreground">Canal</Label>
                       <Badge variant="outline">{form.channel}</Badge>
                     </div>
                     <div>
-                      <Label className="text-xs text-muted-foreground">Schedule</Label>
+                      <Label className="text-xs text-muted-foreground">Programare</Label>
                       <p className="font-medium">
                         {form.scheduleType === "now"
-                          ? "Send immediately"
-                          : `Scheduled: ${form.scheduledAt}`}
+                          ? "Trimite imediat"
+                          : `Programat: ${form.scheduledAt}`}
                       </p>
                     </div>
                     {form.goalAmount && (
                       <div>
-                        <Label className="text-xs text-muted-foreground">Fundraising Goal</Label>
+                        <Label className="text-xs text-muted-foreground">Obiectiv strangere fonduri</Label>
                         <p className="font-medium">{form.goalAmount} RON</p>
                       </div>
                     )}
                     {audienceCount !== null && (
                       <div>
-                        <Label className="text-xs text-muted-foreground">Estimated Recipients</Label>
+                        <Label className="text-xs text-muted-foreground">Destinatari estimati</Label>
                         <p className="font-medium">{audienceCount}</p>
                       </div>
                     )}
@@ -678,14 +678,14 @@ export default function NewCampaignPage() {
 
                   {form.subject && (
                     <div className="pt-4 border-t">
-                      <Label className="text-xs text-muted-foreground">Subject</Label>
+                      <Label className="text-xs text-muted-foreground">Subiect</Label>
                       <p className="font-medium">{form.subject}</p>
                     </div>
                   )}
 
                   {form.emailBody && (
                     <div className="pt-4 border-t">
-                      <Label className="text-xs text-muted-foreground mb-2 block">Email Preview</Label>
+                      <Label className="text-xs text-muted-foreground mb-2 block">Previzualizare email</Label>
                       <div className="border rounded-lg p-4 bg-white max-h-[300px] overflow-y-auto">
                         <div
                           dangerouslySetInnerHTML={{ __html: form.emailBody }}
@@ -697,11 +697,11 @@ export default function NewCampaignPage() {
 
                   {form.smsBody && (
                     <div className="pt-4 border-t">
-                      <Label className="text-xs text-muted-foreground mb-2 block">SMS Preview</Label>
+                      <Label className="text-xs text-muted-foreground mb-2 block">Previzualizare SMS</Label>
                       <div className="bg-muted p-3 rounded-lg max-w-sm">
                         <p className="text-sm">{form.smsBody}</p>
                         <p className="text-xs text-muted-foreground mt-2">
-                          {form.smsBody.length} chars / {Math.ceil(form.smsBody.length / 160)} segment(s)
+                          {form.smsBody.length} caractere / {Math.ceil(form.smsBody.length / 160)} segment(e)
                         </p>
                       </div>
                     </div>
@@ -719,7 +719,7 @@ export default function NewCampaignPage() {
               disabled={currentStepIndex === 0}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              Inapoi
             </Button>
             <div className="flex gap-2">
               {currentStep === "review" ? (
@@ -729,11 +729,11 @@ export default function NewCampaignPage() {
                   ) : (
                     <Send className="mr-2 h-4 w-4" />
                   )}
-                  {form.scheduleType === "now" ? "Send Campaign" : "Schedule Campaign"}
+                  {form.scheduleType === "now" ? "Trimite campania" : "Programeaza campania"}
                 </Button>
               ) : (
                 <Button onClick={goNext} disabled={!canProceed()}>
-                  Next
+                  Urmatorul
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
@@ -748,7 +748,7 @@ export default function NewCampaignPage() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
                 <CardTitle className="text-base flex items-center gap-2">
                   <Sparkles className="h-4 w-4 text-purple-500" />
-                  AI Assistant
+                  Asistent AI
                 </CardTitle>
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setAiSidebarOpen(false)}>
                   <X className="h-4 w-4" />
@@ -756,10 +756,10 @@ export default function NewCampaignPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Describe what you want and AI will generate the campaign content for you.
+                  Descrie ce doresti si AI va genera continutul campaniei pentru tine.
                 </p>
                 <Textarea
-                  placeholder="e.g., Write a heartfelt thank-you email for donors who contributed to our flood relief campaign..."
+                  placeholder="ex., Scrie un email de multumire pentru donatorii care au contribuit la campania de ajutor in caz de inundatii..."
                   value={aiPrompt}
                   onChange={(e) => setAiPrompt(e.target.value)}
                   className="min-h-[120px]"
@@ -774,15 +774,15 @@ export default function NewCampaignPage() {
                   ) : (
                     <Wand2 className="mr-2 h-4 w-4" />
                   )}
-                  Generate Content
+                  Genereaza continut
                 </Button>
                 <div className="text-xs text-muted-foreground space-y-1">
-                  <p className="font-medium">Tips:</p>
+                  <p className="font-medium">Sfaturi:</p>
                   <ul className="list-disc list-inside space-y-0.5">
-                    <li>Mention the campaign purpose</li>
-                    <li>Specify the tone (formal, friendly)</li>
-                    <li>Include a call-to-action goal</li>
-                    <li>Mention your NGO name and mission</li>
+                    <li>Mentioneaza scopul campaniei</li>
+                    <li>Specifica tonul (formal, prietenos)</li>
+                    <li>Include un obiectiv de actiune</li>
+                    <li>Mentioneaza numele si misiunea ONG-ului</li>
                   </ul>
                 </div>
               </CardContent>

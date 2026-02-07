@@ -169,14 +169,14 @@ export default function CampaignDetailPage() {
       <div className="space-y-4">
         <Button variant="ghost" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+          Inapoi
         </Button>
         <Card className="max-w-md mx-auto">
           <CardContent className="py-10 text-center">
             <AlertTriangle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <h3 className="text-lg font-semibold">{error || "Campaign not found"}</h3>
+            <h3 className="text-lg font-semibold">{error || "Campania nu a fost gasita"}</h3>
             <Link href="/dashboard/campaigns">
-              <Button className="mt-4">Back to Campaigns</Button>
+              <Button className="mt-4">Inapoi la campanii</Button>
             </Link>
           </CardContent>
         </Card>
@@ -190,19 +190,19 @@ export default function CampaignDetailPage() {
   const deliveryRate = campaign.totalSent > 0 ? (campaign.totalDelivered / campaign.totalSent) * 100 : 0;
 
   const pieData = [
-    { name: "Opened", value: campaign.totalOpened },
-    { name: "Clicked", value: campaign.totalClicked },
-    { name: "Delivered Only", value: Math.max(0, campaign.totalDelivered - campaign.totalOpened) },
-    { name: "Bounced", value: campaign.totalBounced },
-    { name: "Pending", value: Math.max(0, campaign.totalSent - campaign.totalDelivered - campaign.totalBounced) },
+    { name: "Deschis", value: campaign.totalOpened },
+    { name: "Click", value: campaign.totalClicked },
+    { name: "Doar livrat", value: Math.max(0, campaign.totalDelivered - campaign.totalOpened) },
+    { name: "Respins", value: campaign.totalBounced },
+    { name: "In asteptare", value: Math.max(0, campaign.totalSent - campaign.totalDelivered - campaign.totalBounced) },
   ].filter((d) => d.value > 0);
 
   const barData = [
-    { name: "Sent", value: campaign.totalSent },
-    { name: "Delivered", value: campaign.totalDelivered },
-    { name: "Opened", value: campaign.totalOpened },
-    { name: "Clicked", value: campaign.totalClicked },
-    { name: "Bounced", value: campaign.totalBounced },
+    { name: "Trimis", value: campaign.totalSent },
+    { name: "Livrat", value: campaign.totalDelivered },
+    { name: "Deschis", value: campaign.totalOpened },
+    { name: "Click", value: campaign.totalClicked },
+    { name: "Respins", value: campaign.totalBounced },
   ];
 
   const filteredRecipients = recipients.filter((r) => {
@@ -257,7 +257,7 @@ export default function CampaignDetailPage() {
                 {campaign.channel}
               </span>
               <span>{campaign.type.replace(/_/g, " ")}</span>
-              {campaign.sentAt && <span>Sent {formatDate(campaign.sentAt)}</span>}
+              {campaign.sentAt && <span>Trimis {formatDate(campaign.sentAt)}</span>}
             </div>
           </div>
         </div>
@@ -265,18 +265,18 @@ export default function CampaignDetailPage() {
           {(campaign.status === "SENDING" || campaign.status === "SCHEDULED") && (
             <Button variant="outline" onClick={() => handleAction("pause")} disabled={actionLoading}>
               <Pause className="mr-2 h-4 w-4" />
-              Pause
+              Pauza
             </Button>
           )}
           {campaign.status === "PAUSED" && (
             <Button variant="outline" onClick={() => handleAction("resume")} disabled={actionLoading}>
               <Play className="mr-2 h-4 w-4" />
-              Resume
+              Reia
             </Button>
           )}
           <Button variant="outline" onClick={() => handleAction("duplicate")} disabled={actionLoading}>
             <Copy className="mr-2 h-4 w-4" />
-            Duplicate
+            Duplica
           </Button>
         </div>
       </div>
@@ -287,7 +287,7 @@ export default function CampaignDetailPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Send className="h-4 w-4" />
-              <span className="text-sm">Sent</span>
+              <span className="text-sm">Trimis</span>
             </div>
             <p className="text-2xl font-bold">{campaign.totalSent.toLocaleString()}</p>
           </CardContent>
@@ -296,40 +296,40 @@ export default function CampaignDetailPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <CheckCircle2 className="h-4 w-4" />
-              <span className="text-sm">Delivered</span>
+              <span className="text-sm">Livrat</span>
             </div>
             <p className="text-2xl font-bold">{deliveryRate.toFixed(1)}%</p>
-            <p className="text-xs text-muted-foreground">{campaign.totalDelivered.toLocaleString()} of {campaign.totalSent.toLocaleString()}</p>
+            <p className="text-xs text-muted-foreground">{campaign.totalDelivered.toLocaleString()} din {campaign.totalSent.toLocaleString()}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <Eye className="h-4 w-4" />
-              <span className="text-sm">Opened</span>
+              <span className="text-sm">Deschis</span>
             </div>
             <p className="text-2xl font-bold">{openRate.toFixed(1)}%</p>
-            <p className="text-xs text-muted-foreground">{campaign.totalOpened.toLocaleString()} opens</p>
+            <p className="text-xs text-muted-foreground">{campaign.totalOpened.toLocaleString()} deschideri</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <MousePointerClick className="h-4 w-4" />
-              <span className="text-sm">Clicked</span>
+              <span className="text-sm">Click</span>
             </div>
             <p className="text-2xl font-bold">{clickRate.toFixed(1)}%</p>
-            <p className="text-xs text-muted-foreground">{campaign.totalClicked.toLocaleString()} clicks</p>
+            <p className="text-xs text-muted-foreground">{campaign.totalClicked.toLocaleString()} clickuri</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-muted-foreground mb-1">
               <XCircle className="h-4 w-4" />
-              <span className="text-sm">Bounced</span>
+              <span className="text-sm">Respins</span>
             </div>
             <p className="text-2xl font-bold">{bounceRate.toFixed(1)}%</p>
-            <p className="text-xs text-muted-foreground">{campaign.totalBounced.toLocaleString()} bounced</p>
+            <p className="text-xs text-muted-foreground">{campaign.totalBounced.toLocaleString()} respinse</p>
           </CardContent>
         </Card>
       </div>
@@ -338,15 +338,15 @@ export default function CampaignDetailPage() {
       {campaign.goalAmount && campaign.goalAmount > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Fundraising Goal Progress</CardTitle>
+            <CardTitle className="text-base">Progres obiectiv strangere de fonduri</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-muted-foreground">
-                {formatCurrency(campaign.currentAmount)} raised
+                {formatCurrency(campaign.currentAmount)} strans
               </span>
               <span className="text-sm font-medium">
-                Goal: {formatCurrency(campaign.goalAmount)}
+                Obiectiv: {formatCurrency(campaign.goalAmount)}
               </span>
             </div>
             <Progress
@@ -354,7 +354,7 @@ export default function CampaignDetailPage() {
               className="h-3"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              {percentage(campaign.currentAmount, campaign.goalAmount)} of goal reached
+              {percentage(campaign.currentAmount, campaign.goalAmount)} din obiectiv atins
             </p>
           </CardContent>
         </Card>
@@ -364,15 +364,15 @@ export default function CampaignDetailPage() {
         <TabsList>
           <TabsTrigger value="performance" className="gap-1">
             <BarChart3 className="h-3 w-3" />
-            Performance
+            Performanta
           </TabsTrigger>
           <TabsTrigger value="recipients" className="gap-1">
             <Users className="h-3 w-3" />
-            Recipients
+            Destinatari
           </TabsTrigger>
           <TabsTrigger value="content" className="gap-1">
             <Mail className="h-3 w-3" />
-            Content
+            Continut
           </TabsTrigger>
         </TabsList>
 
@@ -381,7 +381,7 @@ export default function CampaignDetailPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Delivery Funnel</CardTitle>
+                <CardTitle className="text-base">Palnie livrare</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
@@ -400,7 +400,7 @@ export default function CampaignDetailPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Delivery Distribution</CardTitle>
+                <CardTitle className="text-base">Distributie livrare</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[300px]">
@@ -426,7 +426,7 @@ export default function CampaignDetailPage() {
                     </ResponsiveContainer>
                   ) : (
                     <div className="flex items-center justify-center h-full text-muted-foreground">
-                      No delivery data yet
+                      Niciun dat de livrare inca
                     </div>
                   )}
                 </div>
@@ -436,24 +436,24 @@ export default function CampaignDetailPage() {
             {/* Additional Stats */}
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle className="text-base">Detailed Statistics</CardTitle>
+                <CardTitle className="text-base">Statistici detaliate</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="p-3 rounded-lg bg-muted/50">
-                    <p className="text-sm text-muted-foreground">Complaints</p>
+                    <p className="text-sm text-muted-foreground">Reclamatii</p>
                     <p className="text-xl font-bold">{campaign.totalComplaints}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50">
-                    <p className="text-sm text-muted-foreground">Unsubscribed</p>
+                    <p className="text-sm text-muted-foreground">Dezabonat</p>
                     <p className="text-xl font-bold">{campaign.totalUnsubscribed}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50">
-                    <p className="text-sm text-muted-foreground">Recipients</p>
+                    <p className="text-sm text-muted-foreground">Destinatari</p>
                     <p className="text-xl font-bold">{campaign.recipientCount}</p>
                   </div>
                   <div className="p-3 rounded-lg bg-muted/50">
-                    <p className="text-sm text-muted-foreground">Revenue</p>
+                    <p className="text-sm text-muted-foreground">Venituri</p>
                     <p className="text-xl font-bold text-green-600">{formatCurrency(campaign.currentAmount)}</p>
                   </div>
                 </div>
@@ -468,14 +468,14 @@ export default function CampaignDetailPage() {
             <CardHeader>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <CardTitle className="text-base">Recipients</CardTitle>
-                  <CardDescription>{recipients.length} total recipients</CardDescription>
+                  <CardTitle className="text-base">Destinatari</CardTitle>
+                  <CardDescription>{recipients.length} destinatari in total</CardDescription>
                 </div>
                 <div className="flex gap-2">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      placeholder="Search recipients..."
+                      placeholder="Cauta destinatari..."
                       value={recipientSearch}
                       onChange={(e) => setRecipientSearch(e.target.value)}
                       className="pl-9 w-60"
@@ -486,13 +486,13 @@ export default function CampaignDetailPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="DELIVERED">Delivered</SelectItem>
-                      <SelectItem value="OPENED">Opened</SelectItem>
-                      <SelectItem value="CLICKED">Clicked</SelectItem>
-                      <SelectItem value="BOUNCED">Bounced</SelectItem>
-                      <SelectItem value="FAILED">Failed</SelectItem>
-                      <SelectItem value="PENDING">Pending</SelectItem>
+                      <SelectItem value="all">Toate statusurile</SelectItem>
+                      <SelectItem value="DELIVERED">Livrat</SelectItem>
+                      <SelectItem value="OPENED">Deschis</SelectItem>
+                      <SelectItem value="CLICKED">Click</SelectItem>
+                      <SelectItem value="BOUNCED">Respins</SelectItem>
+                      <SelectItem value="FAILED">Esuat</SelectItem>
+                      <SelectItem value="PENDING">In asteptare</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -501,19 +501,19 @@ export default function CampaignDetailPage() {
             <CardContent className="p-0">
               {filteredRecipients.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">
-                  No recipients match your search.
+                  Niciun destinatar nu corespunde cautarii.
                 </p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b bg-muted/50">
-                        <th className="p-3 text-left font-medium">Recipient</th>
-                        <th className="p-3 text-left font-medium">Address</th>
-                        <th className="p-3 text-left font-medium">Channel</th>
+                        <th className="p-3 text-left font-medium">Destinatar</th>
+                        <th className="p-3 text-left font-medium">Adresa</th>
+                        <th className="p-3 text-left font-medium">Canal</th>
                         <th className="p-3 text-left font-medium">Status</th>
-                        <th className="p-3 text-left font-medium hidden md:table-cell">Delivered</th>
-                        <th className="p-3 text-left font-medium hidden lg:table-cell">Opened</th>
+                        <th className="p-3 text-left font-medium hidden md:table-cell">Livrat</th>
+                        <th className="p-3 text-left font-medium hidden lg:table-cell">Deschis</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -528,7 +528,7 @@ export default function CampaignDetailPage() {
                                 {r.donor.name ? getInitials(r.donor.name) : "?"}
                               </div>
                               <span className="font-medium truncate max-w-[150px]">
-                                {r.donor.name || "Unknown"}
+                                {r.donor.name || "Necunoscut"}
                               </span>
                             </Link>
                           </td>
@@ -551,7 +551,7 @@ export default function CampaignDetailPage() {
                   </table>
                   {filteredRecipients.length > 50 && (
                     <p className="text-sm text-muted-foreground text-center py-3 border-t">
-                      Showing 50 of {filteredRecipients.length} recipients
+                      Se afiseaza 50 din {filteredRecipients.length} destinatari
                     </p>
                   )}
                 </div>
@@ -566,7 +566,7 @@ export default function CampaignDetailPage() {
             {campaign.subject && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Email Subject</CardTitle>
+                  <CardTitle className="text-base">Subiect email</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="font-medium">{campaign.subject}</p>
@@ -579,7 +579,7 @@ export default function CampaignDetailPage() {
             {campaign.emailBody && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Email Body</CardTitle>
+                  <CardTitle className="text-base">Corpul emailului</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="border rounded-lg p-4 bg-white">
@@ -594,7 +594,7 @@ export default function CampaignDetailPage() {
             {campaign.smsBody && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">SMS Message</CardTitle>
+                  <CardTitle className="text-base">Mesaj SMS</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="bg-muted p-4 rounded-lg max-w-sm">

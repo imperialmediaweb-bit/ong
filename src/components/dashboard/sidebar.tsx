@@ -13,15 +13,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: Home },
-  { name: "Donors", href: "/dashboard/donors", icon: Users },
-  { name: "Campaigns", href: "/dashboard/campaigns", icon: Mail },
-  { name: "Messages", href: "/dashboard/messages", icon: MessageSquare },
-  { name: "Automations", href: "/dashboard/automations", icon: Zap },
-  { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-  { name: "Consent & Privacy", href: "/dashboard/privacy", icon: Shield },
-  { name: "Donations", href: "/dashboard/donations", icon: Heart },
-  { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  { name: "Panou principal", href: "/dashboard", icon: Home },
+  { name: "Donatori", href: "/dashboard/donors", icon: Users },
+  { name: "Campanii", href: "/dashboard/campaigns", icon: Mail },
+  { name: "Mesaje", href: "/dashboard/messages", icon: MessageSquare },
+  { name: "Automatizari", href: "/dashboard/automations", icon: Zap },
+  { name: "Analitica", href: "/dashboard/analytics", icon: BarChart3 },
+  { name: "Consimtamant & GDPR", href: "/dashboard/privacy", icon: Shield },
+  { name: "Donatii", href: "/dashboard/donations", icon: Heart },
+  { name: "Setari", href: "/dashboard/settings", icon: Settings },
 ];
 
 export function Sidebar() {
@@ -37,7 +37,7 @@ export function Sidebar() {
         <div>
           <h1 className="text-lg font-bold">NGO HUB</h1>
           <p className="text-xs text-muted-foreground truncate max-w-[160px]">
-            {(session?.user as any)?.ngoName || "CRM Platform"}
+            {(session?.user as any)?.ngoName || "Platforma CRM"}
           </p>
         </div>
       </div>

@@ -78,17 +78,17 @@ interface AddDonorForm {
 }
 
 const STATUS_OPTIONS = [
-  { value: "all", label: "All Statuses" },
-  { value: "ACTIVE", label: "Active" },
-  { value: "INACTIVE", label: "Inactive" },
-  { value: "UNSUBSCRIBED", label: "Unsubscribed" },
+  { value: "all", label: "Toate statusurile" },
+  { value: "ACTIVE", label: "Activ" },
+  { value: "INACTIVE", label: "Inactiv" },
+  { value: "UNSUBSCRIBED", label: "Dezabonat" },
 ];
 
 const CHANNEL_OPTIONS = [
-  { value: "all", label: "All Channels" },
+  { value: "all", label: "Toate canalele" },
   { value: "EMAIL", label: "Email" },
   { value: "SMS", label: "SMS" },
-  { value: "BOTH", label: "Both" },
+  { value: "BOTH", label: "Ambele" },
 ];
 
 const statusBadgeVariant = (status: string) => {
@@ -245,7 +245,7 @@ export default function DonorsPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Are you sure you want to delete ${selectedDonors.size} donor(s)? This action cannot be undone.`)) return;
+    if (!confirm(`Sunteti sigur ca doriti sa stergeti ${selectedDonors.size} donator(i)? Aceasta actiune nu poate fi anulata.`)) return;
     const ids = Array.from(selectedDonors);
     try {
       const res = await fetch("/api/donors/bulk", {
@@ -265,33 +265,33 @@ export default function DonorsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Donors</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Donatori</h1>
           <p className="text-muted-foreground">
-            Manage your donor database. {total > 0 && `${total} donor${total !== 1 ? "s" : ""} total.`}
+            Gestioneaza baza de date a donatorilor. {total > 0 && `${total} donator${total !== 1 ? "i" : ""} in total.`}
           </p>
         </div>
         <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
-              Add Donor
+              Adauga donator
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <form onSubmit={handleSubmit(handleAddDonor)}>
               <DialogHeader>
-                <DialogTitle>Add New Donor</DialogTitle>
+                <DialogTitle>Adauga donator nou</DialogTitle>
                 <DialogDescription>
-                  Register a new donor in your CRM. They will receive a consent confirmation.
+                  Inregistreaza un donator nou in CRM. Va primi o confirmare de consimtamant.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="name">Full Name</Label>
+                  <Label htmlFor="name">Nume complet</Label>
                   <Input
                     id="name"
                     placeholder="John Doe"
-                    {...register("name", { required: "Name is required" })}
+                    {...register("name", { required: "Numele este obligatoriu" })}
                   />
                   {errors.name && (
                     <p className="text-xs text-destructive">{errors.name.message}</p>
@@ -303,14 +303,14 @@ export default function DonorsPage() {
                     id="email"
                     type="email"
                     placeholder="john@example.com"
-                    {...register("email", { required: "Email is required" })}
+                    {...register("email", { required: "Email-ul este obligatoriu" })}
                   />
                   {errors.email && (
                     <p className="text-xs text-destructive">{errors.email.message}</p>
                   )}
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="phone">Phone</Label>
+                  <Label htmlFor="phone">Telefon</Label>
                   <Input
                     id="phone"
                     placeholder="+40 712 345 678"
@@ -318,7 +318,7 @@ export default function DonorsPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="channel">Preferred Channel</Label>
+                  <Label htmlFor="channel">Canal preferat</Label>
                   <select
                     id="channel"
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -326,26 +326,26 @@ export default function DonorsPage() {
                   >
                     <option value="EMAIL">Email</option>
                     <option value="SMS">SMS</option>
-                    <option value="BOTH">Both</option>
+                    <option value="BOTH">Ambele</option>
                   </select>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <input type="checkbox" id="emailConsent" {...register("emailConsent")} className="rounded" />
-                    <Label htmlFor="emailConsent" className="text-sm">Email marketing consent</Label>
+                    <Label htmlFor="emailConsent" className="text-sm">Consimtamant marketing email</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <input type="checkbox" id="smsConsent" {...register("smsConsent")} className="rounded" />
-                    <Label htmlFor="smsConsent" className="text-sm">SMS marketing consent</Label>
+                    <Label htmlFor="smsConsent" className="text-sm">Consimtamant marketing SMS</Label>
                   </div>
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
                       id="privacyConsent"
-                      {...register("privacyConsent", { required: "Privacy consent is required" })}
+                      {...register("privacyConsent", { required: "Consimtamantul pentru confidentialitate este obligatoriu" })}
                       className="rounded"
                     />
-                    <Label htmlFor="privacyConsent" className="text-sm">Privacy policy consent *</Label>
+                    <Label htmlFor="privacyConsent" className="text-sm">Consimtamant politica de confidentialitate *</Label>
                   </div>
                   {errors.privacyConsent && (
                     <p className="text-xs text-destructive">{errors.privacyConsent.message}</p>
@@ -354,11 +354,11 @@ export default function DonorsPage() {
               </div>
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setAddDialogOpen(false)}>
-                  Cancel
+                  Anuleaza
                 </Button>
                 <Button type="submit" disabled={addLoading}>
                   {addLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Add Donor
+                  Adauga donator
                 </Button>
               </DialogFooter>
             </form>
@@ -373,7 +373,7 @@ export default function DonorsPage() {
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name, email, or phone..."
+                placeholder="Cauta dupa nume, email sau telefon..."
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -388,7 +388,7 @@ export default function DonorsPage() {
                 onClick={() => setFiltersOpen(!filtersOpen)}
               >
                 <Filter className="mr-2 h-4 w-4" />
-                Filters
+                Filtre
                 {(statusFilter !== "all" || channelFilter !== "all") && (
                   <Badge variant="default" className="ml-2 h-5 w-5 rounded-full p-0 text-[10px] flex items-center justify-center">
                     {(statusFilter !== "all" ? 1 : 0) + (channelFilter !== "all" ? 1 : 0)}
@@ -442,7 +442,7 @@ export default function DonorsPage() {
                   }}
                 >
                   <X className="mr-1 h-3 w-3" />
-                  Clear All
+                  Sterge toate
                 </Button>
               </div>
             </div>
@@ -456,20 +456,20 @@ export default function DonorsPage() {
           <CardContent className="py-3">
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium">
-                {selectedDonors.size} donor{selectedDonors.size !== 1 ? "s" : ""} selected
+                {selectedDonors.size} donator{selectedDonors.size !== 1 ? "i" : ""} selectat{selectedDonors.size !== 1 ? "i" : ""}
               </span>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={handleBulkExport}>
                   <Download className="mr-1 h-3 w-3" />
-                  Export
+                  Exporta
                 </Button>
                 <Button variant="outline" size="sm">
                   <Tag className="mr-1 h-3 w-3" />
-                  Tag
+                  Eticheta
                 </Button>
                 <Button variant="destructive" size="sm" onClick={handleBulkDelete}>
                   <Trash2 className="mr-1 h-3 w-3" />
-                  Delete
+                  Sterge
                 </Button>
               </div>
               <Button
@@ -478,7 +478,7 @@ export default function DonorsPage() {
                 onClick={() => setSelectedDonors(new Set())}
                 className="ml-auto"
               >
-                Clear Selection
+                Anuleaza selectia
               </Button>
             </div>
           </CardContent>
@@ -504,11 +504,11 @@ export default function DonorsPage() {
           ) : donors.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <Users className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold">No donors found</h3>
+              <h3 className="text-lg font-semibold">Niciun donator gasit</h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-sm">
                 {search || statusFilter !== "all"
-                  ? "Try adjusting your search or filters."
-                  : "Add your first donor to get started."}
+                  ? "Incercati sa ajustati cautarea sau filtrele."
+                  : "Adaugati primul donator pentru a incepe."}
               </p>
             </div>
           ) : (
@@ -527,12 +527,12 @@ export default function DonorsPage() {
                         className="flex items-center gap-1 font-medium hover:text-foreground"
                         onClick={() => handleSort("name")}
                       >
-                        Name
+                        Nume
                         <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </th>
                     <th className="p-3 text-left hidden md:table-cell">Email</th>
-                    <th className="p-3 text-left hidden lg:table-cell">Phone</th>
+                    <th className="p-3 text-left hidden lg:table-cell">Telefon</th>
                     <th className="p-3 text-left">
                       <button
                         className="flex items-center gap-1 font-medium hover:text-foreground"
@@ -547,7 +547,7 @@ export default function DonorsPage() {
                         className="flex items-center gap-1 font-medium hover:text-foreground ml-auto"
                         onClick={() => handleSort("totalDonated")}
                       >
-                        Total Donated
+                        Total donat
                         <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </th>
@@ -556,11 +556,11 @@ export default function DonorsPage() {
                         className="flex items-center gap-1 font-medium hover:text-foreground"
                         onClick={() => handleSort("lastDonationAt")}
                       >
-                        Last Donation
+                        Ultima donatie
                         <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </th>
-                    <th className="p-3 text-left hidden lg:table-cell">Tags</th>
+                    <th className="p-3 text-left hidden lg:table-cell">Etichete</th>
                     <th className="p-3 w-10"></th>
                   </tr>
                 </thead>
@@ -583,7 +583,7 @@ export default function DonorsPage() {
                             {donor.name ? getInitials(donor.name) : "?"}
                           </div>
                           <span className="font-medium truncate max-w-[150px]">
-                            {donor.name || "Unknown"}
+                            {donor.name || "Necunoscut"}
                           </span>
                         </div>
                       </td>
@@ -602,7 +602,7 @@ export default function DonorsPage() {
                         {formatCurrency(donor.totalDonated)}
                       </td>
                       <td className="p-3 hidden xl:table-cell text-muted-foreground">
-                        {donor.lastDonationAt ? formatDate(donor.lastDonationAt) : "Never"}
+                        {donor.lastDonationAt ? formatDate(donor.lastDonationAt) : "Niciodata"}
                       </td>
                       <td className="p-3 hidden lg:table-cell">
                         <div className="flex flex-wrap gap-1">
@@ -641,8 +641,8 @@ export default function DonorsPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between px-4 py-3 border-t">
               <p className="text-sm text-muted-foreground">
-                Showing {(page - 1) * pageSize + 1} to{" "}
-                {Math.min(page * pageSize, total)} of {total}
+                Se afiseaza {(page - 1) * pageSize + 1} pana la{" "}
+                {Math.min(page * pageSize, total)} din {total}
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -652,7 +652,7 @@ export default function DonorsPage() {
                   onClick={() => setPage(page - 1)}
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  Anterioara
                 </Button>
                 <div className="flex items-center gap-1">
                   {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
@@ -685,7 +685,7 @@ export default function DonorsPage() {
                   disabled={page >= totalPages}
                   onClick={() => setPage(page + 1)}
                 >
-                  Next
+                  Urmatoarea
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>
