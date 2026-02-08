@@ -18,31 +18,52 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
-          include: { ngo: true },
-        });
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email },
+            include: { ngo: true },
+          });
 
-        if (!user || !user.isActive) return null;
+          if (!user) {
+            console.error(`[AUTH] User not found: ${credentials.email}`);
+            // Check if ANY users exist
+            const count = await prisma.user.count();
+            console.error(`[AUTH] Total users in database: ${count}`);
+            return null;
+          }
 
-        const isValid = await compare(credentials.password, user.passwordHash);
-        if (!isValid) return null;
+          if (!user.isActive) {
+            console.error(`[AUTH] User inactive: ${credentials.email}`);
+            return null;
+          }
 
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { lastLoginAt: new Date() },
-        });
+          const isValid = await compare(credentials.password, user.passwordHash);
+          if (!isValid) {
+            console.error(`[AUTH] Invalid password for: ${credentials.email}`);
+            return null;
+          }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          ngoId: user.ngoId,
-          ngoName: user.ngo?.name,
-          ngoSlug: user.ngo?.slug,
-          plan: user.ngo?.subscriptionPlan,
-        };
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date() },
+          });
+
+          console.log(`[AUTH] Login success: ${user.email} (${user.role})`);
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            ngoId: user.ngoId,
+            ngoName: user.ngo?.name,
+            ngoSlug: user.ngo?.slug,
+            plan: user.ngo?.subscriptionPlan,
+          };
+        } catch (error: any) {
+          console.error(`[AUTH] Database error:`, error.message);
+          return null;
+        }
       },
     }),
   ],
