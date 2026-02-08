@@ -71,13 +71,29 @@ model Ngo {
   donations         Donation[]
   verification      NgoVerification?
 
-  // Stripe subscription
+  // Stripe subscription (platform plan)
   stripeCustomerId    String?   @unique
   stripeSubscriptionId String?
   stripePriceId       String?
-  subscriptionStatus  String?   @default("active") // active, past_due, canceled, trialing
+  subscriptionStatus  String?   @default("active")
   currentPeriodEnd    DateTime?
   trialEndsAt         DateTime?
+
+  // Stripe Connect (donations go directly to NGO)
+  stripeConnectId     String?   @unique  // acct_xxx - Stripe Connect account
+  stripeConnectStatus String?   @default("pending") // pending, active, restricted
+  stripeConnectOnboarded Boolean @default(false)
+
+  // Public profile & rankings
+  isFeatured        Boolean   @default(false)  // promoted/boosted
+  boostUntil        DateTime?                   // boost expiration
+  rating            Float     @default(0)       // 0-5 average rating
+  ratingCount       Int       @default(0)
+  totalRaised       Float     @default(0)       // total donations through platform
+  donorCountPublic  Int       @default(0)       // public donor count
+  category          String?                     // Social, Educatie, Sanatate, Mediu, etc.
+  shortDescription  String?                     // max 150 chars for cards
+  coverImageUrl     String?
 
   // Notifications
   notifications     Notification[]

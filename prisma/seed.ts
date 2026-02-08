@@ -93,11 +93,19 @@ async function main() {
     create: {
       name: "Asociatia Demo ONG",
       slug: "demo-ngo",
-      description: "O asociatie demonstrativa pentru testarea platformei NGO HUB",
+      description: "O asociatie demonstrativa pentru testarea platformei NGO HUB. Ne dedicam sprijinirii comunitatilor defavorizate si promovarii educatiei in mediul rural.",
+      shortDescription: "Sprijinim comunitatile defavorizate si promovam educatia",
       subscriptionPlan: "ELITE",
       senderEmail: "noreply@demo-ngo.org",
       senderName: "Asociatia Demo ONG",
       subscriptionStatus: "active",
+      category: "Social",
+      isFeatured: true,
+      boostUntil: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000),
+      rating: 4.8,
+      ratingCount: 47,
+      totalRaised: 125750,
+      donorCountPublic: 342,
     },
   });
 
@@ -177,11 +185,17 @@ async function main() {
     create: {
       name: "Fundatia Sperantei",
       slug: "fundatia-sperantei",
-      description: "Fundatie dedicata sprijinirii copiilor defavorizati",
+      description: "Fundatie dedicata sprijinirii copiilor defavorizati din mediul rural. Oferim burse scolare, rechizite si sprijin educational.",
+      shortDescription: "Sprijinim copiii defavorizati din mediul rural",
       subscriptionPlan: "PRO",
       senderEmail: "contact@fundatia-sperantei.ro",
       senderName: "Fundatia Sperantei",
       subscriptionStatus: "active",
+      category: "Educatie",
+      rating: 4.5,
+      ratingCount: 28,
+      totalRaised: 67200,
+      donorCountPublic: 185,
     },
   });
 
@@ -222,11 +236,17 @@ async function main() {
     create: {
       name: "ONG Verde",
       slug: "ong-verde",
-      description: "Organizatie pentru protectia mediului",
+      description: "Organizatie dedicata protectiei mediului si promovarii sustenabilitatii. Organizam actiuni de ecologizare si campanii de constientizare.",
+      shortDescription: "Protejam mediul si promovam sustenabilitatea",
       subscriptionPlan: "BASIC",
       senderEmail: "contact@ong-verde.ro",
       senderName: "ONG Verde",
       subscriptionStatus: "active",
+      category: "Mediu",
+      rating: 4.2,
+      ratingCount: 15,
+      totalRaised: 18500,
+      donorCountPublic: 73,
     },
   });
 
@@ -241,6 +261,158 @@ async function main() {
       ngoId: ngo3.id,
     },
   });
+
+  // ─── Additional Demo NGOs ────────────────────────────────────
+  const moreNgos = [
+    {
+      name: "Asociatia pentru Sanatate",
+      slug: "asociatia-sanatate",
+      description: "Oferim servicii medicale gratuite pentru persoanele defavorizate din Romania. Organizam caravane medicale si campanii de preventie.",
+      shortDescription: "Servicii medicale gratuite pentru persoane defavorizate",
+      category: "Sanatate",
+      plan: "PRO" as const,
+      rating: 4.7,
+      ratingCount: 63,
+      totalRaised: 234500,
+      donorCountPublic: 512,
+      featured: true,
+      adminEmail: "admin@asociatia-sanatate.ro",
+      adminName: "Dr. Ana Ionescu",
+      verified: true,
+    },
+    {
+      name: "Fundatia Cultura Vie",
+      slug: "cultura-vie",
+      description: "Promovam cultura si artele in comunitatile marginalizate. Organizam ateliere creative, spectacole si evenimente culturale.",
+      shortDescription: "Cultura si arte in comunitatile marginalizate",
+      category: "Cultura",
+      plan: "ELITE" as const,
+      rating: 4.9,
+      ratingCount: 31,
+      totalRaised: 89300,
+      donorCountPublic: 198,
+      featured: true,
+      adminEmail: "admin@cultura-vie.ro",
+      adminName: "Alexandra Stanescu",
+      verified: true,
+    },
+    {
+      name: "Sport pentru Toti",
+      slug: "sport-pentru-toti",
+      description: "Promovam sportul si miscarea in randul tinerilor din medii defavorizate. Oferim echipament sportiv si antrenamente gratuite.",
+      shortDescription: "Sport si miscare pentru tineri defavorizati",
+      category: "Sport",
+      plan: "PRO" as const,
+      rating: 4.4,
+      ratingCount: 22,
+      totalRaised: 45600,
+      donorCountPublic: 134,
+      featured: false,
+      adminEmail: "admin@sport-toti.ro",
+      adminName: "Vlad Munteanu",
+      verified: true,
+    },
+    {
+      name: "Drepturile Omului Romania",
+      slug: "drepturi-om",
+      description: "Militam pentru respectarea drepturilor fundamentale ale omului. Oferim asistenta juridica gratuita si campanii de advocacy.",
+      shortDescription: "Asistenta juridica gratuita si advocacy",
+      category: "Drepturile omului",
+      plan: "ELITE" as const,
+      rating: 4.6,
+      ratingCount: 41,
+      totalRaised: 156800,
+      donorCountPublic: 287,
+      featured: false,
+      adminEmail: "admin@drepturi-om.ro",
+      adminName: "Cristina Radu",
+      verified: true,
+    },
+    {
+      name: "Hrana pentru Suflet",
+      slug: "hrana-suflet",
+      description: "Distribuim pachete alimentare si mese calde pentru persoane fara adapost si familii in nevoie din Bucuresti.",
+      shortDescription: "Pachete alimentare si mese calde pentru cei in nevoie",
+      category: "Social",
+      plan: "PRO" as const,
+      rating: 4.8,
+      ratingCount: 89,
+      totalRaised: 312400,
+      donorCountPublic: 743,
+      featured: true,
+      adminEmail: "admin@hrana-suflet.ro",
+      adminName: "Gheorghe Dinu",
+      verified: true,
+    },
+    {
+      name: "TechEdu Romania",
+      slug: "techedu",
+      description: "Invatam copiii si tinerii programare si competente digitale. Organizam bootcamp-uri gratuite si mentorat in IT.",
+      shortDescription: "Programare si competente digitale pentru tineri",
+      category: "Educatie",
+      plan: "PRO" as const,
+      rating: 4.3,
+      ratingCount: 19,
+      totalRaised: 28900,
+      donorCountPublic: 95,
+      featured: false,
+      adminEmail: "admin@techedu.ro",
+      adminName: "Radu Serban",
+      verified: false,
+    },
+  ];
+
+  for (const ngoData of moreNgos) {
+    const newNgo = await prisma.ngo.upsert({
+      where: { slug: ngoData.slug },
+      update: {},
+      create: {
+        name: ngoData.name,
+        slug: ngoData.slug,
+        description: ngoData.description,
+        shortDescription: ngoData.shortDescription,
+        subscriptionPlan: ngoData.plan,
+        subscriptionStatus: "active",
+        category: ngoData.category,
+        rating: ngoData.rating,
+        ratingCount: ngoData.ratingCount,
+        totalRaised: ngoData.totalRaised,
+        donorCountPublic: ngoData.donorCountPublic,
+        isFeatured: ngoData.featured,
+        boostUntil: ngoData.featured ? new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) : null,
+      },
+    });
+
+    await prisma.user.upsert({
+      where: { email: ngoData.adminEmail },
+      update: {},
+      create: {
+        email: ngoData.adminEmail,
+        passwordHash,
+        name: ngoData.adminName,
+        role: "NGO_ADMIN",
+        ngoId: newNgo.id,
+      },
+    });
+
+    if (ngoData.verified) {
+      await prisma.ngoVerification.upsert({
+        where: { ngoId: newNgo.id },
+        update: {},
+        create: {
+          ngoId: newNgo.id,
+          status: "APPROVED",
+          registrationNumber: `RO${Math.floor(10000000 + Math.random() * 90000000)}`,
+          legalForm: ngoData.name.startsWith("Fundatia") ? "Fundatie" : "Asociatie",
+          reviewedBy: superAdmin.id,
+          reviewedAt: new Date(),
+          aiScore: 80 + Math.floor(Math.random() * 20),
+        },
+      });
+    }
+  }
+
+  console.log(`${moreNgos.length} ONG-uri demo aditionale create`);
 
   // ─── Mini-site config ──────────────────────────────────────────
   await prisma.miniSiteConfig.upsert({
