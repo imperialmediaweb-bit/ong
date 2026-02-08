@@ -35,6 +35,17 @@ export async function GET() {
         sendgridApiKey: true,
         twilioAccountSid: true,
         twilioPhoneNumber: true,
+        miniSiteConfig: {
+          select: {
+            heroTitle: true,
+            heroDescription: true,
+            primaryColor: true,
+            showNewsletter: true,
+            showDonation: true,
+            showUpdates: true,
+            customCss: true,
+          },
+        },
       },
     });
 
@@ -65,7 +76,21 @@ export async function GET() {
       orderBy: { createdAt: "asc" },
     });
 
-    return NextResponse.json({ data: { ngo: masked, users } });
+    const minisite = ngo.miniSiteConfig ?? {
+      heroTitle: "",
+      heroDescription: "",
+      primaryColor: "#6366f1",
+      showNewsletter: true,
+      showDonation: true,
+      showUpdates: true,
+      customCss: "",
+    };
+
+    return NextResponse.json({
+      data: { ngo: masked, users },
+      minisite,
+      slug: ngo.slug,
+    });
   } catch (error) {
     console.error("Settings GET error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
