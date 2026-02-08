@@ -8,4 +8,4 @@ cmds = ["npm ci"]
 cmds = ["npx prisma generate", "npm run build"]
 
 [start]
-cmd = "node_modules/.bin/prisma db push --skip-generate; node_modules/.bin/tsx prisma/seed.ts; npm start"
+cmd = "node_modules/.bin/prisma db push --skip-generate --accept-data-loss 2>&1 || true; node_modules/.bin/tsx prisma/seed.ts 2>&1 || echo 'Seed failed - use /api/seed to seed manually'; npm start"
