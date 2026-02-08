@@ -42,47 +42,65 @@ const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON" }).format(amount);
 
 export default async function HomePage() {
-  const [
-    verifiedNgos,
-    featuredNgos,
-    topNgosByDonations,
-    recentNgos,
-    platformStats,
-  ] = await Promise.all([
-    prisma.ngo.findMany({
-      where: { isActive: true, verification: { status: "APPROVED" } },
-      include: { verification: true, _count: { select: { donors: true, donations: true } } },
-      orderBy: { totalRaised: "desc" },
-      take: 50,
-    }),
-    prisma.ngo.findMany({
-      where: { isActive: true, isFeatured: true, boostUntil: { gte: new Date() } },
-      include: { verification: true },
-      orderBy: { totalRaised: "desc" },
-      take: 6,
-    }),
-    prisma.ngo.findMany({
-      where: { isActive: true, totalRaised: { gt: 0 } },
-      orderBy: { totalRaised: "desc" },
-      take: 10,
-    }),
-    prisma.ngo.findMany({
-      where: { isActive: true },
-      orderBy: { createdAt: "desc" },
-      take: 6,
-    }),
-    prisma.ngo.aggregate({
-      _count: true,
-      _sum: { totalRaised: true },
-    }),
-  ]);
+  let verifiedNgos: any[] = [];
+  let featuredNgos: any[] = [];
+  let topNgosByDonations: any[] = [];
+  let recentNgos: any[] = [];
+  let totalNgos = 0;
+  let totalRaised = 0;
+  let totalDonors = 0;
+  let totalDonations = 0;
+  let maxRaised = 1;
 
-  const totalDonors = await prisma.donor.count();
-  const totalDonations = await prisma.donation.count({ where: { status: "COMPLETED" } });
+  try {
+    const [
+      _verifiedNgos,
+      _featuredNgos,
+      _topNgosByDonations,
+      _recentNgos,
+      _platformStats,
+    ] = await Promise.all([
+      prisma.ngo.findMany({
+        where: { isActive: true, verification: { status: "APPROVED" } },
+        include: { verification: true, _count: { select: { donors: true, donations: true } } },
+        orderBy: { totalRaised: "desc" },
+        take: 50,
+      }),
+      prisma.ngo.findMany({
+        where: { isActive: true, isFeatured: true, boostUntil: { gte: new Date() } },
+        include: { verification: true },
+        orderBy: { totalRaised: "desc" },
+        take: 6,
+      }),
+      prisma.ngo.findMany({
+        where: { isActive: true, totalRaised: { gt: 0 } },
+        orderBy: { totalRaised: "desc" },
+        take: 10,
+      }),
+      prisma.ngo.findMany({
+        where: { isActive: true },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+      }),
+      prisma.ngo.aggregate({
+        _count: true,
+        _sum: { totalRaised: true },
+      }),
+    ]);
 
-  const totalNgos = platformStats._count;
-  const totalRaised = platformStats._sum.totalRaised || 0;
-  const maxRaised = topNgosByDonations.length > 0 ? topNgosByDonations[0].totalRaised : 1;
+    verifiedNgos = _verifiedNgos;
+    featuredNgos = _featuredNgos;
+    topNgosByDonations = _topNgosByDonations;
+    recentNgos = _recentNgos;
+    totalNgos = _platformStats._count;
+    totalRaised = _platformStats._sum.totalRaised || 0;
+
+    totalDonors = await prisma.donor.count();
+    totalDonations = await prisma.donation.count({ where: { status: "COMPLETED" } });
+    maxRaised = topNgosByDonations.length > 0 ? topNgosByDonations[0].totalRaised : 1;
+  } catch (error) {
+    console.error("[HOMEPAGE] Database error:", error);
+  }
 
   return (
     <div className="min-h-screen">

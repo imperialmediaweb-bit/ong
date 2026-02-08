@@ -25,6 +25,12 @@ model User {
   sessions       Session[]
   blogPosts      BlogPost[]
 
+  // Networking
+  sentConnections     Connection[]    @relation("ConnectionRequester")
+  receivedConnections Connection[]    @relation("ConnectionReceiver")
+  sentMessages        DirectMessage[] @relation("MessageSender")
+  receivedMessages    DirectMessage[] @relation("MessageReceiver")
+
   @@index([ngoId])
   @@index([email])
 }
@@ -105,6 +111,10 @@ model Ngo {
 
   // Notifications
   notifications     Notification[]
+
+  // Documents & Forms
+  formularAnaf        FormularAnaf[]
+  sponsorshipContracts SponsorshipContract[]
 
   // Provider settings (encrypted)
   sendgridApiKey    String?
@@ -707,4 +717,164 @@ enum NotificationType {
   SYSTEM
   CAMPAIGN_COMPLETED
   DONATION_RECEIVED
+  CONNECTION_REQUEST
+  NEW_MESSAGE
+  CONTRACT_SIGNED
+}
+
+// ─── ANAF Formular 230 (3.5% redirect) ──────────────────────────
+
+model FormularAnaf {
+  id              String   @id @default(cuid())
+  ngoId           String
+  ngo             Ngo      @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+
+  // Contributor data (persoana fizica)
+  cnp             String?
+  firstName       String
+  lastName        String
+  street          String?
+  number          String?
+  block           String?
+  staircase       String?
+  floor           String?
+  apartment       String?
+  city            String
+  county          String
+  postalCode      String?
+  phone           String?
+  email           String?
+
+  // NGO data (auto-filled)
+  ngoName         String
+  ngoCui          String   // CUI/CIF of NGO
+  ngoIban         String?
+  ngoContractNr   String?
+
+  // Tax year
+  taxYear         Int
+  percentage      Float    @default(3.5)
+
+  // Status
+  status          FormStatus @default(GENERATED)
+  signedAt        DateTime?
+  downloadCount   Int       @default(0)
+  pdfUrl          String?
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([ngoId])
+  @@index([taxYear])
+  @@index([status])
+}
+
+enum FormStatus {
+  GENERATED
+  DOWNLOADED
+  SIGNED
+  SUBMITTED
+}
+
+// ─── Sponsorship Contracts ───────────────────────────────────────
+
+model SponsorshipContract {
+  id              String          @id @default(cuid())
+  ngoId           String
+  ngo             Ngo             @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+
+  // Company data
+  companyName     String
+  companyCui      String          // CUI/CIF
+  companyAddress  String
+  companyCounty   String?
+  companyCity     String?
+  companyRep      String          // Representative name
+  companyRepRole  String?         // Representative role (Director, Administrator)
+  companyEmail    String?
+  companyPhone    String?
+  companyIban     String?
+
+  // NGO data (auto-filled)
+  ngoName         String
+  ngoCui          String
+  ngoAddress      String?
+  ngoRep          String?
+  ngoRepRole      String?
+  ngoIban         String?
+
+  // Contract details
+  contractNumber  String
+  contractDate    DateTime        @default(now())
+  amount          Float
+  currency        String          @default("RON")
+  purpose         String?         // Sponsorship purpose/destination
+  duration        String?         // Contract duration
+  paymentTerms    String?         // Payment terms
+
+  // Status
+  status          ContractStatus  @default(DRAFT)
+  signedByCompany Boolean         @default(false)
+  signedByNgo     Boolean         @default(false)
+  signedAt        DateTime?
+  pdfUrl          String?
+  downloadCount   Int             @default(0)
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([ngoId])
+  @@index([status])
+  @@index([companyName])
+}
+
+enum ContractStatus {
+  DRAFT
+  SENT
+  SIGNED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+// ─── Networking (LinkedIn-style connections) ─────────────────────
+
+model Connection {
+  id              String           @id @default(cuid())
+  requesterId     String           // User who sent request
+  requester       User             @relation("ConnectionRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  receiverId      String           // User who receives request
+  receiver        User             @relation("ConnectionReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  status          ConnectionStatus @default(PENDING)
+  message         String?          // Connection request message
+
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([requesterId, receiverId])
+  @@index([requesterId])
+  @@index([receiverId])
+  @@index([status])
+}
+
+enum ConnectionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  BLOCKED
+}
+
+model DirectMessage {
+  id              String   @id @default(cuid())
+  senderId        String
+  sender          User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId      String
+  receiver        User     @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  content         String
+  isRead          Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([createdAt])
 }

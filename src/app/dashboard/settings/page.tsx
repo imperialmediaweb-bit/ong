@@ -41,6 +41,9 @@ import {
   Key,
   UserPlus,
   Trash2,
+  CreditCard,
+  ExternalLink,
+  Palette,
 } from "lucide-react";
 
 interface ProfileSettings {
@@ -147,6 +150,29 @@ export default function SettingsPage() {
   const [inviteRole, setInviteRole] = useState("MEMBER");
   const [inviteLoading, setInviteLoading] = useState(false);
 
+  // Mini-site
+  const [minisite, setMinisite] = useState({
+    heroTitle: "",
+    heroDescription: "",
+    primaryColor: "#6366f1",
+    showNewsletter: true,
+    showDonation: true,
+    showUpdates: true,
+    customCss: "",
+  });
+  const [minisiteLoading, setMinisiteLoading] = useState(true);
+  const [ngoSlug, setNgoSlug] = useState("");
+
+  // Subscription
+  const [subscription, setSubscription] = useState({
+    plan: "BASIC",
+    status: "active",
+    currentPeriodEnd: null as string | null,
+    expiresAt: null as string | null,
+    hasStripe: false,
+  });
+  const [subLoading, setSubLoading] = useState(true);
+
   // Fetch profile settings
   const fetchProfile = useCallback(async () => {
     setProfileLoading(true);
@@ -216,6 +242,55 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // Fetch mini-site config
+  const fetchMinisite = useCallback(async () => {
+    setMinisiteLoading(true);
+    try {
+      const res = await fetch("/api/settings");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.minisite) {
+          setMinisite({
+            heroTitle: data.minisite.heroTitle || "",
+            heroDescription: data.minisite.heroDescription || "",
+            primaryColor: data.minisite.primaryColor || "#6366f1",
+            showNewsletter: data.minisite.showNewsletter !== false,
+            showDonation: data.minisite.showDonation !== false,
+            showUpdates: data.minisite.showUpdates !== false,
+            customCss: data.minisite.customCss || "",
+          });
+        }
+        if (data.slug) setNgoSlug(data.slug);
+      }
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setMinisiteLoading(false);
+    }
+  }, []);
+
+  // Fetch subscription
+  const fetchSubscription = useCallback(async () => {
+    setSubLoading(true);
+    try {
+      const res = await fetch("/api/subscription");
+      if (res.ok) {
+        const data = await res.json();
+        setSubscription({
+          plan: data.plan || "BASIC",
+          status: data.status || "active",
+          currentPeriodEnd: data.currentPeriodEnd || null,
+          expiresAt: data.expiresAt || null,
+          hasStripe: data.hasStripe || false,
+        });
+      }
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setSubLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     switch (activeTab) {
       case "profile":
@@ -230,8 +305,14 @@ export default function SettingsPage() {
       case "team":
         fetchTeam();
         break;
+      case "minisite":
+        fetchMinisite();
+        break;
+      case "subscription":
+        fetchSubscription();
+        break;
     }
-  }, [activeTab, fetchProfile, fetchEmail, fetchSms, fetchTeam]);
+  }, [activeTab, fetchProfile, fetchEmail, fetchSms, fetchTeam, fetchMinisite, fetchSubscription]);
 
   const clearMessages = () => {
     setError(null);
@@ -355,6 +436,48 @@ export default function SettingsPage() {
     }
   };
 
+  const handleSaveMinisite = async () => {
+    clearMessages();
+    setSaving(true);
+    try {
+      const res = await fetch("/api/settings/minisite", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(minisite),
+      });
+      if (!res.ok) throw new Error("Failed to save mini-site settings");
+      setSuccess("Setarile mini-site au fost salvate cu succes.");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleChangePlan = async (plan: string) => {
+    clearMessages();
+    setSaving(true);
+    try {
+      const res = await fetch("/api/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      if (!res.ok) throw new Error("Eroare la schimbarea planului");
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      setSuccess(`Planul a fost schimbat la ${plan}.`);
+      fetchSubscription();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -386,20 +509,28 @@ export default function SettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); clearMessages(); }}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="profile" className="gap-1">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="profile" className="gap-1 text-xs">
             <Building className="h-3 w-3" />
             Profil
           </TabsTrigger>
-          <TabsTrigger value="email" className="gap-1">
+          <TabsTrigger value="minisite" className="gap-1 text-xs">
+            <Globe className="h-3 w-3" />
+            Mini-site
+          </TabsTrigger>
+          <TabsTrigger value="subscription" className="gap-1 text-xs">
+            <CreditCard className="h-3 w-3" />
+            Abonament
+          </TabsTrigger>
+          <TabsTrigger value="email" className="gap-1 text-xs">
             <Mail className="h-3 w-3" />
-            Furnizor email
+            Email
           </TabsTrigger>
-          <TabsTrigger value="sms" className="gap-1">
+          <TabsTrigger value="sms" className="gap-1 text-xs">
             <MessageSquare className="h-3 w-3" />
-            Furnizor SMS
+            SMS
           </TabsTrigger>
-          <TabsTrigger value="team" className="gap-1">
+          <TabsTrigger value="team" className="gap-1 text-xs">
             <Users className="h-3 w-3" />
             Echipa
           </TabsTrigger>
@@ -826,6 +957,238 @@ export default function SettingsPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Mini-site Tab */}
+        <TabsContent value="minisite">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="h-5 w-5" />
+                Editor Mini-site
+              </CardTitle>
+              <CardDescription>
+                Personalizeaza pagina publica a organizatiei tale.
+                {ngoSlug && (
+                  <a
+                    href={`/s/${ngoSlug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 ml-2 text-primary hover:underline"
+                  >
+                    Vizualizeaza mini-site <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {minisiteLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  <div className="grid gap-2">
+                    <Label htmlFor="heroTitle">Titlu Hero</Label>
+                    <Input
+                      id="heroTitle"
+                      placeholder="Ajuta-ne sa schimbam lumea"
+                      value={minisite.heroTitle}
+                      onChange={(e) => setMinisite({ ...minisite, heroTitle: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="heroDesc">Descriere Hero</Label>
+                    <Textarea
+                      id="heroDesc"
+                      placeholder="Descriere scurta afisata pe pagina principala..."
+                      value={minisite.heroDescription}
+                      onChange={(e) => setMinisite({ ...minisite, heroDescription: e.target.value })}
+                      className="min-h-[80px]"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="primaryColor">Culoare principala</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        id="primaryColor"
+                        value={minisite.primaryColor}
+                        onChange={(e) => setMinisite({ ...minisite, primaryColor: e.target.value })}
+                        className="h-10 w-14 rounded border cursor-pointer"
+                      />
+                      <Input
+                        value={minisite.primaryColor}
+                        onChange={(e) => setMinisite({ ...minisite, primaryColor: e.target.value })}
+                        className="w-32 font-mono"
+                      />
+                      <div
+                        className="h-10 flex-1 rounded-md border"
+                        style={{ backgroundColor: minisite.primaryColor }}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/30 transition">
+                      <input
+                        type="checkbox"
+                        checked={minisite.showNewsletter}
+                        onChange={(e) => setMinisite({ ...minisite, showNewsletter: e.target.checked })}
+                        className="h-4 w-4"
+                      />
+                      <div>
+                        <p className="text-sm font-medium">Newsletter</p>
+                        <p className="text-xs text-muted-foreground">Formular abonare</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/30 transition">
+                      <input
+                        type="checkbox"
+                        checked={minisite.showDonation}
+                        onChange={(e) => setMinisite({ ...minisite, showDonation: e.target.checked })}
+                        className="h-4 w-4"
+                      />
+                      <div>
+                        <p className="text-sm font-medium">Donatii</p>
+                        <p className="text-xs text-muted-foreground">Buton donatie</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/30 transition">
+                      <input
+                        type="checkbox"
+                        checked={minisite.showUpdates}
+                        onChange={(e) => setMinisite({ ...minisite, showUpdates: e.target.checked })}
+                        className="h-4 w-4"
+                      />
+                      <div>
+                        <p className="text-sm font-medium">Actualizari</p>
+                        <p className="text-xs text-muted-foreground">Campanii recente</p>
+                      </div>
+                    </label>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="customCss">CSS personalizat (optional)</Label>
+                    <Textarea
+                      id="customCss"
+                      placeholder=".hero { background: linear-gradient(...) }"
+                      value={minisite.customCss}
+                      onChange={(e) => setMinisite({ ...minisite, customCss: e.target.value })}
+                      className="min-h-[80px] font-mono text-xs"
+                    />
+                  </div>
+                </>
+              )}
+            </CardContent>
+            <CardFooter className="border-t pt-6">
+              <Button onClick={handleSaveMinisite} disabled={saving || minisiteLoading}>
+                {saving ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
+                Salveaza mini-site
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        {/* Subscription Tab */}
+        <TabsContent value="subscription">
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Abonamentul tau
+                </CardTitle>
+                <CardDescription>
+                  Gestioneaza planul de abonament al organizatiei tale.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {subLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/30">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-lg font-semibold">Plan {subscription.plan}</h3>
+                          <Badge variant={subscription.status === "active" ? "success" : "warning"}>
+                            {subscription.status === "active" ? "Activ" : subscription.status}
+                          </Badge>
+                        </div>
+                        {subscription.expiresAt && (
+                          <p className="text-sm text-muted-foreground">
+                            Expira: {new Date(subscription.expiresAt).toLocaleDateString("ro-RO")}
+                          </p>
+                        )}
+                        {subscription.currentPeriodEnd && (
+                          <p className="text-sm text-muted-foreground">
+                            Perioada curenta pana la: {new Date(subscription.currentPeriodEnd).toLocaleDateString("ro-RO")}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {[
+                        {
+                          name: "BASIC",
+                          price: "Gratuit",
+                          features: ["100 donatori", "1.000 email-uri/luna", "1 utilizator", "Mini-site de baza"],
+                        },
+                        {
+                          name: "PRO",
+                          price: "149 RON/luna",
+                          features: ["5.000 donatori", "10.000 email-uri/luna", "5 utilizatori", "Automatizari", "AI asistent", "SMS campanii"],
+                        },
+                        {
+                          name: "ELITE",
+                          price: "399 RON/luna",
+                          features: ["Donatori nelimitati", "Email-uri nelimitate", "Utilizatori nelimitati", "Toate functiile", "Suport prioritar", "API access"],
+                        },
+                      ].map((p) => (
+                        <div
+                          key={p.name}
+                          className={`p-4 border rounded-lg ${subscription.plan === p.name ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:border-muted-foreground/30"} transition`}
+                        >
+                          <h4 className="font-semibold text-lg">{p.name}</h4>
+                          <p className="text-xl font-bold mt-1 mb-3">{p.price}</p>
+                          <ul className="space-y-1.5 text-sm text-muted-foreground mb-4">
+                            {p.features.map((f) => (
+                              <li key={f} className="flex items-center gap-1.5">
+                                <CheckCircle2 className="h-3 w-3 text-green-500 shrink-0" />
+                                {f}
+                              </li>
+                            ))}
+                          </ul>
+                          {subscription.plan === p.name ? (
+                            <Badge className="w-full justify-center py-1">Plan curent</Badge>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => handleChangePlan(p.name)}
+                              disabled={saving}
+                            >
+                              {subscription.plan === "ELITE" && p.name !== "ELITE"
+                                ? "Downgrade"
+                                : "Upgrade"}{" "}
+                              la {p.name}
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
     </div>

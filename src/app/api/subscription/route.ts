@@ -85,6 +85,7 @@ export async function GET() {
       subscriptionPlan: true,
       subscriptionStatus: true,
       currentPeriodEnd: true,
+      subscriptionExpiresAt: true,
       trialEndsAt: true,
       stripeCustomerId: true,
       stripeSubscriptionId: true,
@@ -99,6 +100,7 @@ export async function GET() {
     plan: ngo.subscriptionPlan,
     status: ngo.subscriptionStatus,
     currentPeriodEnd: ngo.currentPeriodEnd,
+    expiresAt: ngo.subscriptionExpiresAt,
     trialEndsAt: ngo.trialEndsAt,
     hasStripe: !!ngo.stripeCustomerId,
   });

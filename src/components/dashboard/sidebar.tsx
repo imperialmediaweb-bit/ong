@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Users, Mail, MessageSquare, Zap, BarChart3,
-  Shield, Settings, Home, Heart, LogOut, Menu, X,
+  Shield, Settings, Home, Heart, LogOut, Menu, X, FileText,
+  Globe, Briefcase, Share2, Sparkles,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
@@ -18,9 +19,13 @@ const navigation = [
   { name: "Campanii", href: "/dashboard/campaigns", icon: Mail },
   { name: "Mesaje", href: "/dashboard/messages", icon: MessageSquare },
   { name: "Automatizari", href: "/dashboard/automations", icon: Zap },
+  { name: "Social Media & AI", href: "/dashboard/social-ai", icon: Sparkles },
   { name: "Analitica", href: "/dashboard/analytics", icon: BarChart3 },
   { name: "Consimtamant & GDPR", href: "/dashboard/privacy", icon: Shield },
   { name: "Donatii", href: "/dashboard/donations", icon: Heart },
+  { name: "Formular 230", href: "/dashboard/formular-230", icon: FileText },
+  { name: "Contracte", href: "/dashboard/contracte", icon: Briefcase },
+  { name: "Retea", href: "/dashboard/retea", icon: Share2 },
   { name: "Setari", href: "/dashboard/settings", icon: Settings },
 ];
 
