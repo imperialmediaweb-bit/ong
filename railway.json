@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "npx prisma db push --skip-generate && npx tsx prisma/seed.ts && npm start",
+    "startCommand": "node_modules/.bin/prisma db push --skip-generate && node_modules/.bin/tsx prisma/seed.ts && npm start",
     "healthcheckPath": "/api/health",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 3
