@@ -8,4 +8,4 @@ cmds = ["npm ci"]
 cmds = ["npx prisma generate", "npm run build"]
 
 [start]
-cmd = "node_modules/.bin/prisma db push --skip-generate && node_modules/.bin/tsx prisma/seed.ts && npm start"
+cmd = "node_modules/.bin/prisma db push --skip-generate; node_modules/.bin/tsx prisma/seed.ts; npm start"
