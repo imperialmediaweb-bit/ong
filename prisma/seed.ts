@@ -11,7 +11,7 @@ async function main() {
   // ─── SUPER ADMIN ────────────────────────────────────────────────
   const superAdmin = await prisma.user.upsert({
     where: { email: "superadmin@ngohub.ro" },
-    update: {},
+    update: { passwordHash },
     create: {
       email: "superadmin@ngohub.ro",
       passwordHash,
@@ -114,7 +114,7 @@ async function main() {
   // ─── NGO Admin ──────────────────────────────────────────────────
   await prisma.user.upsert({
     where: { email: "admin@demo-ngo.org" },
-    update: {},
+    update: { passwordHash, ngoId: ngo.id },
     create: {
       email: "admin@demo-ngo.org",
       passwordHash,
@@ -127,7 +127,7 @@ async function main() {
   // ─── Staff User ─────────────────────────────────────────────────
   await prisma.user.upsert({
     where: { email: "staff@demo-ngo.org" },
-    update: {},
+    update: { passwordHash, ngoId: ngo.id },
     create: {
       email: "staff@demo-ngo.org",
       passwordHash,
@@ -140,7 +140,7 @@ async function main() {
   // ─── Viewer User ────────────────────────────────────────────────
   await prisma.user.upsert({
     where: { email: "viewer@demo-ngo.org" },
-    update: {},
+    update: { passwordHash, ngoId: ngo.id },
     create: {
       email: "viewer@demo-ngo.org",
       passwordHash,
@@ -205,7 +205,7 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: "admin@fundatia-sperantei.ro" },
-    update: {},
+    update: { passwordHash },
     create: {
       email: "admin@fundatia-sperantei.ro",
       passwordHash,
@@ -257,7 +257,7 @@ async function main() {
 
   await prisma.user.upsert({
     where: { email: "admin@ong-verde.ro" },
-    update: {},
+    update: { passwordHash },
     create: {
       email: "admin@ong-verde.ro",
       passwordHash,
@@ -392,7 +392,7 @@ async function main() {
 
     await prisma.user.upsert({
       where: { email: ngoData.adminEmail },
-      update: {},
+      update: { passwordHash },
       create: {
         email: ngoData.adminEmail,
         passwordHash,
