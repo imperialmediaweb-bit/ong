@@ -116,6 +116,9 @@ model Ngo {
   formularAnaf        FormularAnaf[]
   sponsorshipContracts SponsorshipContract[]
 
+  // Sponsor Companies CRM
+  sponsorCompanies    SponsorCompany[]
+
   // Provider settings (encrypted)
   sendgridApiKey    String?
   twilioAccountSid  String?
@@ -877,4 +880,129 @@ model DirectMessage {
   @@index([senderId])
   @@index([receiverId])
   @@index([createdAt])
+}
+
+// ─── Sponsor Companies CRM ──────────────────────────────────────
+
+model SponsorCompany {
+  id                String              @id @default(cuid())
+  ngoId             String
+  ngo               Ngo                 @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+
+  name              String
+  domain            String?             // website domain
+  website           String?
+  industry          String?
+  city              String?
+  country           String              @default("Romania")
+  status            SponsorCompanyStatus @default(NEW)
+  tags              String[]            @default([])
+  notes             String?
+
+  lastContactedAt   DateTime?
+  nextFollowupAt    DateTime?
+
+  createdBy         String?             // userId who added
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  contacts          SponsorContact[]
+  interactions      SponsorInteraction[]
+  aiMatches         SponsorAiMatch[]
+
+  @@unique([ngoId, name, city])
+  @@index([ngoId])
+  @@index([status])
+  @@index([industry])
+  @@index([nextFollowupAt])
+}
+
+enum SponsorCompanyStatus {
+  NEW
+  CONTACTED
+  REPLIED
+  MEETING
+  SPONSOR
+  NOT_INTERESTED
+  LATER
+}
+
+model SponsorContact {
+  id                String              @id @default(cuid())
+  companyId         String
+  company           SponsorCompany      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  fullName          String
+  role              String?             // job title
+  email             String?
+  phone             String?
+  linkedinUrl       String?
+  status            SponsorContactStatus @default(NEW)
+  notes             String?
+  dncFlag           Boolean             @default(false) // Do Not Contact
+
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+
+  interactions      SponsorInteraction[]
+
+  @@index([companyId])
+  @@index([email])
+  @@index([status])
+}
+
+enum SponsorContactStatus {
+  NEW
+  CONTACTED
+  REPLIED
+  DO_NOT_CONTACT
+}
+
+model SponsorInteraction {
+  id                String              @id @default(cuid())
+  companyId         String
+  company           SponsorCompany      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contactId         String?
+  contact           SponsorContact?     @relation(fields: [contactId], references: [id], onDelete: SetNull)
+
+  type              InteractionType
+  subject           String?
+  body              String?
+  createdBy         String?             // userId
+
+  createdAt         DateTime            @default(now())
+
+  @@index([companyId])
+  @@index([contactId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum InteractionType {
+  NOTE
+  EMAIL_SENT
+  EMAIL_RECEIVED
+  CALL
+  MEETING
+  AI_MATCH
+  STATUS_CHANGE
+}
+
+model SponsorAiMatch {
+  id                String              @id @default(cuid())
+  companyId         String
+  company           SponsorCompany      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  ngoId             String
+
+  score             Int                 // 0-100
+  reasons           Json                // string[] of 3 reasons
+  angle             String?             // education/medical/social/children/elderly/environment/local
+  rawAnalysis       String?             // full AI response
+
+  feedbackAccepted  Boolean?            // null = no feedback yet
+  createdAt         DateTime            @default(now())
+
+  @@index([companyId])
+  @@index([ngoId])
+  @@index([score])
 }

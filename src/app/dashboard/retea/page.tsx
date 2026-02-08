@@ -9,9 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Users, Search, MessageCircle, UserPlus, Check, X,
-  Loader2, Send, Building, Heart, Globe, ChevronRight,
+  Loader2, Send, Building, Heart, Globe, ChevronRight, Briefcase,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { SponsorCRM } from "@/components/dashboard/sponsor-crm";
 
 // ────────────────────────────────────────────
 // Types
@@ -152,7 +153,7 @@ export default function ReteaPage() {
   const { data: session } = useSession();
   const currentUserId = (session?.user as any)?.id;
 
-  const [activeTab, setActiveTab] = useState("conexiuni");
+  const [activeTab, setActiveTab] = useState("sponsori");
 
   // Connections state
   const [accepted, setAccepted] = useState<ConnectionItem[]>([]);
@@ -398,9 +399,9 @@ export default function ReteaPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Retea</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Retea & Companii Sponsori</h1>
         <p className="text-muted-foreground">
-          Conecteaza-te cu alte organizatii, trimite mesaje si descopera parteneri noi.
+          Gestioneaza companiile sponsor, contacteaza factorii de decizie si descopera parteneri noi.
         </p>
       </div>
 
@@ -450,7 +451,11 @@ export default function ReteaPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="sponsori" className="flex items-center gap-2">
+            <Briefcase className="h-4 w-4" />
+            Companii sponsori
+          </TabsTrigger>
           <TabsTrigger value="conexiuni" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Conexiuni
@@ -474,6 +479,13 @@ export default function ReteaPage() {
             )}
           </TabsTrigger>
         </TabsList>
+
+        {/* ═══════════════════════════════════════ */}
+        {/* COMPANII SPONSORI TAB                  */}
+        {/* ═══════════════════════════════════════ */}
+        <TabsContent value="sponsori">
+          <SponsorCRM />
+        </TabsContent>
 
         {/* ═══════════════════════════════════════ */}
         {/* CONEXIUNI TAB                          */}
