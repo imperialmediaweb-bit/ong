@@ -1,5 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { sendEmail } from "@/lib/email";
+import {
+  subscriptionRenewedEmail,
+  paymentFailedEmail,
+  subscriptionExpiredEmail,
+} from "@/lib/subscription-emails";
+
+const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://ngohub.ro";
 
 export async function POST(req: NextRequest) {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
@@ -53,14 +61,18 @@ export async function POST(req: NextRequest) {
         if (subscription) {
           const ngo = await prisma.ngo.findFirst({
             where: { stripeSubscriptionId: subscription },
+            include: { users: { where: { role: "NGO_ADMIN" }, select: { email: true } } },
           });
 
           if (ngo) {
+            const newPeriodEnd = new Date(invoice.lines?.data?.[0]?.period?.end * 1000);
             await prisma.ngo.update({
               where: { id: ngo.id },
               data: {
                 subscriptionStatus: "active",
-                currentPeriodEnd: new Date(invoice.lines?.data?.[0]?.period?.end * 1000),
+                currentPeriodEnd: newPeriodEnd,
+                subscriptionExpiresAt: newPeriodEnd,
+                lastExpirationNotice: null,
               },
             });
 
@@ -69,9 +81,26 @@ export async function POST(req: NextRequest) {
                 ngoId: ngo.id,
                 type: "SUBSCRIPTION_RENEWED",
                 title: "Abonament reinnoit",
-                message: "Plata pentru abonament a fost procesata cu succes.",
+                message: "Plata recurenta a fost procesata cu succes.",
               },
             });
+
+            // Send email
+            for (const admin of ngo.users) {
+              const emailData = subscriptionRenewedEmail({
+                ngoName: ngo.name,
+                plan: ngo.subscriptionPlan,
+                nextExpiresAt: newPeriodEnd,
+                dashboardUrl: `${APP_URL}/dashboard`,
+              });
+              await sendEmail({
+                to: admin.email,
+                subject: emailData.subject,
+                html: emailData.html,
+                from: "noreply@ngohub.ro",
+                fromName: "NGO HUB",
+              }).catch(console.error);
+            }
           }
         }
         break;
@@ -84,6 +113,7 @@ export async function POST(req: NextRequest) {
         if (subscription) {
           const ngo = await prisma.ngo.findFirst({
             where: { stripeSubscriptionId: subscription },
+            include: { users: { where: { role: "NGO_ADMIN" }, select: { email: true } } },
           });
 
           if (ngo) {
@@ -101,6 +131,22 @@ export async function POST(req: NextRequest) {
                 actionUrl: "/dashboard/settings",
               },
             });
+
+            // Send payment failed email
+            for (const admin of ngo.users) {
+              const emailData = paymentFailedEmail({
+                ngoName: ngo.name,
+                plan: ngo.subscriptionPlan,
+                dashboardUrl: `${APP_URL}/dashboard/settings`,
+              });
+              await sendEmail({
+                to: admin.email,
+                subject: emailData.subject,
+                html: emailData.html,
+                from: "noreply@ngohub.ro",
+                fromName: "NGO HUB",
+              }).catch(console.error);
+            }
           }
         }
         break;
@@ -111,15 +157,18 @@ export async function POST(req: NextRequest) {
 
         const ngo = await prisma.ngo.findFirst({
           where: { stripeSubscriptionId: subscription.id },
+          include: { users: { where: { role: "NGO_ADMIN" }, select: { email: true } } },
         });
 
         if (ngo) {
+          const previousPlan = ngo.subscriptionPlan;
           await prisma.ngo.update({
             where: { id: ngo.id },
             data: {
               subscriptionPlan: "BASIC",
               subscriptionStatus: "canceled",
               stripeSubscriptionId: null,
+              subscriptionExpiresAt: null,
             },
           });
 
@@ -132,6 +181,22 @@ export async function POST(req: NextRequest) {
               actionUrl: "/dashboard/settings",
             },
           });
+
+          // Send expiration email
+          for (const admin of ngo.users) {
+            const emailData = subscriptionExpiredEmail({
+              ngoName: ngo.name,
+              previousPlan,
+              dashboardUrl: `${APP_URL}/dashboard/settings`,
+            });
+            await sendEmail({
+              to: admin.email,
+              subject: emailData.subject,
+              html: emailData.html,
+              from: "noreply@ngohub.ro",
+              fromName: "NGO HUB",
+            }).catch(console.error);
+          }
         }
         break;
       }

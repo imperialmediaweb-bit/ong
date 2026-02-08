@@ -79,6 +79,14 @@ model Ngo {
   currentPeriodEnd    DateTime?
   trialEndsAt         DateTime?
 
+  // Manual subscription management (by Super Admin)
+  subscriptionStartAt   DateTime?   // when current plan was assigned
+  subscriptionExpiresAt DateTime?   // when plan expires (null = no expiration)
+  subscriptionAssignedBy String?    // user ID of admin who assigned it
+  subscriptionNotes     String?     // admin notes about subscription
+  lastExpirationNotice  DateTime?   // last time expiration warning was sent
+  autoRenew             Boolean     @default(false) // auto-renew on expiration
+
   // Stripe Connect (donations go directly to NGO)
   stripeConnectId     String?   @unique  // acct_xxx - Stripe Connect account
   stripeConnectStatus String?   @default("pending") // pending, active, restricted
