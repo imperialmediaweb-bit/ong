@@ -10,19 +10,24 @@ interface Props {
 }
 
 export default async function MiniSitePage({ params }: Props) {
-  const ngo = await prisma.ngo.findUnique({
-    where: { slug: params.slug, isActive: true },
-    include: {
-      miniSiteConfig: true,
-      consentTexts: { where: { isActive: true } },
-    },
-  });
+  let ngo: any = null;
+  try {
+    ngo = await prisma.ngo.findUnique({
+      where: { slug: params.slug, isActive: true },
+      include: {
+        miniSiteConfig: true,
+        consentTexts: { where: { isActive: true } },
+      },
+    });
+  } catch (error) {
+    console.error("Mini-site error:", error);
+  }
 
   if (!ngo) notFound();
 
   const config = ngo.miniSiteConfig;
   const consentTexts = Object.fromEntries(
-    ngo.consentTexts.map((ct) => [ct.type, ct.text])
+    ngo.consentTexts.map((ct: any) => [ct.type, ct.text])
   );
 
   return (

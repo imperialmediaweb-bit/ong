@@ -20,10 +20,15 @@ interface Props {
 }
 
 export default async function DonatePage({ params }: Props) {
-  const ngo = await prisma.ngo.findUnique({
-    where: { slug: params.slug, isActive: true },
-    include: { verification: true },
-  });
+  let ngo: any = null;
+  try {
+    ngo = await prisma.ngo.findUnique({
+      where: { slug: params.slug, isActive: true },
+      include: { verification: true },
+    });
+  } catch (error) {
+    console.error("Donate page error:", error);
+  }
 
   if (!ngo) {
     notFound();

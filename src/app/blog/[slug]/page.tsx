@@ -20,29 +20,39 @@ interface Props {
 }
 
 export default async function BlogPostPage({ params }: Props) {
-  const post = await prisma.blogPost.findUnique({
-    where: { slug: params.slug },
-    include: { author: { select: { name: true } } },
-  });
+  let post: any = null;
+  let relatedPosts: any[] = [];
+  try {
+    post = await prisma.blogPost.findUnique({
+      where: { slug: params.slug },
+      include: { author: { select: { name: true } } },
+    });
+  } catch (error) {
+    console.error("Blog post error:", error);
+  }
 
   if (!post || post.status !== "PUBLISHED") notFound();
 
-  // Increment view count
-  await prisma.blogPost.update({
-    where: { id: post.id },
-    data: { viewCount: { increment: 1 } },
-  });
+  try {
+    // Increment view count
+    await prisma.blogPost.update({
+      where: { id: post.id },
+      data: { viewCount: { increment: 1 } },
+    });
 
-  // Related posts
-  const relatedPosts = await prisma.blogPost.findMany({
-    where: {
-      status: "PUBLISHED",
-      id: { not: post.id },
-      category: post.category || undefined,
-    },
-    take: 3,
-    orderBy: { publishedAt: "desc" },
-  });
+    // Related posts
+    relatedPosts = await prisma.blogPost.findMany({
+      where: {
+        status: "PUBLISHED",
+        id: { not: post.id },
+        category: post.category || undefined,
+      },
+      take: 3,
+      orderBy: { publishedAt: "desc" },
+    });
+  } catch (error) {
+    console.error("Blog related posts error:", error);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
@@ -69,7 +79,7 @@ export default async function BlogPostPage({ params }: Props) {
 
           <div className="flex flex-wrap items-center gap-2 mb-4">
             {post.category && <Badge variant="secondary">{post.category}</Badge>}
-            {post.tags.map((tag) => (
+            {post.tags.map((tag: string) => (
               <Badge key={tag} variant="outline">{tag}</Badge>
             ))}
           </div>
