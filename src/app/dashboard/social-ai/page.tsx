@@ -476,7 +476,7 @@ export default function SocialAiPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label>Buget estimat</Label>
-                  <Select value={budget} onValueChange={setBudget}>
+                  <Select value={budget || undefined} onValueChange={setBudget}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecteaza" />
                     </SelectTrigger>
