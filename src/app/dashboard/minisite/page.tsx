@@ -1,0 +1,1352 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Sparkles,
+  Save,
+  Loader2,
+  ExternalLink,
+  Building,
+  FileText,
+  Wand2,
+  Palette,
+  Globe,
+  Phone,
+  Mail,
+  MapPin,
+  Facebook,
+  Instagram,
+  Linkedin,
+  Youtube,
+  Twitter,
+  Music2,
+  CheckCircle2,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Image,
+  Type,
+} from "lucide-react";
+
+// ─── Types ───────────────────────────────────────────────────────────
+
+interface MiniSiteState {
+  // NGO basic info (Tab 1)
+  ngoName: string;
+  slug: string;
+  logoUrl: string;
+  shortDescription: string;
+  description: string;
+  category: string;
+  websiteUrl: string;
+  coverImageUrl: string;
+
+  // Association / Legal data (Tab 2)
+  cui: string;
+  registrationNr: string;
+  bankAccount: string;
+  bankName: string;
+  contactAddress: string;
+  contactEmail: string;
+  contactPhone: string;
+  socialFacebook: string;
+  socialInstagram: string;
+  socialLinkedin: string;
+  socialYoutube: string;
+  socialTiktok: string;
+  socialTwitter: string;
+
+  // AI-generated content (Tab 3)
+  heroTitle: string;
+  heroDescription: string;
+  aboutText: string;
+  missionText: string;
+  impactText: string;
+
+  // Customization (Tab 4)
+  primaryColor: string;
+  accentColor: string;
+  theme: string;
+  heroCtaText: string;
+  showAbout: boolean;
+  showMission: boolean;
+  showImpact: boolean;
+  showDonation: boolean;
+  showNewsletter: boolean;
+  showContact: boolean;
+  showSocial: boolean;
+  showFormular230: boolean;
+  showContract: boolean;
+  customCss: string;
+  isPublished: boolean;
+}
+
+const DEFAULT_STATE: MiniSiteState = {
+  ngoName: "",
+  slug: "",
+  logoUrl: "",
+  shortDescription: "",
+  description: "",
+  category: "",
+  websiteUrl: "",
+  coverImageUrl: "",
+  cui: "",
+  registrationNr: "",
+  bankAccount: "",
+  bankName: "",
+  contactAddress: "",
+  contactEmail: "",
+  contactPhone: "",
+  socialFacebook: "",
+  socialInstagram: "",
+  socialLinkedin: "",
+  socialYoutube: "",
+  socialTiktok: "",
+  socialTwitter: "",
+  heroTitle: "",
+  heroDescription: "",
+  aboutText: "",
+  missionText: "",
+  impactText: "",
+  primaryColor: "#6366f1",
+  accentColor: "#f59e0b",
+  theme: "modern",
+  heroCtaText: "Doneaza acum",
+  showAbout: true,
+  showMission: true,
+  showImpact: true,
+  showDonation: true,
+  showNewsletter: true,
+  showContact: true,
+  showSocial: true,
+  showFormular230: false,
+  showContract: false,
+  customCss: "",
+  isPublished: false,
+};
+
+const CATEGORIES = [
+  "Social",
+  "Educatie",
+  "Sanatate",
+  "Mediu",
+  "Cultura",
+  "Sport",
+  "Drepturile omului",
+  "Altele",
+];
+
+const THEMES = [
+  { value: "modern", label: "Modern" },
+  { value: "classic", label: "Clasic" },
+  { value: "minimal", label: "Minimal" },
+];
+
+// ─── Component ───────────────────────────────────────────────────────
+
+export default function MiniSiteBuilderPage() {
+  const [state, setState] = useState<MiniSiteState>(DEFAULT_STATE);
+  const [activeTab, setActiveTab] = useState("date-ong");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [aiGenerated, setAiGenerated] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  // ─── Helpers ─────────────────────────────────────────────────────
+
+  const updateField = useCallback(
+    <K extends keyof MiniSiteState>(field: K, value: MiniSiteState[K]) => {
+      setState((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const clearSaveMessage = useCallback(() => {
+    setTimeout(() => setSaveMessage(null), 4000);
+  }, []);
+
+  // ─── Load data on mount ──────────────────────────────────────────
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        setLoadError(null);
+        const res = await fetch("/api/minisite/builder");
+        if (!res.ok) {
+          throw new Error("Nu s-au putut incarca datele mini-site-ului.");
+        }
+        const data = await res.json();
+
+        setState((prev) => ({
+          ...prev,
+          ngoName: data.ngoName || "",
+          slug: data.slug || "",
+          logoUrl: data.logoUrl || "",
+          shortDescription: data.shortDescription || "",
+          description: data.description || "",
+          category: data.category || "",
+          websiteUrl: data.websiteUrl || "",
+          coverImageUrl: data.coverImageUrl || "",
+          cui: data.cui || "",
+          registrationNr: data.registrationNr || "",
+          bankAccount: data.bankAccount || "",
+          bankName: data.bankName || "",
+          contactAddress: data.contactAddress || "",
+          contactEmail: data.contactEmail || "",
+          contactPhone: data.contactPhone || "",
+          socialFacebook: data.socialFacebook || "",
+          socialInstagram: data.socialInstagram || "",
+          socialLinkedin: data.socialLinkedin || "",
+          socialYoutube: data.socialYoutube || "",
+          socialTiktok: data.socialTiktok || "",
+          socialTwitter: data.socialTwitter || "",
+          heroTitle: data.heroTitle || "",
+          heroDescription: data.heroDescription || "",
+          aboutText: data.aboutText || "",
+          missionText: data.missionText || "",
+          impactText: data.impactText || "",
+          primaryColor: data.primaryColor || "#6366f1",
+          accentColor: data.accentColor || "#f59e0b",
+          theme: data.theme || "modern",
+          heroCtaText: data.heroCtaText || "Doneaza acum",
+          showAbout: data.showAbout ?? true,
+          showMission: data.showMission ?? true,
+          showImpact: data.showImpact ?? true,
+          showDonation: data.showDonation ?? true,
+          showNewsletter: data.showNewsletter ?? true,
+          showContact: data.showContact ?? true,
+          showSocial: data.showSocial ?? true,
+          showFormular230: data.showFormular230 ?? false,
+          showContract: data.showContract ?? false,
+          customCss: data.customCss || "",
+          isPublished: data.isPublished ?? false,
+        }));
+
+        if (data.heroTitle || data.aboutText || data.missionText) {
+          setAiGenerated(true);
+        }
+      } catch (err) {
+        console.error("Error loading minisite data:", err);
+        setLoadError(
+          err instanceof Error
+            ? err.message
+            : "Eroare la incarcarea datelor."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // ─── Save ────────────────────────────────────────────────────────
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setSaveMessage(null);
+
+      const res = await fetch("/api/minisite/builder", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(state),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(
+          errData?.error || "Eroare la salvare. Incercati din nou."
+        );
+      }
+
+      setSaveMessage({
+        type: "success",
+        text: "Mini-site-ul a fost salvat cu succes!",
+      });
+      clearSaveMessage();
+    } catch (err) {
+      console.error("Error saving minisite:", err);
+      setSaveMessage({
+        type: "error",
+        text:
+          err instanceof Error
+            ? err.message
+            : "Eroare la salvare. Incercati din nou.",
+      });
+      clearSaveMessage();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ─── AI Generate ─────────────────────────────────────────────────
+
+  const handleAiGenerate = async () => {
+    try {
+      setGenerating(true);
+      setSaveMessage(null);
+
+      const res = await fetch("/api/minisite/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ngoName: state.ngoName,
+          description: state.description,
+          shortDescription: state.shortDescription,
+          category: state.category,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(
+          errData?.error || "Eroare la generarea continutului AI."
+        );
+      }
+
+      const data = await res.json();
+
+      setState((prev) => ({
+        ...prev,
+        heroTitle: data.heroTitle || prev.heroTitle,
+        heroDescription: data.heroDescription || prev.heroDescription,
+        aboutText: data.aboutText || prev.aboutText,
+        missionText: data.missionText || prev.missionText,
+        impactText: data.impactText || prev.impactText,
+      }));
+
+      setAiGenerated(true);
+      setSaveMessage({
+        type: "success",
+        text: "Continutul a fost generat cu succes! Puteti edita textele mai jos.",
+      });
+      clearSaveMessage();
+    } catch (err) {
+      console.error("Error generating AI content:", err);
+      setSaveMessage({
+        type: "error",
+        text:
+          err instanceof Error
+            ? err.message
+            : "Eroare la generarea continutului AI.",
+      });
+      clearSaveMessage();
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // ─── Preview ─────────────────────────────────────────────────────
+
+  const handlePreview = () => {
+    if (state.slug) {
+      window.open(`/s/${state.slug}`, "_blank");
+    }
+  };
+
+  // ─── Loading screen ──────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="text-muted-foreground">
+            Se incarca datele mini-site-ului...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Card className="max-w-md w-full">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <AlertCircle className="h-8 w-8 mx-auto text-destructive" />
+              <p className="text-destructive">{loadError}</p>
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+              >
+                Reincarca pagina
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ─── Render ──────────────────────────────────────────────────────
+
+  return (
+    <div className="space-y-6">
+      {/* Page header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Constructor Mini-Site
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Configureaza pagina publica a organizatiei tale cu ajutorul AI-ului
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant={state.isPublished ? "success" : "secondary"}>
+            {state.isPublished ? "Publicat" : "Nepublicat"}
+          </Badge>
+          {state.slug && (
+            <Badge variant="outline" className="font-mono text-xs">
+              /s/{state.slug}
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      {/* Tabs wizard */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="date-ong" className="gap-1.5">
+            <Building className="h-4 w-4" />
+            <span className="hidden sm:inline">Date ONG</span>
+          </TabsTrigger>
+          <TabsTrigger value="date-asociatie" className="gap-1.5">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">Date asociatie</span>
+          </TabsTrigger>
+          <TabsTrigger value="genereaza-ai" className="gap-1.5">
+            <Wand2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Genereaza cu AI</span>
+          </TabsTrigger>
+          <TabsTrigger value="personalizeaza" className="gap-1.5">
+            <Palette className="h-4 w-4" />
+            <span className="hidden sm:inline">Personalizeaza</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ─── Tab 1: Date ONG ──────────────────────────────────── */}
+        <TabsContent value="date-ong">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                Date ONG
+              </CardTitle>
+              <CardDescription>
+                Informatiile de baza ale organizatiei care vor aparea pe
+                mini-site
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Logo URL */}
+              <div className="space-y-2">
+                <Label htmlFor="logoUrl" className="flex items-center gap-2">
+                  <Image className="h-4 w-4" />
+                  URL Logo
+                </Label>
+                <Input
+                  id="logoUrl"
+                  placeholder="https://exemplu.ro/logo.png"
+                  value={state.logoUrl}
+                  onChange={(e) => updateField("logoUrl", e.target.value)}
+                />
+                {state.logoUrl && (
+                  <div className="mt-2 p-3 border rounded-md bg-muted/30 inline-block">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={state.logoUrl}
+                      alt="Logo preview"
+                      className="h-16 w-auto object-contain"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* NGO Name (readonly) */}
+              <div className="space-y-2">
+                <Label htmlFor="ngoName" className="flex items-center gap-2">
+                  <Type className="h-4 w-4" />
+                  Numele organizatiei
+                </Label>
+                <Input
+                  id="ngoName"
+                  value={state.ngoName}
+                  readOnly
+                  className="bg-muted cursor-not-allowed"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Numele organizatiei nu poate fi modificat de aici. Accesati
+                  Setari pentru modificari.
+                </p>
+              </div>
+
+              {/* Short description */}
+              <div className="space-y-2">
+                <Label htmlFor="shortDescription">
+                  Descriere scurta (max 150 caractere)
+                </Label>
+                <Textarea
+                  id="shortDescription"
+                  placeholder="O descriere scurta a organizatiei..."
+                  value={state.shortDescription}
+                  onChange={(e) => {
+                    if (e.target.value.length <= 150) {
+                      updateField("shortDescription", e.target.value);
+                    }
+                  }}
+                  rows={2}
+                />
+                <p className="text-xs text-muted-foreground text-right">
+                  {state.shortDescription.length}/150 caractere
+                </p>
+              </div>
+
+              {/* Full description */}
+              <div className="space-y-2">
+                <Label htmlFor="description">Descriere completa</Label>
+                <Textarea
+                  id="description"
+                  placeholder="Descrieti pe larg activitatea organizatiei..."
+                  value={state.description}
+                  onChange={(e) => updateField("description", e.target.value)}
+                  rows={5}
+                />
+              </div>
+
+              {/* Category (button group) */}
+              <div className="space-y-2">
+                <Label>Categoria</Label>
+                <div className="flex flex-wrap gap-2">
+                  {CATEGORIES.map((cat) => (
+                    <Button
+                      key={cat}
+                      type="button"
+                      variant={state.category === cat ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => updateField("category", cat)}
+                    >
+                      {cat}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Website URL */}
+              <div className="space-y-2">
+                <Label htmlFor="websiteUrl" className="flex items-center gap-2">
+                  <Globe className="h-4 w-4" />
+                  Website URL
+                </Label>
+                <Input
+                  id="websiteUrl"
+                  placeholder="https://www.organizatia-ta.ro"
+                  value={state.websiteUrl}
+                  onChange={(e) => updateField("websiteUrl", e.target.value)}
+                />
+              </div>
+
+              {/* Cover Image URL */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="coverImageUrl"
+                  className="flex items-center gap-2"
+                >
+                  <Image className="h-4 w-4" />
+                  URL Imagine de coperta
+                </Label>
+                <Input
+                  id="coverImageUrl"
+                  placeholder="https://exemplu.ro/cover.jpg"
+                  value={state.coverImageUrl}
+                  onChange={(e) => updateField("coverImageUrl", e.target.value)}
+                />
+                {state.coverImageUrl && (
+                  <div className="mt-2 border rounded-md overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={state.coverImageUrl}
+                      alt="Cover preview"
+                      className="w-full h-40 object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ─── Tab 2: Date Asociatie ────────────────────────────── */}
+        <TabsContent value="date-asociatie">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Date asociatie
+              </CardTitle>
+              <CardDescription>
+                Informatii legale, bancare si de contact ale asociatiei
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Legal info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cui">CUI / CIF</Label>
+                  <Input
+                    id="cui"
+                    placeholder="RO12345678"
+                    value={state.cui}
+                    onChange={(e) => updateField("cui", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="registrationNr">
+                    Numar inregistrare
+                  </Label>
+                  <Input
+                    id="registrationNr"
+                    placeholder="J40/1234/2020"
+                    value={state.registrationNr}
+                    onChange={(e) =>
+                      updateField("registrationNr", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Bank info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bankAccount">Cont bancar IBAN</Label>
+                  <Input
+                    id="bankAccount"
+                    placeholder="RO49AAAA1B31007593840000"
+                    value={state.bankAccount}
+                    onChange={(e) => updateField("bankAccount", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bankName">Banca</Label>
+                  <Input
+                    id="bankName"
+                    placeholder="Banca Transilvania"
+                    value={state.bankName}
+                    onChange={(e) => updateField("bankName", e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Address */}
+              <div className="space-y-2">
+                <Label
+                  htmlFor="contactAddress"
+                  className="flex items-center gap-2"
+                >
+                  <MapPin className="h-4 w-4" />
+                  Adresa sediu
+                </Label>
+                <Input
+                  id="contactAddress"
+                  placeholder="Str. Exemplu nr. 1, Bucuresti"
+                  value={state.contactAddress}
+                  onChange={(e) =>
+                    updateField("contactAddress", e.target.value)
+                  }
+                />
+              </div>
+
+              {/* Contact info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="contactEmail"
+                    className="flex items-center gap-2"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Email contact
+                  </Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    placeholder="contact@organizatia.ro"
+                    value={state.contactEmail}
+                    onChange={(e) =>
+                      updateField("contactEmail", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="contactPhone"
+                    className="flex items-center gap-2"
+                  >
+                    <Phone className="h-4 w-4" />
+                    Telefon contact
+                  </Label>
+                  <Input
+                    id="contactPhone"
+                    type="tel"
+                    placeholder="+40 712 345 678"
+                    value={state.contactPhone}
+                    onChange={(e) =>
+                      updateField("contactPhone", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Social media links */}
+              <div className="space-y-3">
+                <Label className="text-base font-semibold">
+                  Retele sociale
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Adaugati link-urile catre profilurile organizatiei pe retelele
+                  sociale
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="socialFacebook"
+                      className="flex items-center gap-2"
+                    >
+                      <Facebook className="h-4 w-4" />
+                      Facebook
+                    </Label>
+                    <Input
+                      id="socialFacebook"
+                      placeholder="https://facebook.com/organizatia"
+                      value={state.socialFacebook}
+                      onChange={(e) =>
+                        updateField("socialFacebook", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="socialInstagram"
+                      className="flex items-center gap-2"
+                    >
+                      <Instagram className="h-4 w-4" />
+                      Instagram
+                    </Label>
+                    <Input
+                      id="socialInstagram"
+                      placeholder="https://instagram.com/organizatia"
+                      value={state.socialInstagram}
+                      onChange={(e) =>
+                        updateField("socialInstagram", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="socialLinkedin"
+                      className="flex items-center gap-2"
+                    >
+                      <Linkedin className="h-4 w-4" />
+                      LinkedIn
+                    </Label>
+                    <Input
+                      id="socialLinkedin"
+                      placeholder="https://linkedin.com/company/organizatia"
+                      value={state.socialLinkedin}
+                      onChange={(e) =>
+                        updateField("socialLinkedin", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="socialYoutube"
+                      className="flex items-center gap-2"
+                    >
+                      <Youtube className="h-4 w-4" />
+                      YouTube
+                    </Label>
+                    <Input
+                      id="socialYoutube"
+                      placeholder="https://youtube.com/@organizatia"
+                      value={state.socialYoutube}
+                      onChange={(e) =>
+                        updateField("socialYoutube", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="socialTiktok"
+                      className="flex items-center gap-2"
+                    >
+                      <Music2 className="h-4 w-4" />
+                      TikTok
+                    </Label>
+                    <Input
+                      id="socialTiktok"
+                      placeholder="https://tiktok.com/@organizatia"
+                      value={state.socialTiktok}
+                      onChange={(e) =>
+                        updateField("socialTiktok", e.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="socialTwitter"
+                      className="flex items-center gap-2"
+                    >
+                      <Twitter className="h-4 w-4" />
+                      Twitter / X
+                    </Label>
+                    <Input
+                      id="socialTwitter"
+                      placeholder="https://twitter.com/organizatia"
+                      value={state.socialTwitter}
+                      onChange={(e) =>
+                        updateField("socialTwitter", e.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ─── Tab 3: Genereaza cu AI ───────────────────────────── */}
+        <TabsContent value="genereaza-ai">
+          <div className="space-y-6">
+            {/* AI generation card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wand2 className="h-5 w-5" />
+                  Genereaza continut cu AI
+                </CardTitle>
+                <CardDescription>
+                  Inteligenta artificiala va genera automat texte optimizate
+                  pentru mini-site-ul tau pe baza informatiilor despre
+                  organizatie
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-muted/50 rounded-lg p-4 space-y-3">
+                  <p className="text-sm font-medium">
+                    AI-ul va genera urmatoarele sectiuni:
+                  </p>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      <span>
+                        <strong>Titlu Hero</strong> - Titlul principal al
+                        paginii
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      <span>
+                        <strong>Descriere Hero</strong> - Subtitlul de pe
+                        pagina principala
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      <span>
+                        <strong>Sectiunea Despre noi</strong> - Prezentarea
+                        organizatiei
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      <span>
+                        <strong>Sectiunea Misiune</strong> - Misiunea si
+                        viziunea organizatiei
+                      </span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      <span>
+                        <strong>Text Impact</strong> - Descrierea impactului
+                        asupra comunitatii
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+
+                {!state.ngoName && !state.description && (
+                  <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
+                    <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                    <p className="text-sm text-amber-800">
+                      Pentru rezultate mai bune, completati mai intai
+                      informatiile din tabul &quot;Date ONG&quot; (numele,
+                      descrierea si categoria organizatiei).
+                    </p>
+                  </div>
+                )}
+
+                <Button
+                  size="lg"
+                  className="w-full gap-2"
+                  onClick={handleAiGenerate}
+                  disabled={generating}
+                >
+                  {generating ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      Se genereaza continutul...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-5 w-5" />
+                      Genereaza cu AI
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* AI-generated texts (editable) */}
+            {aiGenerated && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                    Continut generat
+                  </CardTitle>
+                  <CardDescription>
+                    Editati textele generate pentru a le personaliza dupa
+                    preferintele dumneavoastra
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="space-y-2">
+                    <Label htmlFor="heroTitle" className="font-medium">
+                      Titlu Hero
+                    </Label>
+                    <Input
+                      id="heroTitle"
+                      value={state.heroTitle}
+                      onChange={(e) =>
+                        updateField("heroTitle", e.target.value)
+                      }
+                      placeholder="Titlul principal al paginii..."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="heroDescription" className="font-medium">
+                      Descriere Hero
+                    </Label>
+                    <Textarea
+                      id="heroDescription"
+                      value={state.heroDescription}
+                      onChange={(e) =>
+                        updateField("heroDescription", e.target.value)
+                      }
+                      placeholder="Subtitlul de pe pagina principala..."
+                      rows={3}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="aboutText" className="font-medium">
+                      Sectiunea Despre noi
+                    </Label>
+                    <Textarea
+                      id="aboutText"
+                      value={state.aboutText}
+                      onChange={(e) =>
+                        updateField("aboutText", e.target.value)
+                      }
+                      placeholder="Prezentarea organizatiei..."
+                      rows={5}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="missionText" className="font-medium">
+                      Sectiunea Misiune
+                    </Label>
+                    <Textarea
+                      id="missionText"
+                      value={state.missionText}
+                      onChange={(e) =>
+                        updateField("missionText", e.target.value)
+                      }
+                      placeholder="Misiunea si viziunea organizatiei..."
+                      rows={5}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="impactText" className="font-medium">
+                      Text Impact
+                    </Label>
+                    <Textarea
+                      id="impactText"
+                      value={state.impactText}
+                      onChange={(e) =>
+                        updateField("impactText", e.target.value)
+                      }
+                      placeholder="Descrierea impactului asupra comunitatii..."
+                      rows={4}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* ─── Tab 4: Personalizeaza ────────────────────────────── */}
+        <TabsContent value="personalizeaza">
+          <div className="space-y-6">
+            {/* Colors & Theme */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Aspect si culori
+                </CardTitle>
+                <CardDescription>
+                  Personalizeaza culorile si tema mini-site-ului
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Primary Color */}
+                  <div className="space-y-2">
+                    <Label htmlFor="primaryColor">Culoare principala</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        id="primaryColor"
+                        value={state.primaryColor}
+                        onChange={(e) =>
+                          updateField("primaryColor", e.target.value)
+                        }
+                        className="h-10 w-14 cursor-pointer rounded border border-input"
+                      />
+                      <Input
+                        value={state.primaryColor}
+                        onChange={(e) =>
+                          updateField("primaryColor", e.target.value)
+                        }
+                        className="font-mono w-32"
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Accent Color */}
+                  <div className="space-y-2">
+                    <Label htmlFor="accentColor">Culoare accent</Label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        id="accentColor"
+                        value={state.accentColor}
+                        onChange={(e) =>
+                          updateField("accentColor", e.target.value)
+                        }
+                        className="h-10 w-14 cursor-pointer rounded border border-input"
+                      />
+                      <Input
+                        value={state.accentColor}
+                        onChange={(e) =>
+                          updateField("accentColor", e.target.value)
+                        }
+                        className="font-mono w-32"
+                        maxLength={7}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Theme selector */}
+                <div className="space-y-2">
+                  <Label>Tema</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {THEMES.map((t) => (
+                      <Button
+                        key={t.value}
+                        type="button"
+                        variant={
+                          state.theme === t.value ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() => updateField("theme", t.value)}
+                      >
+                        {t.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Hero CTA text */}
+                <div className="space-y-2">
+                  <Label htmlFor="heroCtaText">
+                    Text buton CTA (Call to Action)
+                  </Label>
+                  <Input
+                    id="heroCtaText"
+                    placeholder="Doneaza acum"
+                    value={state.heroCtaText}
+                    onChange={(e) =>
+                      updateField("heroCtaText", e.target.value)
+                    }
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Section toggles */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5" />
+                  Sectiuni vizibile
+                </CardTitle>
+                <CardDescription>
+                  Alege ce sectiuni sa fie afisate pe mini-site
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {(
+                    [
+                      {
+                        key: "showAbout" as const,
+                        label: "Sectiunea Despre noi",
+                      },
+                      {
+                        key: "showMission" as const,
+                        label: "Sectiunea Misiune",
+                      },
+                      {
+                        key: "showImpact" as const,
+                        label: "Sectiunea Impact",
+                      },
+                      {
+                        key: "showDonation" as const,
+                        label: "Formular donatie",
+                      },
+                      {
+                        key: "showNewsletter" as const,
+                        label: "Newsletter",
+                      },
+                      {
+                        key: "showContact" as const,
+                        label: "Informatii contact",
+                      },
+                      {
+                        key: "showSocial" as const,
+                        label: "Retele sociale",
+                      },
+                      {
+                        key: "showFormular230" as const,
+                        label: "Formular 230",
+                      },
+                      {
+                        key: "showContract" as const,
+                        label: "Contract sponsorizare",
+                      },
+                    ] as const
+                  ).map(({ key, label }) => (
+                    <label
+                      key={key}
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 cursor-pointer transition-colors"
+                    >
+                      <span className="text-sm font-medium">{label}</span>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={state[key]}
+                        onClick={() => updateField(key, !state[key])}
+                        className={`
+                          relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent
+                          transition-colors duration-200 ease-in-out
+                          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                          ${state[key] ? "bg-primary" : "bg-input"}
+                        `}
+                      >
+                        <span
+                          className={`
+                            pointer-events-none inline-block h-5 w-5 transform rounded-full bg-background shadow-lg ring-0
+                            transition duration-200 ease-in-out
+                            ${state[key] ? "translate-x-5" : "translate-x-0"}
+                          `}
+                        />
+                      </button>
+                    </label>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Custom CSS */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">CSS personalizat</CardTitle>
+                <CardDescription>
+                  Adaugati reguli CSS personalizate pentru mini-site (optional,
+                  pentru utilizatori avansati)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  id="customCss"
+                  placeholder={`.hero-section {\n  background: linear-gradient(...);\n}`}
+                  value={state.customCss}
+                  onChange={(e) => updateField("customCss", e.target.value)}
+                  rows={6}
+                  className="font-mono text-sm"
+                />
+              </CardContent>
+            </Card>
+
+            {/* Publish toggle */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Publicare</CardTitle>
+                <CardDescription>
+                  Controlati vizibilitatea mini-site-ului pentru public
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <label className="flex items-center justify-between p-4 rounded-lg border-2 hover:bg-muted/50 cursor-pointer transition-colors">
+                  <div className="space-y-1">
+                    <span className="text-sm font-semibold flex items-center gap-2">
+                      {state.isPublished ? (
+                        <Eye className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      )}
+                      {state.isPublished
+                        ? "Mini-site publicat"
+                        : "Mini-site nepublicat"}
+                    </span>
+                    <p className="text-xs text-muted-foreground">
+                      {state.isPublished
+                        ? "Pagina este vizibila public la adresa /s/" +
+                          state.slug
+                        : "Pagina nu este vizibila public. Activati pentru a o publica."}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={state.isPublished}
+                    onClick={() =>
+                      updateField("isPublished", !state.isPublished)
+                    }
+                    className={`
+                      relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent
+                      transition-colors duration-200 ease-in-out
+                      focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+                      ${state.isPublished ? "bg-green-600" : "bg-input"}
+                    `}
+                  >
+                    <span
+                      className={`
+                        pointer-events-none inline-block h-6 w-6 transform rounded-full bg-background shadow-lg ring-0
+                        transition duration-200 ease-in-out
+                        ${state.isPublished ? "translate-x-5" : "translate-x-0"}
+                      `}
+                    />
+                  </button>
+                </label>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* ─── Bottom action bar ────────────────────────────────────── */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* Status messages */}
+            <div className="flex-1">
+              {saveMessage && (
+                <div
+                  className={`flex items-center gap-2 text-sm ${
+                    saveMessage.type === "success"
+                      ? "text-green-700"
+                      : "text-destructive"
+                  }`}
+                >
+                  {saveMessage.type === "success" ? (
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                  )}
+                  {saveMessage.text}
+                </div>
+              )}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={handlePreview}
+                disabled={!state.slug}
+                className="gap-2"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Previzualizeaza
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="gap-2 min-w-[140px]"
+              >
+                {saving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Se salveaza...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Salveaza
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

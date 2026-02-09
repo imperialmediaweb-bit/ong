@@ -26,6 +26,7 @@ const navigation = [
   { name: "Formular 230", href: "/dashboard/formular-230", icon: FileText },
   { name: "Contracte", href: "/dashboard/contracte", icon: Briefcase },
   { name: "Retea", href: "/dashboard/retea", icon: Share2 },
+  { name: "Mini-Site", href: "/dashboard/minisite", icon: Globe },
   { name: "Setari", href: "/dashboard/settings", icon: Settings },
 ];
 

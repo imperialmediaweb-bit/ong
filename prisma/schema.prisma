@@ -522,13 +522,58 @@ model MiniSiteConfig {
   id              String   @id @default(cuid())
   ngoId           String   @unique
   ngo             Ngo      @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+
+  // Hero section
   heroTitle       String?
   heroDescription String?
+  heroCtaText     String?  @default("Doneaza acum")
+
+  // About & Mission (AI-generated)
+  aboutText       String?
+  missionText     String?
+  impactText      String?
+
+  // Contact info
+  contactEmail    String?
+  contactPhone    String?
+  contactAddress  String?
+
+  // Legal / Association data
+  cui             String?
+  registrationNr  String?
+  bankAccount     String?
+  bankName        String?
+
+  // Social links
+  socialFacebook  String?
+  socialInstagram String?
+  socialLinkedin  String?
+  socialTwitter   String?
+  socialYoutube   String?
+  socialTiktok    String?
+
+  // Appearance
   primaryColor    String   @default("#6366f1")
+  accentColor     String   @default("#f59e0b")
+  theme           String   @default("modern")
+
+  // Section toggles
   showNewsletter  Boolean  @default(true)
   showDonation    Boolean  @default(true)
   showUpdates     Boolean  @default(true)
+  showAbout       Boolean  @default(true)
+  showMission     Boolean  @default(true)
+  showImpact      Boolean  @default(true)
+  showContact     Boolean  @default(true)
+  showSocial      Boolean  @default(true)
+  showFormular230 Boolean  @default(false)
+  showContract    Boolean  @default(false)
+
+  // Extra
   customCss       String?
+  customSections  Json?    // [{title, content, icon}]
+  isPublished     Boolean  @default(false)
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
