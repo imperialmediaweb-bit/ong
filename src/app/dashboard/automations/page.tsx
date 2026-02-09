@@ -208,7 +208,7 @@ export default function AutomationsPage() {
                 <div className="grid gap-2">
                   <Label>Declansator *</Label>
                   <Select
-                    value={newAutomation.trigger}
+                    value={newAutomation.trigger || undefined}
                     onValueChange={(v) => setNewAutomation({ ...newAutomation, trigger: v })}
                   >
                     <SelectTrigger>
