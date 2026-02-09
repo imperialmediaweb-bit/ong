@@ -15,52 +15,61 @@ async function getDashboardData() {
     return null;
   }
 
-  const [
-    donorCount,
-    activeCampaignCount,
-    donationStats,
-    recentDonations,
-    topCampaigns,
-  ] = await Promise.all([
-    prisma.donor.count({ where: { ngoId, status: "ACTIVE" } }),
-    prisma.campaign.count({ where: { ngoId, status: { in: ["SENDING", "SENT", "SCHEDULED"] } } }),
-    prisma.donation.aggregate({
-      where: { ngoId },
+  try {
+    const [
+      donorCount,
+      activeCampaignCount,
+      donationStats,
+      recentDonations,
+      topCampaigns,
+    ] = await Promise.all([
+      prisma.donor.count({ where: { ngoId, status: "ACTIVE" } }),
+      prisma.campaign.count({ where: { ngoId, status: { in: ["SENDING", "SENT", "SCHEDULED"] } } }),
+      prisma.donation.aggregate({
+        where: { ngoId },
+        _sum: { amount: true },
+        _count: true,
+      }),
+      prisma.donation.findMany({
+        where: { ngoId },
+        include: { donor: { select: { name: true, email: true } }, campaign: { select: { name: true } } },
+        orderBy: { createdAt: "desc" },
+        take: 8,
+      }),
+      prisma.campaign.findMany({
+        where: { ngoId, status: { in: ["SENT", "SENDING"] } },
+        orderBy: { totalOpened: "desc" },
+        take: 5,
+      }),
+    ]);
+
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const monthlyRevenue = await prisma.donation.aggregate({
+      where: { ngoId, createdAt: { gte: thirtyDaysAgo }, status: "COMPLETED" },
       _sum: { amount: true },
-      _count: true,
-    }),
-    prisma.donation.findMany({
-      where: { ngoId },
-      include: { donor: { select: { name: true, email: true } }, campaign: { select: { name: true } } },
-      orderBy: { createdAt: "desc" },
-      take: 8,
-    }),
-    prisma.campaign.findMany({
-      where: { ngoId, status: { in: ["SENT", "SENDING"] } },
-      orderBy: { totalOpened: "desc" },
-      take: 5,
-    }),
-  ]);
+    });
 
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-  const monthlyRevenue = await prisma.donation.aggregate({
-    where: { ngoId, createdAt: { gte: thirtyDaysAgo }, status: "COMPLETED" },
-    _sum: { amount: true },
-  });
-
-  return {
-    stats: {
-      totalDonors: donorCount,
-      activeCampaigns: activeCampaignCount,
-      totalDonations: donationStats._count,
-      totalRevenue: donationStats._sum.amount || 0,
-      monthlyRevenue: monthlyRevenue._sum.amount || 0,
-    },
-    recentDonations,
-    topCampaigns,
-  };
+    return {
+      stats: {
+        totalDonors: donorCount,
+        activeCampaigns: activeCampaignCount,
+        totalDonations: donationStats._count,
+        totalRevenue: donationStats._sum.amount || 0,
+        monthlyRevenue: monthlyRevenue._sum.amount || 0,
+      },
+      recentDonations,
+      topCampaigns,
+    };
+  } catch (error) {
+    console.error("Dashboard data error:", error);
+    return {
+      stats: { totalDonors: 0, activeCampaigns: 0, totalDonations: 0, totalRevenue: 0, monthlyRevenue: 0 },
+      recentDonations: [],
+      topCampaigns: [],
+    };
+  }
 }
 
 export default async function DashboardPage() {

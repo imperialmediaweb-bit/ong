@@ -170,7 +170,7 @@ export function SponsorCRM() {
   const [savingNote, setSavingNote] = useState(false);
 
   // Email composer
-  const [emailContactId, setEmailContactId] = useState("");
+  const [emailContactId, setEmailContactId] = useState("none");
   const [emailSubject, setEmailSubject] = useState("");
   const [emailBody, setEmailBody] = useState("");
   const [emailFollowup, setEmailFollowup] = useState("");
@@ -182,7 +182,7 @@ export function SponsorCRM() {
   const [aiMatch, setAiMatch] = useState<AiMatch | null>(null);
   const [aiVariants, setAiVariants] = useState<EmailVariant[]>([]);
   const [aiMsgLoading, setAiMsgLoading] = useState(false);
-  const [aiMsgContactId, setAiMsgContactId] = useState("");
+  const [aiMsgContactId, setAiMsgContactId] = useState("none");
 
   // CSV import
   const [showImport, setShowImport] = useState(false);
@@ -355,7 +355,7 @@ export function SponsorCRM() {
   // ─── Send email ──────────────────────────────
 
   const handleSendEmail = async () => {
-    if (!emailContactId || !emailSubject.trim() || !emailBody.trim() || !selectedCompany) return;
+    if (!emailContactId || emailContactId === "none" || !emailSubject.trim() || !emailBody.trim() || !selectedCompany) return;
     setSendingEmail(true);
     setEmailSent(false);
     try {
@@ -378,6 +378,7 @@ export function SponsorCRM() {
       setEmailSubject("");
       setEmailBody("");
       setEmailFollowup("");
+      setEmailContactId("none");
       openCompany(selectedCompany.id);
     } catch {
       alert("Eroare la trimitere");
@@ -414,7 +415,7 @@ export function SponsorCRM() {
       const res = await fetch(`/api/sponsors/${selectedCompany.id}/ai-message`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contactId: aiMsgContactId || undefined }),
+        body: JSON.stringify({ contactId: aiMsgContactId && aiMsgContactId !== "none" ? aiMsgContactId : undefined }),
       });
       const data = await res.json();
       setAiVariants(data.variants || []);
@@ -1096,6 +1097,7 @@ export function SponsorCRM() {
                           <Select value={emailContactId} onValueChange={setEmailContactId}>
                             <SelectTrigger><SelectValue placeholder="Selecteaza contact..." /></SelectTrigger>
                             <SelectContent>
+                              <SelectItem value="none">-- Selecteaza contact --</SelectItem>
                               {selectedCompany.contacts?.filter((c) => c.email && !c.dncFlag).map((c) => (
                                 <SelectItem key={c.id} value={c.id}>
                                   {c.fullName} ({c.email})
@@ -1125,7 +1127,7 @@ export function SponsorCRM() {
                           <Input type="date" value={emailFollowup} onChange={(e) => setEmailFollowup(e.target.value)} />
                         </div>
                         <div className="flex gap-2">
-                          <Button onClick={handleSendEmail} disabled={sendingEmail || !emailContactId || !emailSubject.trim() || !emailBody.trim()}>
+                          <Button onClick={handleSendEmail} disabled={sendingEmail || !emailContactId || emailContactId === "none" || !emailSubject.trim() || !emailBody.trim()}>
                             {sendingEmail ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Send className="h-4 w-4 mr-1" />}
                             Trimite email
                           </Button>
@@ -1187,7 +1189,7 @@ export function SponsorCRM() {
                                 <SelectValue placeholder="Contact (optional)" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value=" ">Fara contact specific</SelectItem>
+                                <SelectItem value="none">Fara contact specific</SelectItem>
                                 {selectedCompany.contacts?.map((c) => (
                                   <SelectItem key={c.id} value={c.id}>{c.fullName}</SelectItem>
                                 ))}

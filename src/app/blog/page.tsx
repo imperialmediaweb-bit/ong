@@ -15,11 +15,16 @@ function formatDate(date: Date) {
 }
 
 export default async function BlogPage() {
-  const posts = await prisma.blogPost.findMany({
-    where: { status: "PUBLISHED" },
-    orderBy: { publishedAt: "desc" },
-    include: { author: { select: { name: true } } },
-  });
+  let posts: any[] = [];
+  try {
+    posts = await prisma.blogPost.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: { publishedAt: "desc" },
+      include: { author: { select: { name: true } } },
+    });
+  } catch (error) {
+    console.error("Blog page error:", error);
+  }
 
   const featured = posts.find((p) => p.featured);
   const regular = posts.filter((p) => !p.featured || p.id !== featured?.id);

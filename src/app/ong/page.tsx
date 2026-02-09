@@ -61,14 +61,19 @@ function RatingStars({ rating }: { rating: number }) {
 }
 
 export default async function OngDirectoryPage() {
-  const ngos = await prisma.ngo.findMany({
-    where: { isActive: true },
-    include: {
-      verification: { select: { status: true } },
-      _count: { select: { donors: true, donations: true } },
-    },
-    orderBy: { totalRaised: "desc" },
-  });
+  let ngos: any[] = [];
+  try {
+    ngos = await prisma.ngo.findMany({
+      where: { isActive: true },
+      include: {
+        verification: { select: { status: true } },
+        _count: { select: { donors: true, donations: true } },
+      },
+      orderBy: { totalRaised: "desc" },
+    });
+  } catch (error) {
+    console.error("ONG directory error:", error);
+  }
 
   const totalNgos = ngos.length;
   const verifiedNgos = ngos.filter(
