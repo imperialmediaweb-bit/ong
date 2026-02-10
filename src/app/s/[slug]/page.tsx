@@ -143,7 +143,8 @@ export default async function MiniSitePage({ params }: Props) {
     ? (config as any).miniSiteCampaigns.filter((c: any) => c.isActive)
     : [];
 
-  const showCampaigns = showFormular230 || showContract || showDonation || miniSiteCampaigns.length > 0;
+  const showRedirectImpozit = showFormular230 || showContract || showDonation;
+  const showCampaigns = miniSiteCampaigns.length > 0;
 
   return (
     <div
@@ -169,7 +170,7 @@ export default async function MiniSitePage({ params }: Props) {
               <img
                 src={ngo.logoUrl}
                 alt={ngo.name}
-                className="h-9 w-9 rounded-lg object-cover"
+                className="h-10 w-auto max-w-[160px] object-contain"
               />
             ) : (
               <div
@@ -206,6 +207,14 @@ export default async function MiniSitePage({ params }: Props) {
                 className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
               >
                 Campanii
+              </a>
+            )}
+            {!showCampaigns && showRedirectImpozit && (
+              <a
+                href="#donatie"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
+              >
+                Contribuie
               </a>
             )}
             {blogPosts.length > 0 && (
@@ -265,6 +274,14 @@ export default async function MiniSitePage({ params }: Props) {
                 className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 Campanii
+              </a>
+            )}
+            {!showCampaigns && showRedirectImpozit && (
+              <a
+                href="#donatie"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              >
+                Contribuie
               </a>
             )}
             {blogPosts.length > 0 && (
@@ -444,148 +461,26 @@ export default async function MiniSitePage({ params }: Props) {
 
       {/* ── Main Content ─────────────────────────────────────────────── */}
       <main>
-        {/* ── Campaigns Cards Section ──────────────────────────────────── */}
-        {showCampaigns && (
-          <section id="campanii" className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
+        {/* ── Redirectioneaza Impozit Section ─────────────────────────────── */}
+        {showRedirectImpozit && (
+          <section className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
             <div className="mx-auto max-w-6xl px-4 sm:px-6">
               <div className="mb-12 text-center">
                 <div
                   className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-                  style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
+                  style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
                 >
-                  <Target className="h-7 w-7" style={{ color: accentColor }} />
+                  <Shield className="h-7 w-7" style={{ color: primaryColor }} />
                 </div>
                 <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
-                  Campanii active
+                  Sustine cauza noastra
                 </h2>
                 <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
-                  Alege cum vrei sa contribui la misiunea noastra
+                  Redirectioneaza impozitul sau doneaza direct - fara costuri suplimentare
                 </p>
               </div>
 
-              {/* Dynamic campaigns from builder */}
-              {miniSiteCampaigns.length > 0 && (
-                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 mb-12">
-                  {miniSiteCampaigns.map((camp: any, idx: number) => {
-                    const progress = camp.goalAmount > 0 ? Math.min(100, Math.round(((camp.raisedAmount || 0) / camp.goalAmount) * 100)) : 0;
-                    return (
-                      <div
-                        key={camp.id || idx}
-                        className="group relative overflow-hidden rounded-3xl bg-white shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
-                        style={{ border: `1px solid rgba(${primaryRgb}, 0.1)` }}
-                      >
-                        {/* Campaign image */}
-                        {camp.imageUrl ? (
-                          <div className="relative h-52 overflow-hidden">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={camp.imageUrl}
-                              alt={camp.title}
-                              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                            {/* Overlay goal on image */}
-                            {camp.goalAmount > 0 && (
-                              <div className="absolute bottom-4 left-4 right-4">
-                                <div className="flex items-baseline justify-between text-white mb-1.5">
-                                  <span className="text-lg font-extrabold">
-                                    {Number(camp.raisedAmount || 0).toLocaleString("ro-RO")} RON
-                                  </span>
-                                  <span className="text-sm text-white/80">
-                                    din {Number(camp.goalAmount).toLocaleString("ro-RO")} RON
-                                  </span>
-                                </div>
-                                <div className="h-2 rounded-full bg-white/30 overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full transition-all duration-1000"
-                                    style={{
-                                      width: `${progress}%`,
-                                      background: `linear-gradient(90deg, ${accentColor}, white)`,
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ) : (
-                          <div
-                            className="relative h-40 overflow-hidden"
-                            style={{ background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})` }}
-                          >
-                            <div className="absolute inset-0 flex items-center justify-center opacity-20">
-                              <Heart className="h-24 w-24 text-white" />
-                            </div>
-                            {/* Overlay goal on gradient */}
-                            {camp.goalAmount > 0 && (
-                              <div className="absolute bottom-4 left-4 right-4">
-                                <div className="flex items-baseline justify-between text-white mb-1.5">
-                                  <span className="text-lg font-extrabold">
-                                    {Number(camp.raisedAmount || 0).toLocaleString("ro-RO")} RON
-                                  </span>
-                                  <span className="text-sm text-white/80">
-                                    din {Number(camp.goalAmount).toLocaleString("ro-RO")} RON
-                                  </span>
-                                </div>
-                                <div className="h-2 rounded-full bg-white/30 overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full transition-all duration-1000"
-                                    style={{
-                                      width: `${progress}%`,
-                                      background: `linear-gradient(90deg, ${accentColor}, white)`,
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        <div className="p-6">
-                          <h3 className="text-lg font-bold text-gray-900 leading-snug">
-                            {camp.title}
-                          </h3>
-                          {camp.description && (
-                            <p className="mt-2 text-sm text-gray-500 leading-relaxed line-clamp-3">
-                              {camp.description}
-                            </p>
-                          )}
-
-                          {/* Progress text */}
-                          {camp.goalAmount > 0 && (
-                            <div className="mt-3 flex items-center gap-2">
-                              <div
-                                className="flex h-8 w-8 items-center justify-center rounded-lg"
-                                style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
-                              >
-                                <Target className="h-4 w-4" style={{ color: primaryColor }} />
-                              </div>
-                              <span className="text-sm font-semibold" style={{ color: primaryColor }}>
-                                {progress}% din obiectiv atins
-                              </span>
-                            </div>
-                          )}
-
-                          {/* CTA Button - always links to platform donate page */}
-                          <a
-                            href={`/donate/${ngo.slug}`}
-                            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
-                            style={{
-                              background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
-                              boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.25)`,
-                            }}
-                          >
-                            <Heart className="h-4 w-4" />
-                            Doneaza acum
-                          </a>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* Static cards: Formular 230, Contract, Donate */}
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 {/* Card: Formular 230 */}
                 {showFormular230 && (
                   <div
@@ -678,6 +573,142 @@ export default async function MiniSitePage({ params }: Props) {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── User Campaigns Section ─────────────────────────────────────── */}
+        {showCampaigns && (
+          <section id="campanii" className="scroll-mt-20 bg-white py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
+                >
+                  <Target className="h-7 w-7" style={{ color: accentColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Campanii active
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Sustine campaniile noastre de strangere de fonduri
+                </p>
+              </div>
+
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {miniSiteCampaigns.map((camp: any, idx: number) => {
+                  const progress = camp.goalAmount > 0 ? Math.min(100, Math.round(((camp.raisedAmount || 0) / camp.goalAmount) * 100)) : 0;
+                  return (
+                    <div
+                      key={camp.id || idx}
+                      className="group relative overflow-hidden rounded-3xl bg-white shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
+                      style={{ border: `1px solid rgba(${primaryRgb}, 0.1)` }}
+                    >
+                      {/* Campaign image */}
+                      {camp.imageUrl ? (
+                        <div className="relative h-52 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={camp.imageUrl}
+                            alt={camp.title}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                          {camp.goalAmount > 0 && (
+                            <div className="absolute bottom-4 left-4 right-4">
+                              <div className="flex items-baseline justify-between text-white mb-1.5">
+                                <span className="text-lg font-extrabold">
+                                  {Number(camp.raisedAmount || 0).toLocaleString("ro-RO")} RON
+                                </span>
+                                <span className="text-sm text-white/80">
+                                  din {Number(camp.goalAmount).toLocaleString("ro-RO")} RON
+                                </span>
+                              </div>
+                              <div className="h-2 rounded-full bg-white/30 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all duration-1000"
+                                  style={{
+                                    width: `${progress}%`,
+                                    background: `linear-gradient(90deg, ${accentColor}, white)`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          className="relative h-40 overflow-hidden"
+                          style={{ background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})` }}
+                        >
+                          <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                            <Heart className="h-24 w-24 text-white" />
+                          </div>
+                          {camp.goalAmount > 0 && (
+                            <div className="absolute bottom-4 left-4 right-4">
+                              <div className="flex items-baseline justify-between text-white mb-1.5">
+                                <span className="text-lg font-extrabold">
+                                  {Number(camp.raisedAmount || 0).toLocaleString("ro-RO")} RON
+                                </span>
+                                <span className="text-sm text-white/80">
+                                  din {Number(camp.goalAmount).toLocaleString("ro-RO")} RON
+                                </span>
+                              </div>
+                              <div className="h-2 rounded-full bg-white/30 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all duration-1000"
+                                  style={{
+                                    width: `${progress}%`,
+                                    background: `linear-gradient(90deg, ${accentColor}, white)`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="p-6">
+                        <h3 className="text-lg font-bold text-gray-900 leading-snug">
+                          {camp.title}
+                        </h3>
+                        {camp.description && (
+                          <p className="mt-2 text-sm text-gray-500 leading-relaxed line-clamp-3">
+                            {camp.description}
+                          </p>
+                        )}
+
+                        {camp.goalAmount > 0 && (
+                          <div className="mt-3 flex items-center gap-2">
+                            <div
+                              className="flex h-8 w-8 items-center justify-center rounded-lg"
+                              style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                            >
+                              <Target className="h-4 w-4" style={{ color: primaryColor }} />
+                            </div>
+                            <span className="text-sm font-semibold" style={{ color: primaryColor }}>
+                              {progress}% din obiectiv atins
+                            </span>
+                          </div>
+                        )}
+
+                        <a
+                          href={`/donate/${ngo.slug}`}
+                          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+                          style={{
+                            background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                            boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.25)`,
+                          }}
+                        >
+                          <Heart className="h-4 w-4" />
+                          Doneaza acum
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </section>
