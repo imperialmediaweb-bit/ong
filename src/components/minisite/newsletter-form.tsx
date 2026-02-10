@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, Check } from "lucide-react";
+import { Mail, Check, Phone } from "lucide-react";
 
 interface Props {
   ngoSlug: string;
@@ -16,7 +16,9 @@ interface Props {
 export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [emailConsent, setEmailConsent] = useState(false);
+  const [smsConsent, setSmsConsent] = useState(false);
   const [privacyConsent, setPrivacyConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -35,7 +37,7 @@ export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
       const res = await fetch(`/api/minisite/${ngoSlug}/subscribe`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, emailConsent, privacyConsent }),
+        body: JSON.stringify({ email, name, phone, emailConsent, smsConsent, privacyConsent }),
       });
 
       if (!res.ok) {
@@ -85,9 +87,13 @@ export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
               <Input id="sub-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Numele tau" />
             </div>
             <div>
-              <Label htmlFor="sub-email">Email *</Label>
-              <Input id="sub-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@exemplu.ro" required />
+              <Label htmlFor="sub-phone">Telefon (optional)</Label>
+              <Input id="sub-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+40 712 345 678" />
             </div>
+          </div>
+          <div>
+            <Label htmlFor="sub-email">Email *</Label>
+            <Input id="sub-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@exemplu.ro" required />
           </div>
 
           <div className="space-y-3 border-t pt-3">
@@ -99,6 +105,16 @@ export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
               />
               <Label htmlFor="sub-email-consent" className="text-sm leading-snug">
                 {consentTexts.EMAIL_MARKETING || "Sunt de acord sa primesc actualizari prin email"} *
+              </Label>
+            </div>
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="sub-sms-consent"
+                checked={smsConsent}
+                onCheckedChange={(v) => setSmsConsent(v === true)}
+              />
+              <Label htmlFor="sub-sms-consent" className="text-sm leading-snug">
+                {consentTexts.SMS_MARKETING || "Sunt de acord sa primesc actualizari prin SMS"}
               </Label>
             </div>
             <div className="flex items-start gap-2">

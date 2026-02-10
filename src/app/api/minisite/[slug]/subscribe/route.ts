@@ -37,6 +37,8 @@ export async function POST(
     }
 
     const { email, name, emailConsent, privacyConsent } = parsed.data;
+    const phone = body.phone as string | undefined;
+    const smsConsent = body.smsConsent === true;
 
     const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined;
     const userAgent = request.headers.get("user-agent") || undefined;
@@ -47,8 +49,15 @@ export async function POST(
     });
 
     const emailEncrypted = encrypt(email);
+    const phoneEncrypted = phone ? encrypt(phone) : undefined;
 
     if (donor) {
+      // Determine preferred channel
+      let preferredChannel = donor.preferredChannel;
+      if (phone && smsConsent) {
+        preferredChannel = donor.email ? "BOTH" : "SMS";
+      }
+
       // Update existing donor with consent
       donor = await prisma.donor.update({
         where: { id: donor.id },
@@ -56,11 +65,20 @@ export async function POST(
           name: name || donor.name,
           emailConsent: true,
           privacyConsent: true,
+          ...(phone ? { phone, phoneEncrypted } : {}),
+          ...(smsConsent ? { smsConsent: true } : {}),
+          preferredChannel,
           // Re-activate if was unsubscribed
           status: donor.status === "UNSUBSCRIBED" ? "ACTIVE" : donor.status,
         },
       });
     } else {
+      // Determine preferred channel for new donor
+      let preferredChannel: "EMAIL" | "SMS" | "BOTH" = "EMAIL";
+      if (phone && smsConsent) {
+        preferredChannel = email ? "BOTH" : "SMS";
+      }
+
       // Create new donor
       donor = await prisma.donor.create({
         data: {
@@ -70,7 +88,9 @@ export async function POST(
           name: name || null,
           emailConsent: true,
           privacyConsent: true,
-          preferredChannel: "EMAIL",
+          ...(phone ? { phone, phoneEncrypted } : {}),
+          ...(smsConsent ? { smsConsent: true } : {}),
+          preferredChannel,
         },
       });
     }
@@ -79,12 +99,15 @@ export async function POST(
     const consentRecords = [];
 
     // Get active consent texts
-    const [privacyText, emailConsentText] = await Promise.all([
+    const [privacyText, emailConsentText, smsConsentText] = await Promise.all([
       prisma.consentText.findFirst({
         where: { ngoId: ngo.id, type: "PRIVACY_POLICY", isActive: true },
       }),
       prisma.consentText.findFirst({
         where: { ngoId: ngo.id, type: "EMAIL_MARKETING", isActive: true },
+      }),
+      prisma.consentText.findFirst({
+        where: { ngoId: ngo.id, type: "SMS_MARKETING", isActive: true },
       }),
     ]);
 
@@ -109,6 +132,18 @@ export async function POST(
         userAgent: userAgent || null,
         source: "newsletter",
         consentText: emailConsentText?.text || null,
+      });
+    }
+
+    if (smsConsent) {
+      consentRecords.push({
+        donorId: donor.id,
+        type: "SMS_MARKETING" as const,
+        granted: true,
+        ipAddress: ipAddress || null,
+        userAgent: userAgent || null,
+        source: "newsletter",
+        consentText: smsConsentText?.text || null,
       });
     }
 
