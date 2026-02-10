@@ -85,7 +85,9 @@ export default async function MiniSitePage({ params }: Props) {
 
   const heroTitle = config?.heroTitle || ngo.name;
   const heroDescription = config?.heroDescription || ngo.description || "";
+  const shortDescription = ngo.shortDescription || config?.shortDescription || "";
   const heroCtaText = config?.heroCtaText || "Doneaza acum";
+  const coverImageUrl = ngo.coverImageUrl || config?.coverImageUrl || "";
 
   const showAbout = config?.showAbout !== false;
   const showMission = config?.showMission !== false;
@@ -290,107 +292,139 @@ export default async function MiniSitePage({ params }: Props) {
       </nav>
 
       {/* ── Hero Section ─────────────────────────────────────────────── */}
-      <section
-        className="relative overflow-hidden pt-16"
-        style={{
-          background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 50%, ${primaryColor}bb 100%)`,
-        }}
-      >
+      <section className="relative overflow-hidden pt-16" style={{ minHeight: "85vh" }}>
+        {/* Background: cover image or gradient */}
+        {coverImageUrl ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={coverImageUrl}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(180deg, ${primaryColor}ee 0%, ${primaryColor}cc 40%, ${primaryColor}aa 70%, ${primaryColor}dd 100%)`,
+              }}
+            />
+          </>
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 50%, ${primaryColor}bb 100%)`,
+            }}
+          />
+        )}
+
         {/* Pattern overlay */}
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-[0.07]"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }}
         />
 
-        {/* Floating shapes for depth */}
+        {/* Floating shapes */}
         <div
-          className="absolute -left-20 top-20 h-72 w-72 rounded-full opacity-10"
-          style={{ backgroundColor: accentColor, filter: "blur(60px)" }}
+          className="absolute -left-32 top-1/4 h-96 w-96 rounded-full opacity-15"
+          style={{ backgroundColor: accentColor, filter: "blur(100px)" }}
         />
         <div
-          className="absolute -right-20 bottom-20 h-96 w-96 rounded-full opacity-10"
-          style={{ backgroundColor: "white", filter: "blur(80px)" }}
+          className="absolute -right-32 bottom-1/4 h-[500px] w-[500px] rounded-full opacity-10"
+          style={{ backgroundColor: "white", filter: "blur(120px)" }}
         />
 
-        <div className="relative z-10 px-4 py-20 sm:py-28 md:py-36">
-          <div className="mx-auto max-w-4xl text-center">
-            {/* Logo */}
-            {ngo.logoUrl ? (
-              <div className="mb-8 flex justify-center">
-                <div className="rounded-2xl bg-white/20 p-2.5 shadow-2xl backdrop-blur-sm ring-1 ring-white/30">
+        {/* Content */}
+        <div className="relative z-10 flex min-h-[85vh] items-center px-4 sm:px-6">
+          <div className="mx-auto w-full max-w-6xl">
+            <div className="mx-auto max-w-4xl text-center">
+              {/* Organization badge */}
+              <div className="mb-6 inline-flex items-center gap-3 rounded-full bg-white/15 px-5 py-2.5 backdrop-blur-md ring-1 ring-white/20">
+                {ngo.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={ngo.logoUrl}
                     alt={ngo.name}
-                    className="h-20 w-20 rounded-xl object-cover sm:h-24 sm:w-24"
+                    className="h-8 w-8 rounded-lg object-cover ring-1 ring-white/30"
                   />
-                </div>
+                ) : (
+                  <Heart className="h-5 w-5 text-white" />
+                )}
+                <span className="text-sm font-semibold text-white/90">{ngo.name}</span>
+                {ngo.category && (
+                  <>
+                    <span className="h-4 w-px bg-white/30" />
+                    <span className="text-xs font-medium text-white/70">{ngo.category}</span>
+                  </>
+                )}
               </div>
-            ) : (
-              <div className="mb-8 flex justify-center">
-                <div className="rounded-2xl bg-white/20 p-5 shadow-2xl backdrop-blur-sm ring-1 ring-white/30">
-                  <Heart className="h-12 w-12 text-white sm:h-14 sm:w-14" />
-                </div>
+
+              {/* Hero Title */}
+              <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
+                {heroTitle}
+              </h1>
+
+              {/* Short description - always visible */}
+              {(shortDescription || heroDescription) && (
+                <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/85 sm:text-lg md:text-xl">
+                  {shortDescription || heroDescription}
+                </p>
+              )}
+
+              {/* Extended description if both exist */}
+              {shortDescription && heroDescription && shortDescription !== heroDescription && (
+                <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/65 sm:text-base">
+                  {heroDescription}
+                </p>
+              )}
+
+              {/* CTA Buttons */}
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+                {showDonation && (
+                  <a
+                    href="#donatie"
+                    className="inline-flex items-center gap-2.5 rounded-full px-8 py-4 text-base font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl sm:text-lg"
+                    style={{
+                      backgroundColor: accentColor,
+                      color: "white",
+                      boxShadow: `0 8px 30px rgba(${accentRgb}, 0.4)`,
+                    }}
+                  >
+                    <Heart className="h-5 w-5" />
+                    {heroCtaText}
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                )}
+                {(showAbout || showMission) && (
+                  <a
+                    href="#despre"
+                    className="inline-flex items-center gap-2 rounded-full border-2 border-white/30 bg-white/10 px-8 py-4 text-base font-bold text-white shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white/20 sm:text-lg"
+                  >
+                    Afla mai multe
+                    <ChevronRight className="h-4 w-4" />
+                  </a>
+                )}
               </div>
-            )}
 
-            {/* Title */}
-            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
-              {heroTitle}
-            </h1>
-
-            {/* Description */}
-            {heroDescription && (
-              <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/90 sm:text-xl">
-                {heroDescription}
-              </p>
-            )}
-
-            {/* CTA Buttons */}
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              {showDonation && (
-                <a
-                  href="#donatie"
-                  className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl sm:text-lg"
-                  style={{
-                    backgroundColor: accentColor,
-                    color: "white",
-                    boxShadow: `0 8px 30px rgba(${accentRgb}, 0.4)`,
-                  }}
-                >
-                  <Heart className="h-5 w-5" />
-                  {heroCtaText}
-                  <ArrowRight className="h-4 w-4" />
-                </a>
-              )}
-              {(showAbout || showMission) && (
-                <a
-                  href="#despre"
-                  className="inline-flex items-center gap-2 rounded-full border-2 border-white/30 bg-white/10 px-8 py-4 text-base font-bold text-white shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white/20 sm:text-lg"
-                >
-                  Afla mai multe
-                  <ChevronRight className="h-4 w-4" />
-                </a>
-              )}
-            </div>
-
-            {/* Trust badges */}
-            <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-white/60">
-              {config?.cui && (
-                <span className="flex items-center gap-1.5">
-                  <Shield className="h-4 w-4" />
-                  Organizatie inregistrata
+              {/* Trust badges */}
+              <div className="mt-12 flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+                {config?.cui && (
+                  <span className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white/70 backdrop-blur-sm ring-1 ring-white/10 sm:text-sm">
+                    <Shield className="h-3.5 w-3.5" />
+                    Organizatie inregistrata
+                  </span>
+                )}
+                <span className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white/70 backdrop-blur-sm ring-1 ring-white/10 sm:text-sm">
+                  <Users className="h-3.5 w-3.5" />
+                  {ngo.donorCountPublic || 0} donatori
                 </span>
-              )}
-              <span className="flex items-center gap-1.5">
-                <Users className="h-4 w-4" />
-                {ngo.donorCountPublic || 0} donatori
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4" />
-                {yearsActive} {yearsActive === 1 ? "an" : "ani"} de activitate
-              </span>
+                <span className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white/70 backdrop-blur-sm ring-1 ring-white/10 sm:text-sm">
+                  <Clock className="h-3.5 w-3.5" />
+                  {yearsActive} {yearsActive === 1 ? "an" : "ani"} de activitate
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -398,14 +432,14 @@ export default async function MiniSitePage({ params }: Props) {
         {/* Bottom wave */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg
-            viewBox="0 0 1440 100"
+            viewBox="0 0 1440 120"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             className="w-full"
             preserveAspectRatio="none"
           >
             <path
-              d="M0 100V60C180 20 360 0 540 10C720 20 900 50 1080 55C1260 60 1380 40 1440 30V100H0Z"
+              d="M0 120V80C240 30 480 0 720 20C960 40 1200 80 1440 60V120H0Z"
               fill="#f9fafb"
             />
           </svg>
