@@ -99,6 +99,7 @@ export async function PUT(request: NextRequest) {
 
     const {
       // NGO fields
+      ngoName,
       description,
       shortDescription,
       logoUrl,
@@ -145,6 +146,7 @@ export async function PUT(request: NextRequest) {
 
     // Update NGO fields
     const ngoUpdateData: any = {};
+    if (ngoName !== undefined && ngoName.trim()) ngoUpdateData.name = ngoName.trim();
     if (description !== undefined) ngoUpdateData.description = description;
     if (shortDescription !== undefined) ngoUpdateData.shortDescription = shortDescription;
     if (logoUrl !== undefined) ngoUpdateData.logoUrl = logoUrl;

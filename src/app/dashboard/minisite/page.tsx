@@ -574,22 +574,18 @@ export default function MiniSiteBuilderPage() {
                 )}
               </div>
 
-              {/* NGO Name (readonly) */}
+              {/* NGO Name */}
               <div className="space-y-2">
                 <Label htmlFor="ngoName" className="flex items-center gap-2">
                   <Type className="h-4 w-4" />
-                  Numele organizatiei
+                  Numele organizatiei *
                 </Label>
                 <Input
                   id="ngoName"
                   value={state.ngoName}
-                  readOnly
-                  className="bg-muted cursor-not-allowed"
+                  onChange={(e) => setState((prev) => ({ ...prev, ngoName: e.target.value }))}
+                  placeholder="Asociatia / Fundatia ..."
                 />
-                <p className="text-xs text-muted-foreground">
-                  Numele organizatiei nu poate fi modificat de aici. Accesati
-                  Setari pentru modificari.
-                </p>
               </div>
 
               {/* Short description */}
