@@ -160,13 +160,7 @@ export default async function MiniSitePage({ params }: Props) {
     >
       {/* ── Sticky Navigation Bar ────────────────────────────────────── */}
       <nav
-        className="fixed left-0 right-0 top-0 z-50 transition-all duration-300"
-        style={{
-          backgroundColor: `rgba(${primaryRgb}, 0.92)`,
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          borderBottom: `1px solid rgba(255, 255, 255, 0.1)`,
-        }}
+        className="fixed left-0 right-0 top-0 z-50 border-b border-gray-100 bg-white shadow-sm"
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           {/* Logo + Name */}
@@ -175,14 +169,17 @@ export default async function MiniSitePage({ params }: Props) {
               <img
                 src={ngo.logoUrl}
                 alt={ngo.name}
-                className="h-9 w-9 rounded-lg object-cover shadow-sm ring-2 ring-white/20"
+                className="h-9 w-9 rounded-lg object-cover"
               />
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/20 shadow-sm">
-                <Heart className="h-5 w-5 text-white" />
+              <div
+                className="flex h-9 w-9 items-center justify-center rounded-lg"
+                style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+              >
+                <Heart className="h-5 w-5" style={{ color: primaryColor }} />
               </div>
             )}
-            <span className="hidden text-base font-bold text-white sm:inline">
+            <span className="hidden text-base font-bold text-gray-900 sm:inline">
               {ngo.name}
             </span>
           </a>
@@ -191,14 +188,14 @@ export default async function MiniSitePage({ params }: Props) {
           <div className="hidden items-center gap-1 md:flex">
             <a
               href="#"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-white/90 transition-colors duration-200 hover:bg-white/10 hover:text-white"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
             >
               Acasa
             </a>
             {(showAbout || showMission) && (
               <a
                 href="#despre"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-white/90 transition-colors duration-200 hover:bg-white/10 hover:text-white"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
               >
                 Despre noi
               </a>
@@ -206,7 +203,7 @@ export default async function MiniSitePage({ params }: Props) {
             {showCampaigns && (
               <a
                 href="#campanii"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-white/90 transition-colors duration-200 hover:bg-white/10 hover:text-white"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
               >
                 Campanii
               </a>
@@ -214,7 +211,7 @@ export default async function MiniSitePage({ params }: Props) {
             {blogPosts.length > 0 && (
               <a
                 href="#blog"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-white/90 transition-colors duration-200 hover:bg-white/10 hover:text-white"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
               >
                 Blog
               </a>
@@ -222,7 +219,7 @@ export default async function MiniSitePage({ params }: Props) {
             {showContact && hasContact && (
               <a
                 href="#contact"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-white/90 transition-colors duration-200 hover:bg-white/10 hover:text-white"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
               >
                 Contact
               </a>
@@ -233,32 +230,31 @@ export default async function MiniSitePage({ params }: Props) {
           {showDonation && (
             <a
               href="#donatie"
-              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg"
               style={{
-                backgroundColor: accentColor,
-                boxShadow: `0 4px 14px rgba(${accentRgb}, 0.4)`,
+                backgroundColor: primaryColor,
+                boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.3)`,
               }}
             >
               <Heart className="h-4 w-4" />
-              <span className="hidden sm:inline">Doneaza</span>
-              <span className="sm:hidden">Doneaza</span>
+              <span>Doneaza</span>
             </a>
           )}
         </div>
 
-        {/* Mobile Navigation - CSS only collapsible using :target */}
-        <div className="border-t border-white/10 md:hidden">
+        {/* Mobile Navigation */}
+        <div className="border-t border-gray-100 md:hidden">
           <div className="flex flex-wrap items-center justify-center gap-1 px-4 py-2">
             <a
               href="#"
-              className="rounded-md px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
             >
               Acasa
             </a>
             {(showAbout || showMission) && (
               <a
                 href="#despre"
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 Despre
               </a>
@@ -266,7 +262,7 @@ export default async function MiniSitePage({ params }: Props) {
             {showCampaigns && (
               <a
                 href="#campanii"
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 Campanii
               </a>
@@ -274,7 +270,7 @@ export default async function MiniSitePage({ params }: Props) {
             {blogPosts.length > 0 && (
               <a
                 href="#blog"
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 Blog
               </a>
@@ -282,7 +278,7 @@ export default async function MiniSitePage({ params }: Props) {
             {showContact && hasContact && (
               <a
                 href="#contact"
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 Contact
               </a>
