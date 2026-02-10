@@ -153,6 +153,31 @@ Raspunde cu JSON:
         break;
       }
 
+      case "generateCampaigns": {
+        prompt = `Genereaza 3 campanii de strangere de fonduri pentru organizatia non-profit:
+Nume: ${context.name || ""}
+Categorie: ${context.category || ""}
+Descriere: ${context.description || ""}
+Despre: ${context.aboutText || ""}
+Misiune: ${context.missionText || ""}
+
+Raspunde cu JSON:
+{
+  "campaigns": [
+    {"title": "titlu campanie emotionant si clar", "description": "descriere persuasiva 3-4 propozitii: problema, solutia, impactul donatiei, urgenta", "goalAmount": 10000, "imageUrl": ""},
+    ...
+  ]
+}
+
+Creeaza campanii diverse si relevante pentru cauza organizatiei. Fiecare campanie trebuie sa aiba:
+- Un titlu clar, emotional si specific (nu generic)
+- O descriere care explica EXACT ce se intampla cu banii donati
+- Un obiectiv realist (intre 2000-50000 RON)
+- Tonul: empatic, urgent dar profesional, cu date concrete
+Exemple de tonuri bune: "Cu doar 50 de lei, un copil primeste rechizite pentru un an intreg", "Fiecare leu conteaza - ajuta-ne sa construim..."`;
+        break;
+      }
+
       case "counterStats": {
         prompt = `Genereaza statistici de impact estimate pentru organizatia non-profit:
 Nume: ${context.name || ""}
