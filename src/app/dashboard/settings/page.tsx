@@ -509,14 +509,10 @@ export default function SettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); clearMessages(); }}>
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="profile" className="gap-1 text-xs">
             <Building className="h-3 w-3" />
             Profil
-          </TabsTrigger>
-          <TabsTrigger value="minisite" className="gap-1 text-xs">
-            <Globe className="h-3 w-3" />
-            Mini-site
           </TabsTrigger>
           <TabsTrigger value="subscription" className="gap-1 text-xs">
             <CreditCard className="h-3 w-3" />
@@ -956,139 +952,6 @@ export default function SettingsPage() {
                 </div>
               )}
             </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Mini-site Tab */}
-        <TabsContent value="minisite">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="h-5 w-5" />
-                Editor Mini-site
-              </CardTitle>
-              <CardDescription>
-                Personalizeaza pagina publica a organizatiei tale.
-                {ngoSlug && (
-                  <a
-                    href={`/s/${ngoSlug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 ml-2 text-primary hover:underline"
-                  >
-                    Vizualizeaza mini-site <ExternalLink className="h-3 w-3" />
-                  </a>
-                )}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {minisiteLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <>
-                  <div className="grid gap-2">
-                    <Label htmlFor="heroTitle">Titlu Hero</Label>
-                    <Input
-                      id="heroTitle"
-                      placeholder="Ajuta-ne sa schimbam lumea"
-                      value={minisite.heroTitle}
-                      onChange={(e) => setMinisite({ ...minisite, heroTitle: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="heroDesc">Descriere Hero</Label>
-                    <Textarea
-                      id="heroDesc"
-                      placeholder="Descriere scurta afisata pe pagina principala..."
-                      value={minisite.heroDescription}
-                      onChange={(e) => setMinisite({ ...minisite, heroDescription: e.target.value })}
-                      className="min-h-[80px]"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="primaryColor">Culoare principala</Label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        id="primaryColor"
-                        value={minisite.primaryColor}
-                        onChange={(e) => setMinisite({ ...minisite, primaryColor: e.target.value })}
-                        className="h-10 w-14 rounded border cursor-pointer"
-                      />
-                      <Input
-                        value={minisite.primaryColor}
-                        onChange={(e) => setMinisite({ ...minisite, primaryColor: e.target.value })}
-                        className="w-32 font-mono"
-                      />
-                      <div
-                        className="h-10 flex-1 rounded-md border"
-                        style={{ backgroundColor: minisite.primaryColor }}
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/30 transition">
-                      <input
-                        type="checkbox"
-                        checked={minisite.showNewsletter}
-                        onChange={(e) => setMinisite({ ...minisite, showNewsletter: e.target.checked })}
-                        className="h-4 w-4"
-                      />
-                      <div>
-                        <p className="text-sm font-medium">Newsletter</p>
-                        <p className="text-xs text-muted-foreground">Formular abonare</p>
-                      </div>
-                    </label>
-                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/30 transition">
-                      <input
-                        type="checkbox"
-                        checked={minisite.showDonation}
-                        onChange={(e) => setMinisite({ ...minisite, showDonation: e.target.checked })}
-                        className="h-4 w-4"
-                      />
-                      <div>
-                        <p className="text-sm font-medium">Donatii</p>
-                        <p className="text-xs text-muted-foreground">Buton donatie</p>
-                      </div>
-                    </label>
-                    <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/30 transition">
-                      <input
-                        type="checkbox"
-                        checked={minisite.showUpdates}
-                        onChange={(e) => setMinisite({ ...minisite, showUpdates: e.target.checked })}
-                        className="h-4 w-4"
-                      />
-                      <div>
-                        <p className="text-sm font-medium">Actualizari</p>
-                        <p className="text-xs text-muted-foreground">Campanii recente</p>
-                      </div>
-                    </label>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="customCss">CSS personalizat (optional)</Label>
-                    <Textarea
-                      id="customCss"
-                      placeholder=".hero { background: linear-gradient(...) }"
-                      value={minisite.customCss}
-                      onChange={(e) => setMinisite({ ...minisite, customCss: e.target.value })}
-                      className="min-h-[80px] font-mono text-xs"
-                    />
-                  </div>
-                </>
-              )}
-            </CardContent>
-            <CardFooter className="border-t pt-6">
-              <Button onClick={handleSaveMinisite} disabled={saving || minisiteLoading}>
-                {saving ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-2 h-4 w-4" />
-                )}
-                Salveaza mini-site
-              </Button>
-            </CardFooter>
           </Card>
         </TabsContent>
 
