@@ -180,7 +180,7 @@ export default async function MiniSitePage({ params }: Props) {
     ? (config as any).miniSiteCampaigns.filter((c: any) => c.isActive)
     : [];
 
-  const showRedirectImpozit = showFormular230 || showContract || showDonation;
+  const showRedirectImpozit = showFormular230 || showContract;
   const showCampaigns = miniSiteCampaigns.length > 0;
 
   // ── New section data ────────────────────────────────────────────
@@ -291,20 +291,20 @@ export default async function MiniSitePage({ params }: Props) {
                 Despre noi
               </a>
             )}
+            {showRedirectImpozit && (
+              <a
+                href="#redirectioneaza"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
+              >
+                Redirectioneaza
+              </a>
+            )}
             {showCampaigns && (
               <a
                 href="#campanii"
                 className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
               >
                 Campanii
-              </a>
-            )}
-            {!showCampaigns && showRedirectImpozit && (
-              <a
-                href="#donatie"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
-              >
-                Contribuie
               </a>
             )}
             {blogPosts.length > 0 && (
@@ -326,9 +326,9 @@ export default async function MiniSitePage({ params }: Props) {
           </div>
 
           {/* CTA Button */}
-          {showDonation && (
+          {(showDonation || showCampaigns) && (
             <a
-              href="#donatie"
+              href={showCampaigns ? "#campanii" : "#donatie"}
               className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg"
               style={{
                 backgroundColor: primaryColor,
@@ -358,20 +358,20 @@ export default async function MiniSitePage({ params }: Props) {
                 Despre
               </a>
             )}
+            {showRedirectImpozit && (
+              <a
+                href="#redirectioneaza"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              >
+                Redirectioneaza
+              </a>
+            )}
             {showCampaigns && (
               <a
                 href="#campanii"
                 className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 Campanii
-              </a>
-            )}
-            {!showCampaigns && showRedirectImpozit && (
-              <a
-                href="#donatie"
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
-              >
-                Contribuie
               </a>
             )}
             {blogPosts.length > 0 && (
@@ -551,16 +551,100 @@ export default async function MiniSitePage({ params }: Props) {
 
       {/* ── Main Content ─────────────────────────────────────────────── */}
       <main>
-        {/* ── User Campaigns Section (first, right after hero) ────────── */}
+        {/* ── Redirectioneaza Impozit Section (first, right after hero) ── */}
+        {showRedirectImpozit && (
+          <section id="redirectioneaza" className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                >
+                  <Shield className="h-7 w-7" style={{ color: primaryColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Redirectioneaza impozitul
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Fara costuri suplimentare - banii ar merge oricum la stat
+                </p>
+              </div>
+
+              <div className="mx-auto grid max-w-4xl gap-8 sm:grid-cols-2">
+                {showFormular230 && (
+                  <div
+                    className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                    style={{ border: `1px solid rgba(${accentRgb}, 0.15)` }}
+                  >
+                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)` }} />
+                    <div className="p-6 sm:p-8">
+                      <div
+                        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
+                        style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
+                      >
+                        <FileText className="h-7 w-7" style={{ color: accentColor }} />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900">Redirectioneaza 3,5% din impozit</h3>
+                      <p className="mt-3 text-sm leading-relaxed text-gray-500">
+                        Completeaza Formularul 230 si redirectioneaza 3,5% din impozitul
+                        pe venit. Nu te costa nimic in plus - banii ar merge oricum la stat.
+                      </p>
+                      <a
+                        href={`/s/${ngo.slug}/formular-230`}
+                        className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
+                        style={{ backgroundColor: accentColor, boxShadow: `0 4px 14px rgba(${accentRgb}, 0.3)` }}
+                      >
+                        Completeaza formularul
+                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {showContract && (
+                  <div
+                    className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                    style={{ border: `1px solid rgba(${primaryRgb}, 0.15)` }}
+                  >
+                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}88)` }} />
+                    <div className="p-6 sm:p-8">
+                      <div
+                        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
+                        style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                      >
+                        <Briefcase className="h-7 w-7" style={{ color: primaryColor }} />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900">Sponsorizare 20% pentru firme</h3>
+                      <p className="mt-3 text-sm leading-relaxed text-gray-500">
+                        Firmele pot redirectiona pana la 20% din impozitul pe profit
+                        prin contracte de sponsorizare. Genereaza contractul online.
+                      </p>
+                      <a
+                        href={`/s/${ngo.slug}/contract-sponsorizare`}
+                        className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
+                        style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.3)` }}
+                      >
+                        Genereaza contract
+                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Campanii / Donatii Section ─────────────────────────────── */}
         {showCampaigns && (
-          <section id="campanii" className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
+          <section id="campanii" className={`scroll-mt-20 py-16 sm:py-20 ${showRedirectImpozit ? "bg-white" : "bg-gray-50"}`}>
             <div className="mx-auto max-w-6xl px-4 sm:px-6">
               <div className="mb-12 text-center">
                 <div
                   className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
                   style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
                 >
-                  <Target className="h-7 w-7" style={{ color: accentColor }} />
+                  <Heart className="h-7 w-7" style={{ color: accentColor }} />
                 </div>
                 <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
                   Campanii active
@@ -681,120 +765,6 @@ export default async function MiniSitePage({ params }: Props) {
                     </div>
                   );
                 })}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ── Redirectioneaza Impozit Section (below campaigns) ───────── */}
-        {showRedirectImpozit && (
-          <section className={`scroll-mt-20 py-16 sm:py-20 ${showCampaigns ? "bg-white" : "bg-gray-50"}`}>
-            <div className="mx-auto max-w-6xl px-4 sm:px-6">
-              <div className="mb-12 text-center">
-                <div
-                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-                  style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
-                >
-                  <Shield className="h-7 w-7" style={{ color: primaryColor }} />
-                </div>
-                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
-                  Redirectioneaza impozitul
-                </h2>
-                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
-                  Fara costuri suplimentare - banii ar merge oricum la stat
-                </p>
-              </div>
-
-              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                {showFormular230 && (
-                  <div
-                    className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                    style={{ border: `1px solid rgba(${accentRgb}, 0.15)` }}
-                  >
-                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)` }} />
-                    <div className="p-6 sm:p-8">
-                      <div
-                        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-                        style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
-                      >
-                        <FileText className="h-7 w-7" style={{ color: accentColor }} />
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-900">Redirectioneaza 3,5% din impozit</h3>
-                      <p className="mt-3 text-sm leading-relaxed text-gray-500">
-                        Completeaza Formularul 230 si redirectioneaza 3,5% din impozitul
-                        pe venit. Nu te costa nimic in plus - banii ar merge oricum la stat.
-                      </p>
-                      <a
-                        href={`/s/${ngo.slug}/formular-230`}
-                        className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
-                        style={{ backgroundColor: accentColor, boxShadow: `0 4px 14px rgba(${accentRgb}, 0.3)` }}
-                      >
-                        Completeaza formularul
-                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {showContract && (
-                  <div
-                    className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                    style={{ border: `1px solid rgba(${primaryRgb}, 0.15)` }}
-                  >
-                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}88)` }} />
-                    <div className="p-6 sm:p-8">
-                      <div
-                        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-                        style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
-                      >
-                        <Briefcase className="h-7 w-7" style={{ color: primaryColor }} />
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-900">Sponsorizare 20% pentru firme</h3>
-                      <p className="mt-3 text-sm leading-relaxed text-gray-500">
-                        Firmele pot redirectiona pana la 20% din impozitul pe profit
-                        prin contracte de sponsorizare. Genereaza contractul online.
-                      </p>
-                      <a
-                        href={`/s/${ngo.slug}/contract-sponsorizare`}
-                        className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
-                        style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.3)` }}
-                      >
-                        Genereaza contract
-                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {showDonation && (
-                  <div
-                    className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                    style={{ border: `1px solid rgba(${accentRgb}, 0.15)` }}
-                  >
-                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${accentColor}, ${primaryColor})` }} />
-                    <div className="p-6 sm:p-8">
-                      <div
-                        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-                        style={{ background: `linear-gradient(135deg, rgba(${accentRgb}, 0.15), rgba(${primaryRgb}, 0.15))` }}
-                      >
-                        <Heart className="h-7 w-7" style={{ color: accentColor }} />
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-900">Doneaza direct</h3>
-                      <p className="mt-3 text-sm leading-relaxed text-gray-500">
-                        Fiecare donatie conteaza. Contribuie direct la proiectele noastre
-                        si fa o diferenta reala in viata celor care au nevoie.
-                      </p>
-                      <a
-                        href="#donatie"
-                        className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
-                        style={{ background: `linear-gradient(135deg, ${accentColor}, ${primaryColor})`, boxShadow: `0 4px 14px rgba(${accentRgb}, 0.3)` }}
-                      >
-                        Doneaza acum
-                        <Heart className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
-                      </a>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </section>
@@ -1334,55 +1304,89 @@ export default async function MiniSitePage({ params }: Props) {
                   const month = eventDate
                     ? eventDate.toLocaleDateString("ro-RO", { month: "short" }).toUpperCase()
                     : "";
+                  const fullDate = eventDate
+                    ? eventDate.toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })
+                    : "";
 
                   return (
                     <div
                       key={idx}
-                      className="group relative overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                      className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                     >
-                      {/* Gradient top border */}
-                      <div
-                        className="h-1.5"
-                        style={{
-                          background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
-                        }}
-                      />
-
-                      <div className="flex gap-5 p-6 sm:p-7">
-                        {/* Date badge */}
-                        {eventDate && (
+                      {/* Event Image */}
+                      {event.imageUrl ? (
+                        <div className="relative h-48 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={event.imageUrl}
+                            alt={event.title}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                          {/* Date badge over image */}
+                          {eventDate && (
+                            <div
+                              className="absolute bottom-4 left-4 flex h-16 w-16 flex-col items-center justify-center rounded-xl text-white shadow-lg"
+                              style={{
+                                background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                              }}
+                            >
+                              <span className="text-xl font-extrabold leading-none">{day}</span>
+                              <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wider opacity-80">{month}</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          className="relative flex h-32 items-end overflow-hidden p-4"
+                          style={{ background: `linear-gradient(135deg, ${primaryColor}15, ${accentColor}15)` }}
+                        >
                           <div
-                            className="flex h-20 w-20 flex-shrink-0 flex-col items-center justify-center rounded-2xl text-white shadow-md transition-transform duration-300 group-hover:scale-105"
-                            style={{
-                              background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
-                            }}
+                            className="absolute right-4 top-4 flex h-12 w-12 items-center justify-center rounded-xl opacity-15"
                           >
-                            <span className="text-2xl font-extrabold leading-none">
-                              {day}
-                            </span>
-                            <span className="mt-1 text-[10px] font-bold uppercase tracking-wider opacity-80">
-                              {month}
-                            </span>
+                            <CalendarDays className="h-16 w-16" style={{ color: primaryColor }} />
                           </div>
-                        )}
+                          {/* Date badge */}
+                          {eventDate && (
+                            <div
+                              className="flex h-16 w-16 flex-col items-center justify-center rounded-xl text-white shadow-md"
+                              style={{
+                                background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                              }}
+                            >
+                              <span className="text-xl font-extrabold leading-none">{day}</span>
+                              <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wider opacity-80">{month}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                        {/* Event info */}
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-base font-bold text-gray-900 leading-snug">
-                            {event.title}
-                          </h3>
+                      {/* Event content */}
+                      <div className="flex flex-1 flex-col p-6">
+                        <h3 className="text-lg font-bold text-gray-900 leading-snug">
+                          {event.title}
+                        </h3>
+
+                        <div className="mt-3 flex flex-col gap-2">
+                          {fullDate && (
+                            <p className="flex items-center gap-2 text-xs font-medium text-gray-500">
+                              <Calendar className="h-3.5 w-3.5" style={{ color: accentColor }} />
+                              {fullDate}
+                            </p>
+                          )}
                           {event.location && (
-                            <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-400">
+                            <p className="flex items-center gap-2 text-xs font-medium text-gray-500">
                               <MapPin className="h-3.5 w-3.5" style={{ color: primaryColor }} />
                               {event.location}
                             </p>
                           )}
-                          {event.description && (
-                            <p className="mt-2.5 text-sm leading-relaxed text-gray-500 line-clamp-3">
-                              {event.description}
-                            </p>
-                          )}
                         </div>
+
+                        {event.description && (
+                          <p className="mt-3 flex-1 text-sm leading-relaxed text-gray-500 line-clamp-3">
+                            {event.description}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );

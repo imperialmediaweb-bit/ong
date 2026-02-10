@@ -1999,6 +1999,7 @@ export default function MiniSiteBuilderPage() {
                       <Input type="date" value={ev.date} onChange={(e) => setState(p => ({ ...p, events: p.events.map((x, i) => i === idx ? { ...x, date: e.target.value } : x) }))} />
                     </div>
                     <Input placeholder="Locatie" value={ev.location} onChange={(e) => setState(p => ({ ...p, events: p.events.map((x, i) => i === idx ? { ...x, location: e.target.value } : x) }))} />
+                    <Input placeholder="URL poza eveniment (optional)" value={ev.imageUrl || ""} onChange={(e) => setState(p => ({ ...p, events: p.events.map((x, i) => i === idx ? { ...x, imageUrl: e.target.value } : x) }))} />
                     <Textarea placeholder="Descriere..." rows={2} value={ev.description} onChange={(e) => setState(p => ({ ...p, events: p.events.map((x, i) => i === idx ? { ...x, description: e.target.value } : x) }))} />
                   </div>
                 ))}

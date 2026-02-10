@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import {
   FileText,
   Printer,
@@ -22,6 +21,11 @@ import {
   Heart,
   Building,
   CheckCircle2,
+  Download,
+  ArrowLeft,
+  Shield,
+  User,
+  Briefcase,
 } from "lucide-react";
 
 interface NgoData {
@@ -39,6 +43,10 @@ interface NgoData {
     representativeName: string | null;
     representativeRole: string | null;
   } | null;
+  miniSiteConfig: {
+    bankAccount: string | null;
+    bankName: string | null;
+  } | null;
 }
 
 interface FormData {
@@ -47,15 +55,16 @@ interface FormData {
   companyAddress: string;
   companyCounty: string;
   companyCity: string;
+  companyRegistration: string;
   companyRep: string;
   companyRepRole: string;
   companyEmail: string;
   companyPhone: string;
   companyIban: string;
+  companyBank: string;
   amount: string;
   purpose: string;
-  paymentTerms: string;
-  duration: string;
+  paymentDays: string;
 }
 
 const initialFormData: FormData = {
@@ -64,15 +73,16 @@ const initialFormData: FormData = {
   companyAddress: "",
   companyCounty: "",
   companyCity: "",
+  companyRegistration: "",
   companyRep: "",
   companyRepRole: "Administrator",
   companyEmail: "",
   companyPhone: "",
   companyIban: "",
+  companyBank: "",
   amount: "",
-  purpose: "",
-  paymentTerms: "30 de zile de la semnarea contractului",
-  duration: "12 luni",
+  purpose: "Sustinerea activitatilor si proiectelor organizatiei",
+  paymentDays: "5",
 };
 
 export default function ContractSponsorizarePage() {
@@ -185,6 +195,14 @@ export default function ContractSponsorizarePage() {
             margin: 0 auto;
             padding: 1cm;
           }
+          .contract-logo {
+            text-align: center;
+            margin-bottom: 10px;
+          }
+          .contract-logo img {
+            max-height: 80px;
+            max-width: 200px;
+          }
           .contract-header {
             text-align: center;
             margin-bottom: 30px;
@@ -201,7 +219,7 @@ export default function ContractSponsorizarePage() {
             margin-bottom: 4px;
           }
           .contract-section {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
           }
           .contract-section h2 {
             font-size: 13pt;
@@ -213,10 +231,10 @@ export default function ContractSponsorizarePage() {
             text-align: justify;
             margin-bottom: 6px;
           }
-          .contract-section ol {
+          .contract-section ol, .contract-section ul {
             padding-left: 20px;
           }
-          .contract-section ol li {
+          .contract-section ol li, .contract-section ul li {
             margin-bottom: 4px;
           }
           .signatures {
@@ -241,12 +259,6 @@ export default function ContractSponsorizarePage() {
             padding-top: 4px;
             margin-top: 60px;
             font-size: 10pt;
-          }
-          .stamp-area {
-            margin-top: 10px;
-            font-size: 10pt;
-            font-style: italic;
-            color: #666;
           }
           @media print {
             body { padding: 0; }
@@ -339,20 +351,25 @@ export default function ContractSponsorizarePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-blue-600 mx-auto" />
+          <p className="mt-4 text-sm text-gray-500">Se incarca datele organizatiei...</p>
+        </div>
       </div>
     );
   }
 
   if (!ngo) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex items-center justify-center">
-        <Card className="max-w-md w-full mx-4">
-          <CardContent className="pt-6 text-center">
-            <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-lg font-semibold">Organizatia nu a fost gasita</h2>
-            <p className="text-sm text-muted-foreground mt-2">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 flex items-center justify-center">
+        <Card className="max-w-md w-full mx-4 shadow-xl border-0">
+          <CardContent className="pt-8 pb-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-50">
+              <FileText className="h-8 w-8 text-red-400" />
+            </div>
+            <h2 className="text-lg font-bold text-gray-900">Organizatia nu a fost gasita</h2>
+            <p className="text-sm text-gray-500 mt-2">
               Verificati linkul si incercati din nou.
             </p>
           </CardContent>
@@ -363,60 +380,96 @@ export default function ContractSponsorizarePage() {
 
   const ngoVerif = ngo.verification;
   const ngoCui = ngoVerif?.fiscalCode || ngoVerif?.registrationNumber || "";
-  const ngoAddress = ngoVerif?.address || "";
+  const ngoAddress = [
+    ngoVerif?.address,
+    ngoVerif?.city,
+    ngoVerif?.county ? `jud. ${ngoVerif.county}` : "",
+  ].filter(Boolean).join(", ");
   const ngoRep = ngoVerif?.representativeName || "";
   const ngoRepRole = ngoVerif?.representativeRole || "Presedinte";
+  const ngoIban = ngo.miniSiteConfig?.bankAccount || "";
+  const ngoBank = ngo.miniSiteConfig?.bankName || "";
+  const todayFormatted = new Date().toLocaleDateString("ro-RO", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        {/* Back link */}
+        <a
+          href={`/s/${ngo.slug}`}
+          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-900"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Inapoi la {ngo.name}
+        </a>
+
         {/* Header */}
-        <header className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="bg-primary/10 p-3 rounded-full">
-              <FileText className="h-8 w-8 text-primary" />
+        <header className="mb-10 text-center">
+          {ngo.logoUrl && (
+            <div className="mb-4 flex justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={ngo.logoUrl}
+                alt={ngo.name}
+                className="h-16 w-auto object-contain"
+              />
             </div>
+          )}
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50 shadow-sm">
+            <Briefcase className="h-8 w-8 text-blue-600" />
           </div>
-          <h1 className="text-3xl font-bold">Contract de Sponsorizare</h1>
-          <p className="mt-2 text-muted-foreground">
+          <h1 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+            Contract de Sponsorizare
+          </h1>
+          <p className="mt-3 text-base text-gray-500 max-w-2xl mx-auto">
             Completati datele firmei pentru a genera automat contractul de sponsorizare cu{" "}
-            <span className="font-semibold text-foreground">{ngo.name}</span>
+            <span className="font-semibold text-gray-900">{ngo.name}</span>.
+            Contractul va fi generat conform Legii nr. 32/1994 privind sponsorizarea.
           </p>
         </header>
 
         {!contractGenerated ? (
           /* ── FORM ── */
           <form onSubmit={handleSubmit}>
-            <div className="grid gap-6 md:grid-cols-2">
-              {/* Company Data Card */}
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Building className="h-5 w-5" />
-                    Datele firmei sponsorizatoare
-                  </CardTitle>
-                  <CardDescription>
-                    Completati datele companiei care va fi parte in contractul de sponsorizare.
-                  </CardDescription>
+            <div className="grid gap-6">
+              {/* Step 1: Company Data */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="border-b bg-gray-50/50">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
+                      <Building className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Datele Sponsorului</CardTitle>
+                      <CardDescription>
+                        Completati datele companiei care va sponsoriza organizatia.
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-5 pt-6">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="companyName">
-                        Denumire firma <span className="text-destructive">*</span>
+                        Denumire firma / asociatie <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="companyName"
                         name="companyName"
-                        placeholder="S.C. Exemplu S.R.L."
+                        placeholder="S.C. Exemplu S.R.L. sau Asociatia..."
                         value={form.companyName}
                         onChange={handleChange}
                         required
+                        className="h-11"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="companyCui">
-                        CUI / CIF <span className="text-destructive">*</span>
+                        CUI / CIF <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="companyCui"
@@ -425,22 +478,24 @@ export default function ContractSponsorizarePage() {
                         value={form.companyCui}
                         onChange={handleChange}
                         required
+                        className="h-11"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="companyAddress">Adresa sediului social</Label>
+                    <Label htmlFor="companyAddress">Sediul social (adresa completa)</Label>
                     <Input
                       id="companyAddress"
                       name="companyAddress"
-                      placeholder="Str. Exemplu nr. 1"
+                      placeholder="Str. Exemplu nr. 1, Bl. A, Sc. 1, Et. 2, Ap. 10"
                       value={form.companyAddress}
                       onChange={handleChange}
+                      className="h-11"
                     />
                   </div>
 
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-3">
                     <div className="space-y-2">
                       <Label htmlFor="companyCity">Oras</Label>
                       <Input
@@ -449,6 +504,7 @@ export default function ContractSponsorizarePage() {
                         placeholder="Bucuresti"
                         value={form.companyCity}
                         onChange={handleChange}
+                        className="h-11"
                       />
                     </div>
                     <div className="space-y-2">
@@ -459,6 +515,18 @@ export default function ContractSponsorizarePage() {
                         placeholder="Bucuresti"
                         value={form.companyCounty}
                         onChange={handleChange}
+                        className="h-11"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="companyRegistration">Nr. Reg. Comert / Registru special</Label>
+                      <Input
+                        id="companyRegistration"
+                        name="companyRegistration"
+                        placeholder="J40/1234/2020"
+                        value={form.companyRegistration}
+                        onChange={handleChange}
+                        className="h-11"
                       />
                     </div>
                   </div>
@@ -466,7 +534,7 @@ export default function ContractSponsorizarePage() {
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="companyRep">
-                        Reprezentant legal <span className="text-destructive">*</span>
+                        Reprezentant legal <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="companyRep"
@@ -475,16 +543,43 @@ export default function ContractSponsorizarePage() {
                         value={form.companyRep}
                         onChange={handleChange}
                         required
+                        className="h-11"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="companyRepRole">Functia</Label>
+                      <Label htmlFor="companyRepRole">Functia reprezentantului</Label>
                       <Input
                         id="companyRepRole"
                         name="companyRepRole"
-                        placeholder="Administrator"
+                        placeholder="Administrator / Presedinte"
                         value={form.companyRepRole}
                         onChange={handleChange}
+                        className="h-11"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="companyIban">Cont bancar (IBAN)</Label>
+                      <Input
+                        id="companyIban"
+                        name="companyIban"
+                        placeholder="RO49AAAA1B31007593840000"
+                        value={form.companyIban}
+                        onChange={handleChange}
+                        className="h-11"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="companyBank">Banca</Label>
+                      <Input
+                        id="companyBank"
+                        name="companyBank"
+                        placeholder="Banca Transilvania, Sucursala..."
+                        value={form.companyBank}
+                        onChange={handleChange}
+                        className="h-11"
                       />
                     </div>
                   </div>
@@ -499,6 +594,7 @@ export default function ContractSponsorizarePage() {
                         placeholder="contact@firma.ro"
                         value={form.companyEmail}
                         onChange={handleChange}
+                        className="h-11"
                       />
                     </div>
                     <div className="space-y-2">
@@ -509,39 +605,33 @@ export default function ContractSponsorizarePage() {
                         placeholder="0721 123 456"
                         value={form.companyPhone}
                         onChange={handleChange}
+                        className="h-11"
                       />
                     </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="companyIban">IBAN (optional)</Label>
-                    <Input
-                      id="companyIban"
-                      name="companyIban"
-                      placeholder="RO49AAAA1B31007593840000"
-                      value={form.companyIban}
-                      onChange={handleChange}
-                    />
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Contract Details Card */}
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Detalii sponsorizare
-                  </CardTitle>
-                  <CardDescription>
-                    Specificati suma, scopul si conditiile sponsorizarii.
-                  </CardDescription>
+              {/* Step 2: Sponsorship Details */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="border-b bg-gray-50/50">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100">
+                      <FileText className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Detalii sponsorizare</CardTitle>
+                      <CardDescription>
+                        Specificati suma si scopul sponsorizarii.
+                      </CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-5 pt-6">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label htmlFor="amount">
-                        Suma sponsorizare (RON) <span className="text-destructive">*</span>
+                        Suma sponsorizare (RON) <span className="text-red-500">*</span>
                       </Label>
                       <Input
                         id="amount"
@@ -553,101 +643,125 @@ export default function ContractSponsorizarePage() {
                         value={form.amount}
                         onChange={handleChange}
                         required
+                        className="h-11"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="duration">Durata contract</Label>
+                      <Label htmlFor="paymentDays">Termen plata (zile de la semnare)</Label>
                       <Input
-                        id="duration"
-                        name="duration"
-                        placeholder="12 luni"
-                        value={form.duration}
+                        id="paymentDays"
+                        name="paymentDays"
+                        type="number"
+                        min="1"
+                        placeholder="5"
+                        value={form.paymentDays}
                         onChange={handleChange}
+                        className="h-11"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="purpose">Scopul / destinatia sponsorizarii</Label>
+                    <Label htmlFor="purpose">Obiectul / destinatia sponsorizarii</Label>
                     <Textarea
                       id="purpose"
                       name="purpose"
-                      placeholder="Sustinerea activitatilor organizatiei, programe educationale, etc."
+                      placeholder="Sustinerea activitatilor si proiectelor organizatiei..."
                       value={form.purpose}
                       onChange={handleChange}
                       rows={3}
                     />
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentTerms">Conditii de plata</Label>
-                    <Input
-                      id="paymentTerms"
-                      name="paymentTerms"
-                      placeholder="30 de zile de la semnarea contractului"
-                      value={form.paymentTerms}
-                      onChange={handleChange}
-                    />
-                  </div>
                 </CardContent>
               </Card>
 
-              {/* NGO Info (read-only) */}
-              <Card className="md:col-span-2">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Heart className="h-5 w-5 text-primary" />
-                    Beneficiar: {ngo.name}
-                  </CardTitle>
-                  <CardDescription>
-                    Datele organizatiei vor fi completate automat in contract.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-3 sm:grid-cols-2 text-sm">
+              {/* Step 3: NGO Info */}
+              <Card className="border-0 shadow-lg">
+                <CardHeader className="border-b bg-gray-50/50">
+                  <div className="flex items-center gap-3">
+                    {ngo.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={ngo.logoUrl} alt="" className="h-10 w-10 rounded-xl object-contain" />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100">
+                        <Heart className="h-5 w-5 text-purple-600" />
+                      </div>
+                    )}
                     <div>
-                      <span className="text-muted-foreground">Denumire:</span>{" "}
-                      <span className="font-medium">{ngo.name}</span>
+                      <CardTitle className="text-lg">Beneficiar: {ngo.name}</CardTitle>
+                      <CardDescription>
+                        Datele organizatiei sunt completate automat in contract.
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="rounded-xl bg-gray-50 p-4">
+                      <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">Denumire</p>
+                      <p className="text-sm font-semibold text-gray-900">{ngo.name}</p>
                     </div>
                     {ngoCui && (
-                      <div>
-                        <span className="text-muted-foreground">CUI/CIF:</span>{" "}
-                        <span className="font-medium">{ngoCui}</span>
+                      <div className="rounded-xl bg-gray-50 p-4">
+                        <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">CUI / CIF</p>
+                        <p className="text-sm font-semibold text-gray-900">{ngoCui}</p>
                       </div>
                     )}
                     {ngoAddress && (
-                      <div>
-                        <span className="text-muted-foreground">Adresa:</span>{" "}
-                        <span className="font-medium">{ngoAddress}</span>
+                      <div className="rounded-xl bg-gray-50 p-4">
+                        <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">Sediu</p>
+                        <p className="text-sm font-semibold text-gray-900">{ngoAddress}</p>
                       </div>
                     )}
                     {ngoRep && (
-                      <div>
-                        <span className="text-muted-foreground">Reprezentant:</span>{" "}
-                        <span className="font-medium">{ngoRep} - {ngoRepRole}</span>
+                      <div className="rounded-xl bg-gray-50 p-4">
+                        <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">Reprezentant</p>
+                        <p className="text-sm font-semibold text-gray-900">{ngoRep} - {ngoRepRole}</p>
+                      </div>
+                    )}
+                    {ngoIban && (
+                      <div className="rounded-xl bg-gray-50 p-4">
+                        <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">Cont bancar</p>
+                        <p className="text-sm font-semibold text-gray-900">{ngoIban}{ngoBank ? ` - ${ngoBank}` : ""}</p>
                       </div>
                     )}
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex-col items-start gap-3">
                   {error && (
-                    <p className="text-sm text-destructive w-full">{error}</p>
+                    <div className="w-full rounded-xl bg-red-50 border border-red-100 p-4">
+                      <p className="text-sm text-red-600">{error}</p>
+                    </div>
                   )}
                 </CardFooter>
               </Card>
             </div>
 
-            <div className="mt-6 flex justify-center">
-              <Button type="submit" size="lg" disabled={submitting} className="min-w-[240px]">
+            {/* Info box */}
+            <div className="mt-6 rounded-2xl bg-blue-50 border border-blue-100 p-5">
+              <div className="flex gap-3">
+                <Shield className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-semibold text-blue-900">Contractul include clauze standard</p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Raspundere contractuala, cesiune, notificari, confidentialitate si dispozitii finale
+                    conform legislatiei in vigoare (Legea 32/1994, Codul Civil, Codul Fiscal).
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 flex justify-center">
+              <Button type="submit" size="lg" disabled={submitting} className="min-w-[280px] h-14 text-base shadow-lg">
                 {submitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Se genereaza...
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Se genereaza contractul...
                   </>
                 ) : (
                   <>
-                    <FileText className="mr-2 h-4 w-4" />
-                    Genereaza contractul
+                    <FileText className="mr-2 h-5 w-5" />
+                    Genereaza contractul de sponsorizare
                   </>
                 )}
               </Button>
@@ -657,299 +771,309 @@ export default function ContractSponsorizarePage() {
           /* ── GENERATED CONTRACT ── */
           <div>
             {/* Success banner */}
-            <Card className="mb-6 border-green-200 bg-green-50">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
+            <Card className="mb-6 border-0 shadow-lg bg-gradient-to-r from-emerald-50 to-green-50">
+              <CardContent className="pt-6 pb-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 flex-shrink-0">
+                    <CheckCircle2 className="h-6 w-6 text-green-600" />
+                  </div>
                   <div>
-                    <h3 className="font-semibold text-green-900">
+                    <h3 className="font-bold text-green-900 text-lg">
                       Contract generat cu succes!
                     </h3>
                     <p className="text-sm text-green-700">
-                      Numarul contractului: <span className="font-bold">{contractNumber}</span>.
-                      Printati, semnati si stampilati contractul de mai jos.
+                      Nr. <span className="font-bold">{contractNumber}</span> din {contractDate}.
+                      Printati contractul, semnati si stampilati ambele exemplare.
                     </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Print button */}
-            <div className="flex justify-center gap-3 mb-6">
-              <Button onClick={handlePrint} size="lg">
-                <Printer className="mr-2 h-4 w-4" />
+            {/* Action buttons */}
+            <div className="flex flex-wrap justify-center gap-3 mb-8">
+              <Button onClick={handlePrint} size="lg" className="h-12 shadow-md">
+                <Printer className="mr-2 h-5 w-5" />
                 Printeaza contractul
               </Button>
               <Button
                 variant="outline"
                 size="lg"
+                className="h-12"
                 onClick={() => {
                   setContractGenerated(false);
                   setForm(initialFormData);
                 }}
               >
+                <FileText className="mr-2 h-4 w-4" />
                 Contract nou
               </Button>
+              <a href={`/s/${ngo.slug}`}>
+                <Button variant="outline" size="lg" className="h-12">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Inapoi la site
+                </Button>
+              </a>
             </div>
 
             {/* Printable contract */}
-            <Card className="shadow-lg">
-              <CardContent className="p-8 sm:p-12">
+            <Card className="shadow-2xl border-0">
+              <CardContent className="p-8 sm:p-12 lg:p-16">
                 <div ref={contractRef}>
-                  <div className="contract-header" style={{ textAlign: "center", marginBottom: "30px" }}>
+                  {/* Logo */}
+                  {ngo.logoUrl && (
+                    <div style={{ textAlign: "center", marginBottom: "15px" }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={ngo.logoUrl}
+                        alt={ngo.name}
+                        style={{ maxHeight: "70px", maxWidth: "180px", margin: "0 auto" }}
+                      />
+                    </div>
+                  )}
+
+                  {/* Contract header */}
+                  <div style={{ textAlign: "center", marginBottom: "35px" }}>
                     <h1
                       style={{
                         fontSize: "22px",
                         fontWeight: "bold",
                         textTransform: "uppercase",
-                        letterSpacing: "2px",
-                        marginBottom: "8px",
+                        letterSpacing: "3px",
+                        marginBottom: "10px",
                         fontFamily: "serif",
                       }}
                     >
                       Contract de Sponsorizare
                     </h1>
                     <p style={{ fontSize: "14px", fontFamily: "serif" }}>
-                      Nr. <strong>{contractNumber}</strong> din data de{" "}
+                      NR. <strong>{contractNumber}</strong> din data de{" "}
                       <strong>{contractDate}</strong>
                     </p>
                   </div>
 
                   <div style={{ fontFamily: "serif", fontSize: "13px", lineHeight: "1.8" }}>
-                    {/* CHAPTER I - Parties */}
-                    <div style={{ marginBottom: "20px" }}>
-                      <h2
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "bold",
-                          textTransform: "uppercase",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        Capitolul I - Partile contractante
+                    {/* I. PARTIES */}
+                    <div style={{ marginBottom: "22px" }}>
+                      <h2 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "10px" }}>
+                        I. Prezentul contract a intervenit intre:
                       </h2>
 
-                      <p style={{ textAlign: "justify", marginBottom: "10px" }}>
-                        <strong>1. SPONSORUL:</strong>{" "}
-                        <strong>{form.companyName}</strong>, cu sediul social in{" "}
-                        {form.companyCity && `${form.companyCity}, `}
-                        {form.companyCounty && `jud. ${form.companyCounty}, `}
-                        {form.companyAddress && `${form.companyAddress}, `}
-                        inregistrata la Registrul Comertului, avand Codul Unic de Inregistrare (CUI){" "}
-                        <strong>{form.companyCui}</strong>
-                        {form.companyIban && (
-                          <>, cont bancar IBAN: {form.companyIban}</>
-                        )}
-                        , reprezentata legal prin{" "}
-                        <strong>{form.companyRep}</strong>, in calitate de{" "}
-                        <strong>{form.companyRepRole || "Administrator"}</strong>,
-                        {form.companyEmail && <> email: {form.companyEmail},</>}
-                        {form.companyPhone && <> telefon: {form.companyPhone},</>}
-                        {" "}denumit/a in continuare <strong>&quot;Sponsorul&quot;</strong>,
-                      </p>
-
-                      <p style={{ textAlign: "center", margin: "8px 0", fontWeight: "bold" }}>
-                        si
-                      </p>
-
-                      <p style={{ textAlign: "justify", marginBottom: "10px" }}>
-                        <strong>2. BENEFICIARUL:</strong>{" "}
+                      <p style={{ textAlign: "justify", marginBottom: "12px" }}>
                         <strong>{ngo.name}</strong>
                         {ngoAddress && <>, cu sediul in {ngoAddress}</>}
-                        {ngoCui && (
-                          <>, avand Codul de Identificare Fiscala (CIF) <strong>{ngoCui}</strong></>
+                        {ngoVerif?.registrationNumber && (
+                          <>, avand inregistrare la Registrul Comertului{ngoVerif.county ? ` ${ngoVerif.county}` : ""}</>
+                        )}
+                        {ngoCui && <>, CUI <strong>{ngoCui}</strong></>}
+                        {ngoIban && (
+                          <>, cont bancar {ngo.name} <strong>{ngoIban}</strong>{ngoBank ? ` deschis la ${ngoBank}` : ""}</>
                         )}
                         {ngoRep && (
-                          <>
-                            , reprezentat/a legal prin <strong>{ngoRep}</strong>, in calitate de{" "}
-                            <strong>{ngoRepRole}</strong>
-                          </>
+                          <>, reprezentata legal prin <strong>{ngoRep}</strong></>
                         )}
-                        , denumit/a in continuare <strong>&quot;Beneficiarul&quot;</strong>.
+                        , in calitate de <strong>BENEFICIAR</strong>
+                      </p>
+
+                      <p style={{ textAlign: "center", margin: "12px 0", fontWeight: "bold", fontSize: "14px" }}>
+                        SI
+                      </p>
+
+                      <p style={{ textAlign: "justify", marginBottom: "12px" }}>
+                        <strong>{form.companyName}</strong>
+                        {(form.companyCity || form.companyAddress) && (
+                          <>, cu sediul in{form.companyCity ? ` ${form.companyCity}` : ""}{form.companyAddress ? `, ${form.companyAddress}` : ""}{form.companyCounty ? `, judet ${form.companyCounty}` : ""}</>
+                        )}
+                        {form.companyRegistration && (
+                          <>, inscrisa in Registrul Comertului sub nr. {form.companyRegistration}</>
+                        )}
+                        {form.companyCui && <>, avand CIF <strong>{form.companyCui}</strong></>}
+                        {form.companyIban && (
+                          <>, cont bancar <strong>{form.companyIban}</strong>{form.companyBank ? ` deschis la ${form.companyBank}` : ""}</>
+                        )}
+                        , reprezentata legal prin <strong>{form.companyRep}</strong> - {form.companyRepRole || "Administrator"}
+                        , in calitate de <strong>SPONSOR</strong>.
                       </p>
                     </div>
 
-                    {/* CHAPTER II - Object */}
-                    <div style={{ marginBottom: "20px" }}>
-                      <h2
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "bold",
-                          textTransform: "uppercase",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        Capitolul II - Obiectul contractului
+                    {/* II. OBJECT */}
+                    <div style={{ marginBottom: "22px" }}>
+                      <h2 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "10px" }}>
+                        II. Obiectul contractului
                       </h2>
                       <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                        <strong>Art. 1.</strong> Obiectul prezentului contract il constituie sponsorizarea de catre
-                        Sponsor a Beneficiarului, in conformitate cu prevederile Legii nr. 32/1994 privind
-                        sponsorizarea, cu modificarile si completarile ulterioare.
+                        <strong>2.1.</strong> Obiectul prezentului contract il constituie sponsorizarea BENEFICIARULUI
+                        de catre SPONSOR in vederea sustinerii activitatilor{ngo.name ? ` ${ngo.name}` : ""}:
                       </p>
                       {form.purpose && (
-                        <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                          <strong>Art. 2.</strong> Sponsorizarea are ca destinatie:{" "}
-                          <strong>{form.purpose}</strong>.
-                        </p>
+                        <ul style={{ paddingLeft: "30px", marginBottom: "6px" }}>
+                          <li style={{ textAlign: "justify", listStyleType: "disc" }}>
+                            {form.purpose}
+                          </li>
+                        </ul>
                       )}
                     </div>
 
-                    {/* CHAPTER III - Value */}
-                    <div style={{ marginBottom: "20px" }}>
-                      <h2
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "bold",
-                          textTransform: "uppercase",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        Capitolul III - Valoarea contractului
+                    {/* III. DURATION */}
+                    <div style={{ marginBottom: "22px" }}>
+                      <h2 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "10px" }}>
+                        III. Durata contractului
                       </h2>
                       <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                        <strong>Art. 3.</strong> Valoarea totala a sponsorizarii este de{" "}
+                        <strong>3.1.</strong> Prezentul contract este valabil de la data semnarii sale pana
+                        la indeplinirea obligatiilor de catre parti.
+                      </p>
+                    </div>
+
+                    {/* IV. PRICE AND PAYMENT */}
+                    <div style={{ marginBottom: "22px" }}>
+                      <h2 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "10px" }}>
+                        IV. Pretul contractului si modalitatea de plata
+                      </h2>
+                      <p style={{ textAlign: "justify", marginBottom: "6px" }}>
+                        <strong>4.1.</strong> Sponsorul va acorda Beneficiarului suma de{" "}
                         <strong>{formatAmount(form.amount)} RON</strong>{" "}
                         (adica: {numberToWordsRo(parseFloat(form.amount) || 0)}).
                       </p>
+                    </div>
+
+                    {/* V. BENEFICIARY OBLIGATIONS */}
+                    <div style={{ marginBottom: "22px" }}>
+                      <h2 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "10px" }}>
+                        V. Obligatiile Beneficiarului
+                      </h2>
                       <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                        <strong>Art. 4.</strong> Plata sponsorizarii se va efectua prin virament bancar in contul
-                        Beneficiarului, in termen de{" "}
-                        <strong>{form.paymentTerms}</strong>.
+                        <strong>5.1.</strong> Utilizarea sponsorizarii exclusiv in scopul precizat la capitolul
+                        &quot;Obiectul contractului&quot; al prezentului contract.
                       </p>
                     </div>
 
-                    {/* CHAPTER IV - Sponsor Obligations */}
-                    <div style={{ marginBottom: "20px" }}>
-                      <h2
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "bold",
-                          textTransform: "uppercase",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        Capitolul IV - Obligatiile Sponsorului
+                    {/* VI. SPONSOR OBLIGATIONS */}
+                    <div style={{ marginBottom: "22px" }}>
+                      <h2 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "10px" }}>
+                        VI. Obligatiile Sponsorului
                       </h2>
                       <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                        <strong>Art. 5.</strong> Sponsorul se obliga:
-                      </p>
-                      <ol style={{ paddingLeft: "20px", marginBottom: "6px" }}>
-                        <li style={{ textAlign: "justify", marginBottom: "4px" }}>
-                          Sa vireze suma prevazuta la art. 3 din prezentul contract in contul bancar al
-                          Beneficiarului, in termenul stabilit;
-                        </li>
-                        <li style={{ textAlign: "justify", marginBottom: "4px" }}>
-                          Sa nu impuna Beneficiarului efectuarea de activitati cu caracter publicitar sau
-                          de reclama avand scop comercial;
-                        </li>
-                        <li style={{ textAlign: "justify", marginBottom: "4px" }}>
-                          Sa respecte prevederile Legii nr. 32/1994 privind sponsorizarea.
-                        </li>
-                      </ol>
-                    </div>
-
-                    {/* CHAPTER V - Beneficiary Obligations */}
-                    <div style={{ marginBottom: "20px" }}>
-                      <h2
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "bold",
-                          textTransform: "uppercase",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        Capitolul V - Obligatiile Beneficiarului
-                      </h2>
-                      <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                        <strong>Art. 6.</strong> Beneficiarul se obliga:
-                      </p>
-                      <ol style={{ paddingLeft: "20px", marginBottom: "6px" }}>
-                        <li style={{ textAlign: "justify", marginBottom: "4px" }}>
-                          Sa utilizeze suma primita exclusiv in scopul declarat in prezentul contract;
-                        </li>
-                        <li style={{ textAlign: "justify", marginBottom: "4px" }}>
-                          Sa emita o confirmare scrisa de primire a sponsorizarii;
-                        </li>
-                        <li style={{ textAlign: "justify", marginBottom: "4px" }}>
-                          Sa aduca la cunostinta Sponsorului modul de utilizare a sumelor primite, la cererea acestuia;
-                        </li>
-                        <li style={{ textAlign: "justify", marginBottom: "4px" }}>
-                          Sa respecte prevederile legale in vigoare cu privire la organizatiile neguvernamentale
-                          si la sponsorizare.
-                        </li>
-                      </ol>
-                    </div>
-
-                    {/* CHAPTER VI - Duration */}
-                    <div style={{ marginBottom: "20px" }}>
-                      <h2
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "bold",
-                          textTransform: "uppercase",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        Capitolul VI - Durata contractului
-                      </h2>
-                      <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                        <strong>Art. 7.</strong> Prezentul contract intra in vigoare la data semnarii sale de catre
-                        ambele parti si este valabil pe o perioada de{" "}
-                        <strong>{form.duration || "12 luni"}</strong>.
+                        <strong>6.1.</strong> Plata sumei reprezentand valoarea prezentului contract in conformitate
+                        cu prevederile stabilite la capitolul &quot;PRETUL CONTRACTULUI SI MODALITATEA DE PLATA&quot;.
                       </p>
                       <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                        <strong>Art. 8.</strong> Contractul poate fi prelungit prin acordul scris al ambelor parti.
+                        <strong>6.2.</strong> Sa vireze suma in valoarea prevazuta la art. 4.1 in termen
+                        de {form.paymentDays || "5"} zile de la semnarea contractului de catre parti.
                       </p>
                     </div>
 
-                    {/* CHAPTER VII - Fiscal Provisions */}
-                    <div style={{ marginBottom: "20px" }}>
-                      <h2
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "bold",
-                          textTransform: "uppercase",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        Capitolul VII - Prevederi fiscale
+                    {/* VII. LIABILITY */}
+                    <div style={{ marginBottom: "22px" }}>
+                      <h2 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "10px" }}>
+                        VII. Raspunderea contractuala
                       </h2>
                       <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                        <strong>Art. 9.</strong> In conformitate cu prevederile Legii nr. 227/2015 privind Codul
-                        fiscal, cu modificarile si completarile ulterioare, Sponsorul beneficiaza de facilitati
-                        fiscale pentru sumele alocate sponsorizarii, in limitele si conditiile prevazute de lege.
+                        <strong>7.1.</strong> Nerespectarea clauzelor prezentului contract atrage dupa sine
+                        raspunderea materiala sau dupa caz raspunderea civila si penala precum si plata
+                        de penalitati si despagubiri la nivelul daunelor produse.
                       </p>
                       <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                        <strong>Art. 10.</strong> Sponsorul are dreptul de a deduce cheltuielile de sponsorizare din
-                        impozitul pe profit datorat, in limita a 0,75% din cifra de afaceri si in limita a 20% din
-                        impozitul pe profit datorat, conform legislatiei in vigoare.
+                        <strong>7.2.</strong> Neexecutarea sau executarea necorespunzatoare a obligatiilor ce
+                        revin partilor datorata fortei majore, degreveaza de raspundere cu conditia ca forta
+                        majora sa poata fi dovedita cu acte si comunicata celeilalte parti in termen de cel
+                        mult 15 zile de la aparitie.
+                      </p>
+                      <p style={{ textAlign: "justify", marginBottom: "6px" }}>
+                        <strong>7.3.</strong> Cazurile de forta majora sunt prevazute in Codul Civil; se asimileaza
+                        fortei majore si actele guvernamentale ce modifica vointa partilor, in totul sau in parte,
+                        de la data incheierii acestui contract.
                       </p>
                     </div>
 
-                    {/* CHAPTER VIII - Final Provisions */}
-                    <div style={{ marginBottom: "20px" }}>
-                      <h2
-                        style={{
-                          fontSize: "14px",
-                          fontWeight: "bold",
-                          textTransform: "uppercase",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        Capitolul VIII - Dispozitii finale
+                    {/* VIII. ASSIGNMENT */}
+                    <div style={{ marginBottom: "22px" }}>
+                      <h2 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "10px" }}>
+                        VIII. Cesiunea contractului
                       </h2>
                       <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                        <strong>Art. 11.</strong> Orice modificare a prezentului contract se face prin act aditional
-                        semnat de ambele parti.
+                        <strong>8.1.</strong> Niciuna din partile prezentului contract nu va cesiona drepturile
+                        si obligatiile sale rezultate din acest contract unei terte persoane.
+                      </p>
+                    </div>
+
+                    {/* IX. NOTIFICATIONS */}
+                    <div style={{ marginBottom: "22px" }}>
+                      <h2 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "10px" }}>
+                        IX. Notificari
+                      </h2>
+                      <p style={{ textAlign: "justify", marginBottom: "6px" }}>
+                        <strong>9.1.</strong> In cazul in care comunicarea va fi facuta prin posta, ea se va face
+                        prin scrisoare recomandata care se va considera ca a fost primita de catre destinatar
+                        in 6 zile de la data la care a fost predata serviciului postal.
                       </p>
                       <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                        <strong>Art. 12.</strong> Eventualele litigii aparute in legatura cu executarea prezentului
-                        contract se vor rezolva pe cale amiabila. In cazul in care nu se ajunge la o intelegere, litigiile
-                        vor fi solutionate de instanta de judecata competenta.
+                        <strong>9.2.</strong> In cazul in care comunicarea va fi facuta sub forma de fax sau email,
+                        comunicarea se considera primita de catre destinatar in prima zi lucratoare, urmatoare
+                        celei in care a fost expediata.
+                      </p>
+                    </div>
+
+                    {/* X. CONFIDENTIALITY */}
+                    <div style={{ marginBottom: "22px" }}>
+                      <h2 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "10px" }}>
+                        X. Confidentialitate
+                      </h2>
+                      <p style={{ textAlign: "justify", marginBottom: "6px" }}>
+                        O parte contractanta nu are dreptul, fara acordul scris al celeilalte parti:
+                      </p>
+                      <ul style={{ paddingLeft: "30px", marginBottom: "6px" }}>
+                        <li style={{ textAlign: "justify", marginBottom: "4px", listStyleType: "disc" }}>
+                          De a face cunoscut contractul sau orice prevedere a acestuia unei terte parti,
+                          in afara acelor persoane implicate in indeplinirea contractului;
+                        </li>
+                        <li style={{ textAlign: "justify", marginBottom: "4px", listStyleType: "disc" }}>
+                          De a utiliza informatiile si documentele obtinute sau la care are acces in
+                          perioada de derulare a contractului, in alt scop decat in acela de a-si
+                          indeplini obligatiile contractuale;
+                        </li>
+                        <li style={{ textAlign: "justify", marginBottom: "4px", listStyleType: "disc" }}>
+                          Dezvaluirea oricarei informatii fata de persoanele implicate in indeplinirea
+                          contractului se va face confidential si se va extinde numai asupra acelor
+                          informatii necesare in vederea indeplinirii contractului.
+                        </li>
+                      </ul>
+                      <p style={{ textAlign: "justify", marginBottom: "6px" }}>
+                        O parte contractanta va fi exonerata de raspunderea pentru dezvaluirea de informatii
+                        referitoare la contract daca:
+                      </p>
+                      <ul style={{ paddingLeft: "30px", marginBottom: "6px" }}>
+                        <li style={{ textAlign: "justify", marginBottom: "4px", listStyleType: "disc" }}>
+                          Informatia era cunoscuta partii contractante inainte ca ea sa fi fost primita
+                          de la cealalta parte contractanta; sau
+                        </li>
+                        <li style={{ textAlign: "justify", marginBottom: "4px", listStyleType: "disc" }}>
+                          Informatia a fost dezvaluita dupa ce a fost obtinut acordul scris al celeilalte
+                          parti contractante pentru asemenea dezvaluire; sau
+                        </li>
+                        <li style={{ textAlign: "justify", marginBottom: "4px", listStyleType: "disc" }}>
+                          Partea contractanta a fost obligata in mod legal sa dezvaluie informatia.
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* XI. FINAL PROVISIONS */}
+                    <div style={{ marginBottom: "22px" }}>
+                      <h2 style={{ fontSize: "14px", fontWeight: "bold", textTransform: "uppercase", marginBottom: "10px" }}>
+                        XI. Dispozitii finale
+                      </h2>
+                      <p style={{ textAlign: "justify", marginBottom: "6px" }}>
+                        <strong>11.1.</strong> Modificarea prezentului contract poate fi facuta numai in scris,
+                        prin acordul ambelor parti.
                       </p>
                       <p style={{ textAlign: "justify", marginBottom: "6px" }}>
-                        <strong>Art. 13.</strong> Prezentul contract s-a incheiat in doua (2) exemplare originale,
-                        cate unul pentru fiecare parte, avand aceeasi valoare juridica.
+                        <strong>11.2.</strong> Orice litigii nascute din interpretarea si executarea acestui
+                        contract se vor solutiona pe cale amiabila, iar in situatia in care nu se va ajunge
+                        la un rezultat pe aceasta cale, litigiile se supun instantelor judecatoresti competente.
+                      </p>
+                      <p style={{ textAlign: "justify", marginBottom: "6px" }}>
+                        <strong>11.3.</strong> Prezentul contract a fost incheiat azi {contractDate},
+                        in 2 (doua) exemplare, cate unul pentru fiecare parte.
                       </p>
                     </div>
 
@@ -963,23 +1087,20 @@ export default function ContractSponsorizarePage() {
                       }}
                     >
                       <div style={{ width: "45%", textAlign: "center" }}>
-                        <p style={{ fontWeight: "bold", fontSize: "13px", marginBottom: "4px" }}>
-                          SPONSORUL
+                        <p style={{ fontWeight: "bold", fontSize: "13px", marginBottom: "6px", textTransform: "uppercase" }}>
+                          SPONSOR
                         </p>
-                        <p style={{ fontSize: "13px", marginBottom: "4px" }}>
+                        <p style={{ fontSize: "13px", fontWeight: "bold", marginBottom: "4px" }}>
                           {form.companyName}
                         </p>
                         <p style={{ fontSize: "12px", marginBottom: "4px" }}>
-                          Prin: {form.companyRep}
-                        </p>
-                        <p style={{ fontSize: "12px", marginBottom: "40px" }}>
-                          {form.companyRepRole || "Administrator"}
+                          {form.companyRepRole || "Administrator"}: {form.companyRep}
                         </p>
                         <div
                           style={{
                             borderTop: "1px solid #000",
-                            paddingTop: "4px",
-                            marginTop: "40px",
+                            paddingTop: "6px",
+                            marginTop: "70px",
                             fontSize: "11px",
                           }}
                         >
@@ -988,25 +1109,22 @@ export default function ContractSponsorizarePage() {
                       </div>
 
                       <div style={{ width: "45%", textAlign: "center" }}>
-                        <p style={{ fontWeight: "bold", fontSize: "13px", marginBottom: "4px" }}>
-                          BENEFICIARUL
+                        <p style={{ fontWeight: "bold", fontSize: "13px", marginBottom: "6px", textTransform: "uppercase" }}>
+                          BENEFICIAR
                         </p>
-                        <p style={{ fontSize: "13px", marginBottom: "4px" }}>
+                        <p style={{ fontSize: "13px", fontWeight: "bold", marginBottom: "4px" }}>
                           {ngo.name}
                         </p>
                         {ngoRep && (
                           <p style={{ fontSize: "12px", marginBottom: "4px" }}>
-                            Prin: {ngoRep}
+                            {ngoRepRole}: {ngoRep}
                           </p>
                         )}
-                        <p style={{ fontSize: "12px", marginBottom: "40px" }}>
-                          {ngoRepRole}
-                        </p>
                         <div
                           style={{
                             borderTop: "1px solid #000",
-                            paddingTop: "4px",
-                            marginTop: "40px",
+                            paddingTop: "6px",
+                            marginTop: "70px",
                             fontSize: "11px",
                           }}
                         >
@@ -1020,9 +1138,9 @@ export default function ContractSponsorizarePage() {
             </Card>
 
             {/* Bottom print button */}
-            <div className="flex justify-center gap-3 mt-6">
-              <Button onClick={handlePrint} size="lg">
-                <Printer className="mr-2 h-4 w-4" />
+            <div className="flex justify-center gap-3 mt-8">
+              <Button onClick={handlePrint} size="lg" className="h-12 shadow-md">
+                <Printer className="mr-2 h-5 w-5" />
                 Printeaza contractul
               </Button>
             </div>
@@ -1030,8 +1148,8 @@ export default function ContractSponsorizarePage() {
         )}
 
         {/* Footer */}
-        <footer className="text-center text-xs text-muted-foreground mt-10 pb-8">
-          <p>Generat automat prin NGO HUB. Contractul respecta prevederile Legii nr. 32/1994 privind sponsorizarea.</p>
+        <footer className="text-center text-xs text-gray-400 mt-12 pb-8">
+          <p>Contract generat automat. Respecta prevederile Legii nr. 32/1994 privind sponsorizarea si ale Codului Civil.</p>
         </footer>
       </div>
     </div>

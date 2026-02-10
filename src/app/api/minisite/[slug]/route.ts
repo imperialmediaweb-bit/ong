@@ -28,6 +28,8 @@ export async function GET(
             primaryColor: true,
             showNewsletter: true,
             showDonation: true,
+            bankAccount: true,
+            bankName: true,
           },
         },
       },
