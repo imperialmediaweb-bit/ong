@@ -461,126 +461,9 @@ export default async function MiniSitePage({ params }: Props) {
 
       {/* ── Main Content ─────────────────────────────────────────────── */}
       <main>
-        {/* ── Redirectioneaza Impozit Section ─────────────────────────────── */}
-        {showRedirectImpozit && (
-          <section className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
-            <div className="mx-auto max-w-6xl px-4 sm:px-6">
-              <div className="mb-12 text-center">
-                <div
-                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-                  style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
-                >
-                  <Shield className="h-7 w-7" style={{ color: primaryColor }} />
-                </div>
-                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
-                  Sustine cauza noastra
-                </h2>
-                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
-                  Redirectioneaza impozitul sau doneaza direct - fara costuri suplimentare
-                </p>
-              </div>
-
-              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Card: Formular 230 */}
-                {showFormular230 && (
-                  <div
-                    className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                    style={{ border: `1px solid rgba(${accentRgb}, 0.15)` }}
-                  >
-                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)` }} />
-                    <div className="p-6 sm:p-8">
-                      <div
-                        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-                        style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
-                      >
-                        <FileText className="h-7 w-7" style={{ color: accentColor }} />
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-900">Redirectioneaza 3,5% din impozit</h3>
-                      <p className="mt-3 text-sm leading-relaxed text-gray-500">
-                        Completeaza Formularul 230 si redirectioneaza 3,5% din impozitul
-                        pe venit. Nu te costa nimic in plus - banii ar merge oricum la stat.
-                      </p>
-                      <a
-                        href={`/s/${ngo.slug}/formular-230`}
-                        className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
-                        style={{ backgroundColor: accentColor, boxShadow: `0 4px 14px rgba(${accentRgb}, 0.3)` }}
-                      >
-                        Completeaza formularul
-                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {/* Card: Contract Sponsorizare */}
-                {showContract && (
-                  <div
-                    className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                    style={{ border: `1px solid rgba(${primaryRgb}, 0.15)` }}
-                  >
-                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}88)` }} />
-                    <div className="p-6 sm:p-8">
-                      <div
-                        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-                        style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
-                      >
-                        <Briefcase className="h-7 w-7" style={{ color: primaryColor }} />
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-900">Sponsorizare 20% pentru firme</h3>
-                      <p className="mt-3 text-sm leading-relaxed text-gray-500">
-                        Firmele pot redirectiona pana la 20% din impozitul pe profit
-                        prin contracte de sponsorizare. Genereaza contractul online.
-                      </p>
-                      <a
-                        href={`/s/${ngo.slug}/contract-sponsorizare`}
-                        className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
-                        style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.3)` }}
-                      >
-                        Genereaza contract
-                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {/* Card: Doneaza direct */}
-                {showDonation && (
-                  <div
-                    className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                    style={{ border: `1px solid rgba(${accentRgb}, 0.15)` }}
-                  >
-                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${accentColor}, ${primaryColor})` }} />
-                    <div className="p-6 sm:p-8">
-                      <div
-                        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-                        style={{ background: `linear-gradient(135deg, rgba(${accentRgb}, 0.15), rgba(${primaryRgb}, 0.15))` }}
-                      >
-                        <Heart className="h-7 w-7" style={{ color: accentColor }} />
-                      </div>
-                      <h3 className="text-xl font-bold text-gray-900">Doneaza direct</h3>
-                      <p className="mt-3 text-sm leading-relaxed text-gray-500">
-                        Fiecare donatie conteaza. Contribuie direct la proiectele noastre
-                        si fa o diferenta reala in viata celor care au nevoie.
-                      </p>
-                      <a
-                        href="#donatie"
-                        className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
-                        style={{ background: `linear-gradient(135deg, ${accentColor}, ${primaryColor})`, boxShadow: `0 4px 14px rgba(${accentRgb}, 0.3)` }}
-                      >
-                        Doneaza acum
-                        <Heart className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* ── User Campaigns Section ─────────────────────────────────────── */}
+        {/* ── User Campaigns Section (first, right after hero) ────────── */}
         {showCampaigns && (
-          <section id="campanii" className="scroll-mt-20 bg-white py-16 sm:py-20">
+          <section id="campanii" className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
             <div className="mx-auto max-w-6xl px-4 sm:px-6">
               <div className="mb-12 text-center">
                 <div
@@ -606,7 +489,6 @@ export default async function MiniSitePage({ params }: Props) {
                       className="group relative overflow-hidden rounded-3xl bg-white shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
                       style={{ border: `1px solid rgba(${primaryRgb}, 0.1)` }}
                     >
-                      {/* Campaign image */}
                       {camp.imageUrl ? (
                         <div className="relative h-52 overflow-hidden">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -709,6 +591,120 @@ export default async function MiniSitePage({ params }: Props) {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Redirectioneaza Impozit Section (below campaigns) ───────── */}
+        {showRedirectImpozit && (
+          <section className={`scroll-mt-20 py-16 sm:py-20 ${showCampaigns ? "bg-white" : "bg-gray-50"}`}>
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                >
+                  <Shield className="h-7 w-7" style={{ color: primaryColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Redirectioneaza impozitul
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Fara costuri suplimentare - banii ar merge oricum la stat
+                </p>
+              </div>
+
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {showFormular230 && (
+                  <div
+                    className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                    style={{ border: `1px solid rgba(${accentRgb}, 0.15)` }}
+                  >
+                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)` }} />
+                    <div className="p-6 sm:p-8">
+                      <div
+                        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
+                        style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
+                      >
+                        <FileText className="h-7 w-7" style={{ color: accentColor }} />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900">Redirectioneaza 3,5% din impozit</h3>
+                      <p className="mt-3 text-sm leading-relaxed text-gray-500">
+                        Completeaza Formularul 230 si redirectioneaza 3,5% din impozitul
+                        pe venit. Nu te costa nimic in plus - banii ar merge oricum la stat.
+                      </p>
+                      <a
+                        href={`/s/${ngo.slug}/formular-230`}
+                        className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
+                        style={{ backgroundColor: accentColor, boxShadow: `0 4px 14px rgba(${accentRgb}, 0.3)` }}
+                      >
+                        Completeaza formularul
+                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {showContract && (
+                  <div
+                    className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                    style={{ border: `1px solid rgba(${primaryRgb}, 0.15)` }}
+                  >
+                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}88)` }} />
+                    <div className="p-6 sm:p-8">
+                      <div
+                        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
+                        style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                      >
+                        <Briefcase className="h-7 w-7" style={{ color: primaryColor }} />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900">Sponsorizare 20% pentru firme</h3>
+                      <p className="mt-3 text-sm leading-relaxed text-gray-500">
+                        Firmele pot redirectiona pana la 20% din impozitul pe profit
+                        prin contracte de sponsorizare. Genereaza contractul online.
+                      </p>
+                      <a
+                        href={`/s/${ngo.slug}/contract-sponsorizare`}
+                        className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
+                        style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.3)` }}
+                      >
+                        Genereaza contract
+                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {showDonation && (
+                  <div
+                    className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+                    style={{ border: `1px solid rgba(${accentRgb}, 0.15)` }}
+                  >
+                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${accentColor}, ${primaryColor})` }} />
+                    <div className="p-6 sm:p-8">
+                      <div
+                        className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
+                        style={{ background: `linear-gradient(135deg, rgba(${accentRgb}, 0.15), rgba(${primaryRgb}, 0.15))` }}
+                      >
+                        <Heart className="h-7 w-7" style={{ color: accentColor }} />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900">Doneaza direct</h3>
+                      <p className="mt-3 text-sm leading-relaxed text-gray-500">
+                        Fiecare donatie conteaza. Contribuie direct la proiectele noastre
+                        si fa o diferenta reala in viata celor care au nevoie.
+                      </p>
+                      <a
+                        href="#donatie"
+                        className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
+                        style={{ background: `linear-gradient(135deg, ${accentColor}, ${primaryColor})`, boxShadow: `0 4px 14px rgba(${accentRgb}, 0.3)` }}
+                      >
+                        Doneaza acum
+                        <Heart className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </section>
