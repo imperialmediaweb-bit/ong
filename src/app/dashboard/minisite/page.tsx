@@ -41,6 +41,10 @@ import {
   Type,
   Download,
   MapPin as MapPinIcon,
+  Heart,
+  Plus,
+  Trash2,
+  Target,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -99,6 +103,21 @@ interface MiniSiteState {
   showContract: boolean;
   customCss: string;
   isPublished: boolean;
+  miniSiteCampaigns: MiniSiteCampaign[];
+  templateStyle: string;
+}
+
+interface MiniSiteCampaign {
+  id: string;
+  title: string;
+  description: string;
+  goalAmount: number;
+  raisedAmount: number;
+  imageUrl: string;
+  ctaText: string;
+  ctaLink: string;
+  category: string;
+  isActive: boolean;
 }
 
 const DEFAULT_STATE: MiniSiteState = {
@@ -146,7 +165,21 @@ const DEFAULT_STATE: MiniSiteState = {
   showContract: false,
   customCss: "",
   isPublished: false,
+  miniSiteCampaigns: [],
+  templateStyle: "modern",
 };
+
+const CAMPAIGN_CATEGORIES = [
+  "Strangere de fonduri",
+  "Proiect social",
+  "Educatie",
+  "Sanatate",
+  "Mediu",
+  "Urgenta",
+  "Constructie",
+  "Echipament",
+  "Altele",
+];
 
 const CATEGORIES = [
   "Social",
@@ -252,6 +285,8 @@ export default function MiniSiteBuilderPage() {
           showContract: data.showContract ?? false,
           customCss: data.customCss || "",
           isPublished: data.isPublished ?? false,
+          miniSiteCampaigns: Array.isArray(data.miniSiteCampaigns) ? data.miniSiteCampaigns : [],
+          templateStyle: data.templateStyle || "modern",
         }));
 
         if (data.heroTitle || data.aboutText || data.missionText) {
@@ -527,7 +562,7 @@ export default function MiniSiteBuilderPage() {
 
       {/* Tabs wizard */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="date-ong" className="gap-1.5">
             <Building className="h-4 w-4" />
             <span className="hidden sm:inline">Date ONG</span>
@@ -536,9 +571,13 @@ export default function MiniSiteBuilderPage() {
             <FileText className="h-4 w-4" />
             <span className="hidden sm:inline">Date asociatie</span>
           </TabsTrigger>
+          <TabsTrigger value="campanii" className="gap-1.5">
+            <Heart className="h-4 w-4" />
+            <span className="hidden sm:inline">Campanii</span>
+          </TabsTrigger>
           <TabsTrigger value="genereaza-ai" className="gap-1.5">
             <Wand2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Genereaza cu AI</span>
+            <span className="hidden sm:inline">Genereaza AI</span>
           </TabsTrigger>
           <TabsTrigger value="personalizeaza" className="gap-1.5">
             <Palette className="h-4 w-4" />
@@ -1082,6 +1121,305 @@ export default function MiniSiteBuilderPage() {
                   </div>
                 )}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ─── Tab: Campanii ──────────────────────────────────────── */}
+        <TabsContent value="campanii">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Heart className="h-5 w-5" />
+                    Campaniile tale
+                  </CardTitle>
+                  <CardDescription>
+                    Adauga campanii de strangere de fonduri pe mini-site-ul tau.
+                    Fiecare campanie apare ca un card pe pagina publica.
+                  </CardDescription>
+                </div>
+                <Button
+                  onClick={() => {
+                    const newCampaign: MiniSiteCampaign = {
+                      id: Date.now().toString(),
+                      title: "",
+                      description: "",
+                      goalAmount: 0,
+                      raisedAmount: 0,
+                      imageUrl: "",
+                      ctaText: "Doneaza acum",
+                      ctaLink: "",
+                      category: "Strangere de fonduri",
+                      isActive: true,
+                    };
+                    setState((prev) => ({
+                      ...prev,
+                      miniSiteCampaigns: [...prev.miniSiteCampaigns, newCampaign],
+                    }));
+                  }}
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Adauga campanie
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {state.miniSiteCampaigns.length === 0 ? (
+                <div className="text-center py-12 border-2 border-dashed rounded-xl">
+                  <Target className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <h3 className="font-semibold text-lg mb-1">Nicio campanie inca</h3>
+                  <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+                    Adauga prima ta campanie de strangere de fonduri.
+                    Va aparea pe mini-site-ul tau cu un card dedicat.
+                  </p>
+                  <Button
+                    onClick={() => {
+                      const newCampaign: MiniSiteCampaign = {
+                        id: Date.now().toString(),
+                        title: "",
+                        description: "",
+                        goalAmount: 0,
+                        raisedAmount: 0,
+                        imageUrl: "",
+                        ctaText: "Doneaza acum",
+                        ctaLink: "",
+                        category: "Strangere de fonduri",
+                        isActive: true,
+                      };
+                      setState((prev) => ({
+                        ...prev,
+                        miniSiteCampaigns: [...prev.miniSiteCampaigns, newCampaign],
+                      }));
+                    }}
+                    variant="outline"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Adauga prima campanie
+                  </Button>
+                </div>
+              ) : (
+                state.miniSiteCampaigns.map((campaign, idx) => (
+                  <div
+                    key={campaign.id}
+                    className="border rounded-xl p-5 space-y-4 bg-white"
+                  >
+                    <div className="flex items-center justify-between">
+                      <Badge variant={campaign.isActive ? "default" : "secondary"}>
+                        {campaign.isActive ? "Activa" : "Inactiva"}
+                      </Badge>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setState((prev) => ({
+                              ...prev,
+                              miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                i === idx ? { ...c, isActive: !c.isActive } : c
+                              ),
+                            }));
+                          }}
+                        >
+                          {campaign.isActive ? (
+                            <><EyeOff className="h-4 w-4 mr-1" /> Dezactiveaza</>
+                          ) : (
+                            <><Eye className="h-4 w-4 mr-1" /> Activeaza</>
+                          )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => {
+                            setState((prev) => ({
+                              ...prev,
+                              miniSiteCampaigns: prev.miniSiteCampaigns.filter((_, i) => i !== idx),
+                            }));
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Sterge
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="grid gap-2 sm:col-span-2">
+                        <Label>Titlu campanie *</Label>
+                        <Input
+                          placeholder="Ex: Ajuta 100 de copii sa mearga la scoala"
+                          value={campaign.title}
+                          onChange={(e) => {
+                            setState((prev) => ({
+                              ...prev,
+                              miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                i === idx ? { ...c, title: e.target.value } : c
+                              ),
+                            }));
+                          }}
+                        />
+                      </div>
+
+                      <div className="grid gap-2 sm:col-span-2">
+                        <Label>Descriere</Label>
+                        <Textarea
+                          placeholder="Descrierea campaniei - ce doriti sa realizati, de ce e important, cum vor fi folositi banii..."
+                          rows={3}
+                          value={campaign.description}
+                          onChange={(e) => {
+                            setState((prev) => ({
+                              ...prev,
+                              miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                i === idx ? { ...c, description: e.target.value } : c
+                              ),
+                            }));
+                          }}
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label>Obiectiv (RON)</Label>
+                        <Input
+                          type="number"
+                          placeholder="10000"
+                          value={campaign.goalAmount || ""}
+                          onChange={(e) => {
+                            setState((prev) => ({
+                              ...prev,
+                              miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                i === idx ? { ...c, goalAmount: parseFloat(e.target.value) || 0 } : c
+                              ),
+                            }));
+                          }}
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label>Suma stransa (RON)</Label>
+                        <Input
+                          type="number"
+                          placeholder="2500"
+                          value={campaign.raisedAmount || ""}
+                          onChange={(e) => {
+                            setState((prev) => ({
+                              ...prev,
+                              miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                i === idx ? { ...c, raisedAmount: parseFloat(e.target.value) || 0 } : c
+                              ),
+                            }));
+                          }}
+                        />
+                      </div>
+
+                      <div className="grid gap-2 sm:col-span-2">
+                        <Label>Imagine campanie (URL)</Label>
+                        <Input
+                          placeholder="https://exemplu.ro/imagine-campanie.jpg"
+                          value={campaign.imageUrl}
+                          onChange={(e) => {
+                            setState((prev) => ({
+                              ...prev,
+                              miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                i === idx ? { ...c, imageUrl: e.target.value } : c
+                              ),
+                            }));
+                          }}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Urca imaginea pe Google Drive, Imgur sau alt serviciu si lipeste link-ul.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label>Text buton</Label>
+                        <Input
+                          placeholder="Doneaza acum"
+                          value={campaign.ctaText}
+                          onChange={(e) => {
+                            setState((prev) => ({
+                              ...prev,
+                              miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                i === idx ? { ...c, ctaText: e.target.value } : c
+                              ),
+                            }));
+                          }}
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label>Link buton (optional)</Label>
+                        <Input
+                          placeholder="https://donate.stripe.com/..."
+                          value={campaign.ctaLink}
+                          onChange={(e) => {
+                            setState((prev) => ({
+                              ...prev,
+                              miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                i === idx ? { ...c, ctaLink: e.target.value } : c
+                              ),
+                            }));
+                          }}
+                        />
+                      </div>
+
+                      <div className="grid gap-2">
+                        <Label>Categorie</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {CAMPAIGN_CATEGORIES.map((cat) => (
+                            <button
+                              key={cat}
+                              type="button"
+                              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                                campaign.category === cat
+                                  ? "bg-primary text-white"
+                                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                              }`}
+                              onClick={() => {
+                                setState((prev) => ({
+                                  ...prev,
+                                  miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                    i === idx ? { ...c, category: cat } : c
+                                  ),
+                                }));
+                              }}
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Preview progress bar */}
+                    {campaign.goalAmount > 0 && (
+                      <div className="pt-2 border-t">
+                        <div className="flex justify-between text-sm mb-1">
+                          <span className="font-medium">
+                            {campaign.raisedAmount.toLocaleString("ro-RO")} RON strans
+                          </span>
+                          <span className="text-muted-foreground">
+                            din {campaign.goalAmount.toLocaleString("ro-RO")} RON
+                          </span>
+                        </div>
+                        <div className="h-2.5 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all"
+                            style={{
+                              width: `${Math.min(100, (campaign.raisedAmount / campaign.goalAmount) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {Math.round((campaign.raisedAmount / campaign.goalAmount) * 100)}% din obiectiv
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
         </TabsContent>

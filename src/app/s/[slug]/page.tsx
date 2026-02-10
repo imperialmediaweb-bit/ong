@@ -136,7 +136,12 @@ export default async function MiniSitePage({ params }: Props) {
     blogPosts = [];
   }
 
-  const showCampaigns = showFormular230 || showContract || showDonation;
+  // Dynamic campaigns from miniSiteCampaigns field
+  const miniSiteCampaigns: any[] = Array.isArray((config as any)?.miniSiteCampaigns)
+    ? (config as any).miniSiteCampaigns.filter((c: any) => c.isActive)
+    : [];
+
+  const showCampaigns = showFormular230 || showContract || showDonation || miniSiteCampaigns.length > 0;
 
   return (
     <div
@@ -428,48 +433,132 @@ export default async function MiniSitePage({ params }: Props) {
                 </p>
               </div>
 
+              {/* Dynamic campaigns from builder */}
+              {miniSiteCampaigns.length > 0 && (
+                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 mb-12">
+                  {miniSiteCampaigns.map((camp: any, idx: number) => (
+                    <div
+                      key={camp.id || idx}
+                      className="group relative overflow-hidden rounded-3xl bg-white shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
+                      style={{ border: `1px solid rgba(${primaryRgb}, 0.1)` }}
+                    >
+                      {/* Campaign image */}
+                      {camp.imageUrl ? (
+                        <div className="relative h-52 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={camp.imageUrl}
+                            alt={camp.title}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                          {camp.category && (
+                            <span
+                              className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold text-white backdrop-blur-sm"
+                              style={{ backgroundColor: `${primaryColor}cc` }}
+                            >
+                              {camp.category}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          className="relative h-36 overflow-hidden"
+                          style={{ background: `linear-gradient(135deg, ${primaryColor}20, ${accentColor}20)` }}
+                        >
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <Target className="h-16 w-16" style={{ color: `${primaryColor}40` }} />
+                          </div>
+                          {camp.category && (
+                            <span
+                              className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold text-white"
+                              style={{ backgroundColor: primaryColor }}
+                            >
+                              {camp.category}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="p-6">
+                        <h3 className="text-lg font-bold text-gray-900 leading-snug">
+                          {camp.title}
+                        </h3>
+                        {camp.description && (
+                          <p className="mt-2 text-sm text-gray-500 leading-relaxed line-clamp-3">
+                            {camp.description}
+                          </p>
+                        )}
+
+                        {/* Progress bar */}
+                        {camp.goalAmount > 0 && (
+                          <div className="mt-4">
+                            <div className="flex justify-between text-sm mb-1.5">
+                              <span className="font-bold" style={{ color: primaryColor }}>
+                                {Number(camp.raisedAmount || 0).toLocaleString("ro-RO")} RON
+                              </span>
+                              <span className="text-gray-400">
+                                / {Number(camp.goalAmount).toLocaleString("ro-RO")} RON
+                              </span>
+                            </div>
+                            <div className="h-3 rounded-full bg-gray-100 overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all duration-1000"
+                                style={{
+                                  width: `${Math.min(100, ((camp.raisedAmount || 0) / camp.goalAmount) * 100)}%`,
+                                  background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
+                                }}
+                              />
+                            </div>
+                            <p className="text-xs text-gray-400 mt-1.5">
+                              {Math.round(((camp.raisedAmount || 0) / camp.goalAmount) * 100)}% din obiectiv
+                            </p>
+                          </div>
+                        )}
+
+                        {/* CTA Button */}
+                        <a
+                          href={camp.ctaLink || "#donatie"}
+                          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+                          style={{
+                            background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                            boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.25)`,
+                          }}
+                        >
+                          {camp.ctaText || "Doneaza acum"}
+                          <Heart className="h-4 w-4" />
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Static cards: Formular 230, Contract, Donate */}
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {/* Card 1: Formular 230 */}
+                {/* Card: Formular 230 */}
                 {showFormular230 && (
                   <div
                     className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                    style={{
-                      border: `1px solid rgba(${accentRgb}, 0.15)`,
-                    }}
+                    style={{ border: `1px solid rgba(${accentRgb}, 0.15)` }}
                   >
-                    <div
-                      className="h-1.5"
-                      style={{
-                        background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)`,
-                      }}
-                    />
+                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${accentColor}, ${accentColor}88)` }} />
                     <div className="p-6 sm:p-8">
                       <div
                         className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-                        style={{
-                          backgroundColor: `rgba(${accentRgb}, 0.1)`,
-                        }}
+                        style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
                       >
-                        <FileText
-                          className="h-7 w-7"
-                          style={{ color: accentColor }}
-                        />
+                        <FileText className="h-7 w-7" style={{ color: accentColor }} />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900">
-                        Redirectioneaza 3,5% din impozit
-                      </h3>
+                      <h3 className="text-xl font-bold text-gray-900">Redirectioneaza 3,5% din impozit</h3>
                       <p className="mt-3 text-sm leading-relaxed text-gray-500">
                         Completeaza Formularul 230 si redirectioneaza 3,5% din impozitul
-                        pe venit catre organizatia noastra. Nu te costa nimic
-                        in plus - banii ar merge oricum la stat.
+                        pe venit. Nu te costa nimic in plus - banii ar merge oricum la stat.
                       </p>
                       <a
                         href={`/s/${ngo.slug}/formular-230`}
                         className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
-                        style={{
-                          backgroundColor: accentColor,
-                          boxShadow: `0 4px 14px rgba(${accentRgb}, 0.3)`,
-                        }}
+                        style={{ backgroundColor: accentColor, boxShadow: `0 4px 14px rgba(${accentRgb}, 0.3)` }}
                       >
                         Completeaza formularul
                         <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
@@ -478,47 +567,29 @@ export default async function MiniSitePage({ params }: Props) {
                   </div>
                 )}
 
-                {/* Card 2: Contract Sponsorizare */}
+                {/* Card: Contract Sponsorizare */}
                 {showContract && (
                   <div
                     className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                    style={{
-                      border: `1px solid rgba(${primaryRgb}, 0.15)`,
-                    }}
+                    style={{ border: `1px solid rgba(${primaryRgb}, 0.15)` }}
                   >
-                    <div
-                      className="h-1.5"
-                      style={{
-                        background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}88)`,
-                      }}
-                    />
+                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${primaryColor}, ${primaryColor}88)` }} />
                     <div className="p-6 sm:p-8">
                       <div
                         className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-                        style={{
-                          backgroundColor: `rgba(${primaryRgb}, 0.1)`,
-                        }}
+                        style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
                       >
-                        <Briefcase
-                          className="h-7 w-7"
-                          style={{ color: primaryColor }}
-                        />
+                        <Briefcase className="h-7 w-7" style={{ color: primaryColor }} />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900">
-                        Sponsorizare 20% pentru firme
-                      </h3>
+                      <h3 className="text-xl font-bold text-gray-900">Sponsorizare 20% pentru firme</h3>
                       <p className="mt-3 text-sm leading-relaxed text-gray-500">
                         Firmele pot redirectiona pana la 20% din impozitul pe profit
-                        prin contracte de sponsorizare. Genereaza contractul online
-                        si sustine cauza noastra prin compania ta.
+                        prin contracte de sponsorizare. Genereaza contractul online.
                       </p>
                       <a
                         href={`/s/${ngo.slug}/contract-sponsorizare`}
                         className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
-                        style={{
-                          backgroundColor: primaryColor,
-                          boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.3)`,
-                        }}
+                        style={{ backgroundColor: primaryColor, boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.3)` }}
                       >
                         Genereaza contract
                         <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
@@ -527,47 +598,29 @@ export default async function MiniSitePage({ params }: Props) {
                   </div>
                 )}
 
-                {/* Card 3: Doneaza direct */}
+                {/* Card: Doneaza direct */}
                 {showDonation && (
                   <div
                     className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-                    style={{
-                      border: `1px solid rgba(${accentRgb}, 0.15)`,
-                    }}
+                    style={{ border: `1px solid rgba(${accentRgb}, 0.15)` }}
                   >
-                    <div
-                      className="h-1.5"
-                      style={{
-                        background: `linear-gradient(90deg, ${accentColor}, ${primaryColor})`,
-                      }}
-                    />
+                    <div className="h-1.5" style={{ background: `linear-gradient(90deg, ${accentColor}, ${primaryColor})` }} />
                     <div className="p-6 sm:p-8">
                       <div
                         className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-                        style={{
-                          background: `linear-gradient(135deg, rgba(${accentRgb}, 0.15), rgba(${primaryRgb}, 0.15))`,
-                        }}
+                        style={{ background: `linear-gradient(135deg, rgba(${accentRgb}, 0.15), rgba(${primaryRgb}, 0.15))` }}
                       >
-                        <Heart
-                          className="h-7 w-7"
-                          style={{ color: accentColor }}
-                        />
+                        <Heart className="h-7 w-7" style={{ color: accentColor }} />
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900">
-                        Doneaza direct
-                      </h3>
+                      <h3 className="text-xl font-bold text-gray-900">Doneaza direct</h3>
                       <p className="mt-3 text-sm leading-relaxed text-gray-500">
-                        Fiecare donatie conteaza, indiferent de suma. Contribuie direct
-                        la proiectele noastre si fa o diferenta reala in viata
-                        celor care au nevoie de sprijin.
+                        Fiecare donatie conteaza. Contribuie direct la proiectele noastre
+                        si fa o diferenta reala in viata celor care au nevoie.
                       </p>
                       <a
                         href="#donatie"
                         className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
-                        style={{
-                          background: `linear-gradient(135deg, ${accentColor}, ${primaryColor})`,
-                          boxShadow: `0 4px 14px rgba(${accentRgb}, 0.3)`,
-                        }}
+                        style={{ background: `linear-gradient(135deg, ${accentColor}, ${primaryColor})`, boxShadow: `0 4px 14px rgba(${accentRgb}, 0.3)` }}
                       >
                         Doneaza acum
                         <Heart className="h-4 w-4 transition-transform duration-300 group-hover:scale-110" />

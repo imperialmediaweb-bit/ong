@@ -574,6 +574,12 @@ model MiniSiteConfig {
   formular230PdfUrl    String?  // URL to uploaded PDF form
   formular230Address   String?  // Mailing address for completed forms
 
+  // Mini-site campaigns [{id, title, description, goalAmount, raisedAmount, imageUrl, ctaText, ctaLink, category, isActive}]
+  miniSiteCampaigns    Json?
+
+  // AI template style (for unique sites)
+  templateStyle        String?  @default("modern")
+
   // Extra
   customCss       String?
   customSections  Json?    // [{title, content, icon}]
