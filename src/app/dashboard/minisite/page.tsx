@@ -545,7 +545,7 @@ export default function MiniSiteBuilderPage() {
 
   // ─── AI Tool Generate (per-section) ─────────────────────────────
 
-  const handleAiToolGenerate = async (toolName: string) => {
+  const handleAiToolGenerate = async (toolName: string, extraContext?: Record<string, any>) => {
     try {
       setAiToolLoading(toolName);
       setSaveMessage(null);
@@ -554,17 +554,29 @@ export default function MiniSiteBuilderPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           tool: toolName,
-          ngoName: state.ngoName,
-          description: state.description,
-          category: state.category,
-          shortDescription: state.shortDescription,
+          context: {
+            name: state.ngoName,
+            ngoName: state.ngoName,
+            description: state.description,
+            category: state.category,
+            shortDescription: state.shortDescription,
+            aboutText: state.aboutText,
+            missionText: state.missionText,
+            contactAddress: state.contactAddress,
+            showFormular230: state.showFormular230,
+            showDonation: state.showDonation,
+            ...extraContext,
+          },
         }),
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
         throw new Error(errData?.error || "Eroare la generarea cu AI.");
       }
-      const data = await res.json();
+      const raw = await res.json();
+      // Unwrap: API returns { success, result: {...}, provider } or flat data
+      const data = raw.result || raw;
+
       if (toolName === "faq" && Array.isArray(data.faqItems)) {
         updateField("faqItems", data.faqItems.map((f: any, i: number) => ({ ...f, id: f.id || `faq-${Date.now()}-${i}` })) as any);
       }
@@ -602,6 +614,32 @@ export default function MiniSiteBuilderPage() {
           ...prev,
           donationPopupText: data.donationPopupText || prev.donationPopupText,
           donationPopupDelay: data.donationPopupDelay ?? prev.donationPopupDelay,
+        }));
+      }
+      // Campaign enhancement
+      if (toolName === "enhanceCampaign" && data.title && extraContext?.campaignIdx !== undefined) {
+        const cIdx = extraContext.campaignIdx;
+        setState((prev) => ({
+          ...prev,
+          miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+            i === cIdx ? { ...c, title: data.title || c.title, description: data.description || c.description } : c
+          ),
+        }));
+      }
+      // Generate campaigns AI
+      if (toolName === "generateCampaigns" && Array.isArray(data.campaigns)) {
+        const newCampaigns = data.campaigns.map((c: any, i: number) => ({
+          id: `ai-${Date.now()}-${i}`,
+          title: c.title || "",
+          description: c.description || "",
+          goalAmount: c.goalAmount || 5000,
+          raisedAmount: 0,
+          imageUrl: c.imageUrl || "",
+          isActive: true,
+        }));
+        setState((prev) => ({
+          ...prev,
+          miniSiteCampaigns: [...prev.miniSiteCampaigns, ...newCampaigns],
         }));
       }
       setSaveMessage({ type: "success", text: "Continut generat cu AI cu succes!" });
@@ -1319,38 +1357,20 @@ export default function MiniSiteBuilderPage() {
                     Fiecare campanie apare ca un card pe pagina publica.
                   </CardDescription>
                 </div>
-                <Button
-                  onClick={() => {
-                    const newCampaign: MiniSiteCampaign = {
-                      id: Date.now().toString(),
-                      title: "",
-                      description: "",
-                      goalAmount: 0,
-                      raisedAmount: 0,
-                      imageUrl: "",
-                      isActive: true,
-                    };
-                    setState((prev) => ({
-                      ...prev,
-                      miniSiteCampaigns: [...prev.miniSiteCampaigns, newCampaign],
-                    }));
-                  }}
-                  size="sm"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Adauga campanie
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {state.miniSiteCampaigns.length === 0 ? (
-                <div className="text-center py-12 border-2 border-dashed rounded-xl">
-                  <Target className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                  <h3 className="font-semibold text-lg mb-1">Nicio campanie inca</h3>
-                  <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
-                    Adauga prima ta campanie de strangere de fonduri.
-                    Donatiile se vor face prin platforma noastra.
-                  </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={aiToolLoading === "generateCampaigns"}
+                    onClick={() => handleAiToolGenerate("generateCampaigns")}
+                  >
+                    {aiToolLoading === "generateCampaigns" ? (
+                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-4 w-4 mr-1" />
+                    )}
+                    Genereaza cu AI
+                  </Button>
                   <Button
                     onClick={() => {
                       const newCampaign: MiniSiteCampaign = {
@@ -1367,11 +1387,57 @@ export default function MiniSiteBuilderPage() {
                         miniSiteCampaigns: [...prev.miniSiteCampaigns, newCampaign],
                       }));
                     }}
-                    variant="outline"
+                    size="sm"
                   >
                     <Plus className="h-4 w-4 mr-1" />
-                    Adauga prima campanie
+                    Adauga campanie
                   </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {state.miniSiteCampaigns.length === 0 ? (
+                <div className="text-center py-12 border-2 border-dashed rounded-xl">
+                  <Target className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <h3 className="font-semibold text-lg mb-1">Nicio campanie inca</h3>
+                  <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
+                    Adauga prima ta campanie de strangere de fonduri sau lasa AI sa genereze campanii potrivite pentru organizatia ta.
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <Button
+                      variant="outline"
+                      disabled={aiToolLoading === "generateCampaigns"}
+                      onClick={() => handleAiToolGenerate("generateCampaigns")}
+                    >
+                      {aiToolLoading === "generateCampaigns" ? (
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-4 w-4 mr-1" />
+                      )}
+                      Genereaza cu AI
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        const newCampaign: MiniSiteCampaign = {
+                          id: Date.now().toString(),
+                          title: "",
+                          description: "",
+                          goalAmount: 0,
+                          raisedAmount: 0,
+                          imageUrl: "",
+                          isActive: true,
+                        };
+                        setState((prev) => ({
+                          ...prev,
+                          miniSiteCampaigns: [...prev.miniSiteCampaigns, newCampaign],
+                        }));
+                      }}
+                      variant="outline"
+                    >
+                      <Plus className="h-4 w-4 mr-1" />
+                      Adauga manual
+                    </Button>
+                  </div>
                 </div>
               ) : (
                 state.miniSiteCampaigns.map((campaign, idx) => (
@@ -1509,6 +1575,83 @@ export default function MiniSiteBuilderPage() {
                         <p className="text-xs text-muted-foreground">
                           Urca imaginea pe Google Drive, Imgur sau alt serviciu si lipeste link-ul.
                         </p>
+                      </div>
+
+                      {/* AI Enhance Button */}
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                          disabled={aiToolLoading === `enhance-${idx}`}
+                          onClick={async () => {
+                            setAiToolLoading(`enhance-${idx}`);
+                            await handleAiToolGenerate("enhanceCampaign", {
+                              campaignIdx: idx,
+                              title: campaign.title,
+                              description: campaign.description,
+                              goalAmount: campaign.goalAmount,
+                            });
+                            setAiToolLoading(null);
+                          }}
+                        >
+                          {aiToolLoading === `enhance-${idx}` ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-3.5 w-3.5" />
+                          )}
+                          Imbunatateste cu AI
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                          disabled={aiToolLoading === `social-${idx}`}
+                          onClick={async () => {
+                            setAiToolLoading(`social-${idx}`);
+                            try {
+                              const res = await fetch("/api/minisite/ai-tools", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  tool: "socialPosts",
+                                  context: {
+                                    title: campaign.title,
+                                    description: campaign.description,
+                                    goalAmount: campaign.goalAmount,
+                                    ngoName: state.ngoName,
+                                    donateUrl: state.slug ? `/s/${state.slug}#campanii` : "",
+                                  },
+                                }),
+                              });
+                              if (res.ok) {
+                                const raw = await res.json();
+                                const data = raw.result || raw;
+                                if (Array.isArray(data.posts)) {
+                                  const text = data.posts.map((p: any) => `--- ${p.platform} ---\n${p.text}`).join("\n\n");
+                                  navigator.clipboard.writeText(text).then(() => {
+                                    setSaveMessage({ type: "success", text: "Postari generate si copiate in clipboard!" });
+                                    clearSaveMessage();
+                                  }).catch(() => {
+                                    setSaveMessage({ type: "success", text: text.substring(0, 200) + "..." });
+                                    clearSaveMessage();
+                                  });
+                                }
+                              }
+                            } catch {
+                              setSaveMessage({ type: "error", text: "Eroare la generarea postarilor." });
+                              clearSaveMessage();
+                            }
+                            setAiToolLoading(null);
+                          }}
+                        >
+                          {aiToolLoading === `social-${idx}` ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <MessageSquareQuote className="h-3.5 w-3.5" />
+                          )}
+                          Postari social media
+                        </Button>
                       </div>
 
                       <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
