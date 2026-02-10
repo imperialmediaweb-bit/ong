@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   FileText, Printer, CheckCircle2, Heart, Loader2, ArrowLeft, Shield,
   Download, MapPin, Info, Mail, ChevronDown, ChevronUp, Users, Calendar,
-  BadgeCheck
+  BadgeCheck, ExternalLink, Globe
 } from "lucide-react";
 
 interface Props {
@@ -331,8 +331,19 @@ export default function FormularAnafPage({ params }: Props) {
           </div>
         </div>
 
-        {/* ── Embed from formular230.ro ───────────────────────────── */}
-        {hasEmbed && (
+        {/* ── Option A: Completeaza online pe formular230.ro ─────── */}
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold text-center">
+            Varianta 1: Completeaza online
+          </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-2xl mx-auto">
+            Cel mai rapid mod de a redirectiona 3,5% este prin platforma formular230.ro.
+            Completezi formularul online, semnezi electronic si trimiti - totul in cateva minute.
+          </p>
+        </div>
+
+        {/* Embed from formular230.ro (if configured by NGO) */}
+        {hasEmbed ? (
           <Card className="overflow-hidden shadow-lg border-blue-200">
             <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
               <CardTitle className="flex items-center gap-2">
@@ -350,56 +361,106 @@ export default function FormularAnafPage({ params }: Props) {
               />
             </CardContent>
           </Card>
+        ) : (
+          <Card className="border-blue-200 hover:shadow-md transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row gap-6 items-center">
+                <div className="shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                  <Globe className="h-8 w-8 text-white" />
+                </div>
+                <div className="flex-1 text-center sm:text-left space-y-2">
+                  <h3 className="text-lg font-bold">Completeaza pe formular230.ro</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Acceseaza platforma formular230.ro, cauta <strong>{ngo.name}</strong> si
+                    completeaza formularul online. Este simplu, rapid si gratuit.
+                    Semnezi electronic si trimiti direct de pe telefon sau calculator.
+                  </p>
+                </div>
+                <a
+                  href="https://formular230.ro"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Mergi la formular230.ro
+                </a>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
-        {/* ── PDF Download + Mailing Address ──────────────────────── */}
-        {(hasPdf || hasAddress) && (
-          <div className="grid gap-6 sm:grid-cols-2">
-            {hasPdf && (
-              <Card className="border-green-200 hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Download className="h-5 w-5 text-green-600" />
-                    Descarca Formularul 230
-                  </CardTitle>
-                  <CardDescription>
-                    PDF pre-completat cu datele {ngo.name}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Descarca formularul PDF pre-completat cu datele organizatiei
-                    noastre. Trebuie doar sa adaugi datele tale personale, sa
-                    semnezi si sa il trimiti.
-                  </p>
-                  <a
-                    href={ngo.formular230PdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
-                  >
-                    <Download className="h-4 w-4" />
-                    Descarca PDF
-                  </a>
-                </CardContent>
-              </Card>
-            )}
+        {/* ── Option B: Descarca PDF + Trimite prin posta ─────────── */}
+        <div className="space-y-2 pt-4">
+          <h2 className="text-xl font-bold text-center">
+            Varianta 2: Descarca, printeaza si trimite
+          </h2>
+          <p className="text-sm text-muted-foreground text-center max-w-2xl mx-auto">
+            Preferi varianta clasica? Descarca formularul PDF pre-completat cu datele organizatiei,
+            adauga datele tale, semneaza si trimite-l prin posta sau email.
+          </p>
+        </div>
 
-            {hasAddress && (
-              <Card className="border-orange-200 hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Mail className="h-5 w-5 text-orange-600" />
-                    Unde trimiti formularul?
-                  </CardTitle>
-                  <CardDescription>
-                    Adresa pentru trimiterea formularului prin posta
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
+        <div className="grid gap-6 sm:grid-cols-2">
+          {/* PDF Download */}
+          <Card className="border-green-200 hover:shadow-md transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Download className="h-5 w-5 text-green-600" />
+                Descarca Formularul 230
+              </CardTitle>
+              <CardDescription>
+                {hasPdf
+                  ? `PDF pre-completat cu datele ${ngo.name}`
+                  : "Descarca formularul gol de pe site-ul ANAF"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {hasPdf
+                  ? "Descarca formularul PDF pre-completat cu datele organizatiei noastre. Trebuie doar sa adaugi datele tale personale, sa semnezi si sa il trimiti."
+                  : "Descarca formularul PDF, completeaza-l cu datele tale si cu datele organizatiei de mai sus (CUI, IBAN), semneaza si trimite-l."}
+              </p>
+              {hasPdf ? (
+                <a
+                  href={ngo.formular230PdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
+                >
+                  <Download className="h-4 w-4" />
+                  Descarca PDF
+                </a>
+              ) : (
+                <a
+                  href="https://static.anaf.ro/static/10/Anaf/Declaratii_R/230.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Descarca de pe ANAF
+                </a>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Where to send */}
+          <Card className="border-orange-200 hover:shadow-md transition-shadow">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Mail className="h-5 w-5 text-orange-600" />
+                Unde trimiti formularul?
+              </CardTitle>
+              <CardDescription>
+                Trimite formularul completat si semnat
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {hasAddress ? (
+                <>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Dupa ce completezi si semnezi formularul, trimite-l prin
-                    posta la urmatoarea adresa:
+                    Dupa ce completezi si semnezi formularul, trimite-l la:
                   </p>
                   <div className="flex gap-3 p-4 bg-orange-50 border border-orange-200 rounded-xl">
                     <MapPin className="h-5 w-5 text-orange-600 mt-0.5 shrink-0" />
@@ -407,11 +468,31 @@ export default function FormularAnafPage({ params }: Props) {
                       {ngo.formular230Address}
                     </p>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Formularul completat si semnat poate fi depus la:
+                  </p>
+                  <ul className="text-sm text-muted-foreground space-y-2">
+                    <li className="flex gap-2">
+                      <MapPin className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+                      <span><strong>ANAF</strong> - Administratia financiara din localitatea ta</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <Mail className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+                      <span><strong>Prin posta</strong> - trimite la sediul ANAF de care apartii</span>
+                    </li>
+                    <li className="flex gap-2">
+                      <Globe className="h-4 w-4 text-orange-500 mt-0.5 shrink-0" />
+                      <span><strong>Online</strong> - prin Spatiul Privat Virtual (SPV) de pe anaf.ro</span>
+                    </li>
+                  </ul>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
         {/* ── Manual Form (collapsible if embed exists) ───────────── */}
         <div>

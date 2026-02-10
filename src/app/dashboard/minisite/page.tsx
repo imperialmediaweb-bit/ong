@@ -947,12 +947,36 @@ export default function MiniSiteBuilderPage() {
                   </p>
                 </div>
 
+                {/* Link to formular230.ro */}
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div className="space-y-1">
+                      <h4 className="font-semibold text-blue-900 text-sm">
+                        Pasul 1: Creeaza cont pe formular230.ro
+                      </h4>
+                      <p className="text-xs text-blue-700">
+                        Inregistreaza-te gratuit, adauga datele asociatiei (CUI, IBAN, denumire)
+                        si copiaza codul embed generat.
+                      </p>
+                    </div>
+                    <a
+                      href="https://formular230.ro"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      Mergi la formular230.ro
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  </div>
+                </div>
+
                 {/* Instructions box */}
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
-                  <h4 className="font-semibold text-blue-900 text-sm">
+                <div className="p-4 bg-white border rounded-lg space-y-3">
+                  <h4 className="font-semibold text-sm">
                     Cum functioneaza?
                   </h4>
-                  <ol className="text-sm text-blue-800 space-y-2 list-decimal ml-4">
+                  <ol className="text-sm text-muted-foreground space-y-2 list-decimal ml-4">
                     <li>
                       Creeaza-ti un cont gratuit pe <strong>formular230.ro</strong> si
                       completeaza datele organizatiei tale (CUI, IBAN, denumire, etc.)
