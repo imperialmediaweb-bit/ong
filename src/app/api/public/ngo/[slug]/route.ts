@@ -23,6 +23,15 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
           city: true,
         },
       },
+      miniSiteConfig: {
+        select: {
+          formular230EmbedCode: true,
+          formular230PdfUrl: true,
+          formular230Address: true,
+          bankAccount: true,
+          cui: true,
+        },
+      },
     },
   });
 
@@ -40,9 +49,13 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     category: ngo.category,
     shortDescription: ngo.shortDescription,
     coverImageUrl: ngo.coverImageUrl,
-    cui: ngo.verification?.fiscalCode || ngo.verification?.registrationNumber || null,
+    cui: ngo.miniSiteConfig?.cui || ngo.verification?.fiscalCode || ngo.verification?.registrationNumber || null,
+    iban: ngo.miniSiteConfig?.bankAccount || null,
     address: ngo.verification?.address || null,
     county: ngo.verification?.county || null,
     city: ngo.verification?.city || null,
+    formular230EmbedCode: ngo.miniSiteConfig?.formular230EmbedCode || null,
+    formular230PdfUrl: ngo.miniSiteConfig?.formular230PdfUrl || null,
+    formular230Address: ngo.miniSiteConfig?.formular230Address || null,
   });
 }

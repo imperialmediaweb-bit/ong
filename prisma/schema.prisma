@@ -569,6 +569,17 @@ model MiniSiteConfig {
   showFormular230 Boolean  @default(false)
   showContract    Boolean  @default(false)
 
+  // Formular 230 (from formular230.ro)
+  formular230EmbedCode String?
+  formular230PdfUrl    String?  // URL to uploaded PDF form
+  formular230Address   String?  // Mailing address for completed forms
+
+  // Mini-site campaigns [{id, title, description, goalAmount, raisedAmount, imageUrl, ctaText, ctaLink, category, isActive}]
+  miniSiteCampaigns    Json?
+
+  // AI template style (for unique sites)
+  templateStyle        String?  @default("modern")
+
   // Extra
   customCss       String?
   customSections  Json?    // [{title, content, icon}]
