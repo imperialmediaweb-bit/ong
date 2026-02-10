@@ -46,19 +46,10 @@ const CATEGORY_COLORS: Record<string, { primary: string; accent: string }[]> = {
   ],
 };
 
-// Template styles for unique sites
 const TEMPLATE_STYLES = [
-  "modern",
-  "elegant",
-  "bold",
-  "warm",
-  "minimal",
-  "vibrant",
-  "corporate",
-  "creative",
+  "modern", "elegant", "bold", "warm", "minimal", "vibrant", "corporate", "creative",
 ];
 
-// Different writing tones for AI
 const WRITING_STYLES = [
   "profesional si empatic, cu accent pe incredere si rezultate concrete",
   "cald si personal, ca o scrisoare de la un prieten care face diferenta",
@@ -74,29 +65,30 @@ function getDemoContent(name: string, category?: string, description?: string) {
     {
       heroTitle: `${name} - Impreuna schimbam vieti`,
       heroDescription: `${desc.length > 150 ? desc.substring(0, 150) + "..." : desc}. Alatura-te misiunii noastre si fa diferenta.`,
-      aboutText: `${name} este o organizatie non-guvernamentala dedicata imbunatatirii vietii comunitatii prin programe si initiative in domeniul ${cat.toLowerCase()}.\n\nDe la infiintare, am reusit sa implementam proiecte care au avut un impact real asupra beneficiarilor nostri. Echipa noastra de voluntari si profesionisti lucreaza zi de zi pentru a transforma viziunea noastra in realitate.\n\nCredinta noastra este ca fiecare persoana merita sansa la o viata mai buna, iar prin colaborare si dedicare putem construi o societate mai echitabila.`,
-      missionText: `Misiunea ${name} este de a contribui la dezvoltarea durabila a comunitatii prin programe inovatoare in domeniul ${cat.toLowerCase()}.\n\nNe propunem sa fim un catalizator al schimbarii pozitive, oferind resurse, educatie si sprijin celor care au cea mai mare nevoie.`,
-      impactText: `De-a lungul activitatii noastre, ${name} a reusit sa ajunga la mii de beneficiari prin programele sale. Fiecare donatie contribuie direct la imbunatatirea vietii celor din comunitate.`,
+      aboutText: `${name} este o organizatie non-guvernamentala dedicata imbunatatirii vietii comunitatii prin programe si initiative in domeniul ${cat.toLowerCase()}.\n\nDe la infiintare, am reusit sa implementam proiecte care au avut un impact real asupra beneficiarilor nostri.`,
+      missionText: `Misiunea ${name} este de a contribui la dezvoltarea durabila a comunitatii prin programe inovatoare in domeniul ${cat.toLowerCase()}.`,
+      impactText: `De-a lungul activitatii noastre, ${name} a reusit sa ajunga la mii de beneficiari prin programele sale.`,
       heroCtaText: "Sustine cauza noastra",
-    },
-    {
-      heroTitle: `Fiecare gest conteaza - ${name}`,
-      heroDescription: `Descopera cum ${name} transforma comunitati prin ${cat.toLowerCase()}. Fii parte din schimbare.`,
-      aboutText: `Bine ai venit la ${name}! Suntem o echipa de oameni pasionati care cred in puterea comunitatii de a genera schimbare.\n\nLucram in domeniul ${cat.toLowerCase()} pentru a adresa provocarile reale cu care se confrunta societatea. Fiecare proiect pe care il implementam porneste de la nevoile reale ale beneficiarilor nostri.\n\nTransparenta si responsabilitatea sunt valorile care ne ghideaza. Fiecare leu donat este investit cu grija pentru a maximiza impactul pozitiv.`,
-      missionText: `Ne-am propus sa construim o lume in care ${cat.toLowerCase()} nu mai este un privilegiu, ci un drept fundamental.\n\nPrin programele noastre, oferim instrumente concrete pentru dezvoltare si autonomie. Credem ca investitia in oameni este cea mai valoroasa.`,
-      impactText: `Rezultatele noastre vorbesc de la sine: sute de beneficiari sustinuti, zeci de proiecte finalizate si o comunitate tot mai puternica. Impreuna am demonstrat ca schimbarea e posibila.`,
-      heroCtaText: "Doneaza pentru viitor",
-    },
-    {
-      heroTitle: `Construim viitorul impreuna`,
-      heroDescription: `${name} - dedicati ${cat.toLowerCase()} si dezvoltarii comunitatii. Fiecare contributie face diferenta.`,
-      aboutText: `${name} s-a nascut din dorinta de a raspunde la o nevoie reala: aceea de a aduce schimbare in domeniul ${cat.toLowerCase()}.\n\nCu o echipa dedicata si parteneriate solide, am dezvoltat programe care au transformat vieti. Nu suntem doar o organizatie - suntem o comunitate de oameni care aleg sa actioneze.\n\nFiecare poveste de succes ne motiveaza sa continuam si sa ne extindem impactul catre cat mai multi beneficiari.`,
-      missionText: `Viziunea noastra este o societate in care fiecare persoana are acces la resurse si oportunitati in domeniul ${cat.toLowerCase()}.\n\nLucram strategic, cu programe bazate pe date si nevoi reale, pentru a asigura un impact durabil si masurabil.`,
-      impactText: `${name} a implementat peste 20 de proiecte, sustinand direct mii de persoane. Comunitatile in care lucram sunt mai puternice datorita eforturilor noastre comune.`,
-      heroCtaText: "Fii parte din schimbare",
+      faqItems: [
+        { question: "Cum pot dona?", answer: "Puteti dona direct prin platforma noastra online, prin transfer bancar sau folosind Formularul 230 pentru redirectionarea a 3,5% din impozitul pe venit." },
+        { question: "Cum sunt folositi banii?", answer: `Toate donatiile sunt utilizate direct in programele ${name}. Publicam rapoarte de transparenta anuale pentru a demonstra impactul fiecarei contributii.` },
+        { question: "Pot redirectiona 3,5% din impozit?", answer: "Da! Completati Formularul 230 cu datele noastre si 3,5% din impozitul dumneavoastra pe venit va fi redirectionat catre organizatia noastra, fara niciun cost suplimentar." },
+        { question: "Cum ma pot implica ca voluntar?", answer: "Completati formularul de voluntariat de pe site-ul nostru si va vom contacta in cel mai scurt timp pentru a discuta despre oportunitatile disponibile." },
+      ],
+      testimonials: [
+        { name: "Maria Ionescu", role: "Donator", text: "Sunt impresionata de transparenta si dedicarea echipei. Fiecare donatie conteaza!", photoUrl: "" },
+        { name: "Andrei Popescu", role: "Beneficiar", text: "Programele lor mi-au schimbat viata. Sunt recunoscator pentru tot sprijinul primit.", photoUrl: "" },
+        { name: "Elena Stoica", role: "Voluntar", text: "Cea mai frumoasa experienta de voluntariat. Echipa este minunata si impactul real.", photoUrl: "" },
+      ],
+      counterStats: [
+        { label: "Beneficiari ajutati", value: 1500, suffix: "+" },
+        { label: "Proiecte implementate", value: 45, suffix: "" },
+        { label: "Voluntari activi", value: 200, suffix: "+" },
+        { label: "Comunitati sustinute", value: 12, suffix: "" },
+      ],
     },
   ];
-  return variants[Math.floor(Math.random() * variants.length)];
+  return variants[0];
 }
 
 export async function POST(request: NextRequest) {
@@ -126,14 +118,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Numele organizatiei este obligatoriu" }, { status: 400 });
     }
 
-    // Pick random color variant for category
     const colorVariants = CATEGORY_COLORS[category || "Social"] || CATEGORY_COLORS.Altele;
     const colors = colorVariants[Math.floor(Math.random() * colorVariants.length)];
-
-    // Pick random template style
     const templateStyle = TEMPLATE_STYLES[Math.floor(Math.random() * TEMPLATE_STYLES.length)];
-
-    // Pick random writing style for AI
     const writingStyle = WRITING_STYLES[Math.floor(Math.random() * WRITING_STYLES.length)];
 
     let generated;
@@ -167,15 +154,38 @@ Genereaza un JSON cu EXACT aceste campuri:
   "aboutText": "3 paragrafe profesionale despre organizatie, separate prin \\n\\n. Include: cine suntem, ce facem, de ce facem. Min 400 caractere. Stil unic.",
   "missionText": "2 paragrafe despre misiunea si viziunea organizatiei, separate prin \\n\\n. Specific si concret. Min 300 caractere.",
   "impactText": "1 paragraf despre impactul real, cu cifre estimate daca e posibil. Min 150 caractere. Inspirant.",
-  "heroCtaText": "text buton call-to-action, max 25 caractere, creativ si orientat spre actiune"
+  "heroCtaText": "text buton call-to-action, max 25 caractere, creativ si orientat spre actiune",
+  "faqItems": [
+    {"question": "intrebare frecventa relevanta", "answer": "raspuns detaliat si util, 2-3 propozitii"},
+    {"question": "alta intrebare", "answer": "raspuns detaliat"},
+    {"question": "alta intrebare", "answer": "raspuns detaliat"},
+    {"question": "alta intrebare", "answer": "raspuns detaliat"},
+    {"question": "alta intrebare", "answer": "raspuns detaliat"},
+    {"question": "alta intrebare", "answer": "raspuns detaliat"}
+  ],
+  "testimonials": [
+    {"name": "prenume si nume romanesc realist", "role": "Donator", "text": "testimonial autentic 2-3 propozitii", "photoUrl": ""},
+    {"name": "prenume si nume romanesc", "role": "Beneficiar", "text": "testimonial", "photoUrl": ""},
+    {"name": "prenume si nume romanesc", "role": "Voluntar", "text": "testimonial", "photoUrl": ""}
+  ],
+  "counterStats": [
+    {"label": "eticheta", "value": 1500, "suffix": "+"},
+    {"label": "eticheta", "value": 45, "suffix": ""},
+    {"label": "eticheta", "value": 200, "suffix": "+"},
+    {"label": "eticheta", "value": 12, "suffix": ""}
+  ],
+  "seoTitle": "titlu SEO optimizat max 60 caractere",
+  "seoDescription": "meta description SEO max 155 caractere"
 }
 
 REGULI CRITICE:
 - Limba romana, fara diacritice
 - Ton: ${writingStyle}
-- Continut 100% UNIC - NU folosi formulari generice sau clisee
+- Continut 100% UNIC
 - Personalizeaza totul pe baza informatiilor reale ale organizatiei
-- Fiecare generare trebuie sa fie DIFERITA de cele anterioare
+- FAQ: 6 intrebari relevante despre organizatie, donatii, transparenta, voluntariat
+- Testimoniale: 3 testimoniale de la donator, beneficiar, voluntar
+- Counter stats: 4 statistici realiste de impact cu numere
 - DOAR JSON valid, fara markdown, fara backticks`;
 
         const completion = await openai.chat.completions.create({
@@ -185,7 +195,7 @@ REGULI CRITICE:
             { role: "user", content: prompt },
           ],
           temperature: 1.0,
-          max_tokens: 2000,
+          max_tokens: 3000,
         });
 
         const responseText = completion.choices[0]?.message?.content?.trim();
@@ -220,6 +230,11 @@ REGULI CRITICE:
       primaryColor: colors.primary,
       accentColor: colors.accent,
       templateStyle,
+      faqItems: generated.faqItems || null,
+      testimonials: generated.testimonials || null,
+      counterStats: generated.counterStats || null,
+      seoTitle: generated.seoTitle || "",
+      seoDescription: generated.seoDescription || "",
     };
 
     // Auto-save: update NGO + upsert MiniSiteConfig + publish site
@@ -257,7 +272,19 @@ REGULI CRITICE:
         showFormular230: true,
         showContract: true,
         isPublished: autoPublish !== false,
+        // New AI-generated content
+        showFaq: true,
+        showTestimonials: true,
+        showDonationPopup: true,
+        donationPopupDelay: 20,
+        donationPopupText: `Fiecare donatie conteaza! Sustine ${name} si fa o diferenta reala.`,
       };
+
+      if (result.faqItems) configData.faqItems = result.faqItems as any;
+      if (result.testimonials) configData.testimonials = result.testimonials as any;
+      if (result.counterStats) configData.counterStats = result.counterStats as any;
+      if (result.seoTitle) configData.seoTitle = result.seoTitle;
+      if (result.seoDescription) configData.seoDescription = result.seoDescription;
 
       if (contactEmail) configData.contactEmail = contactEmail;
       if (contactPhone) configData.contactPhone = contactPhone;

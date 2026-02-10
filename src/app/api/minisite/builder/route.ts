@@ -65,6 +65,34 @@ export async function GET() {
       formular230Address: "",
       miniSiteCampaigns: null,
       templateStyle: "modern",
+      // New fields
+      videoUrl: "",
+      showVideo: false,
+      teamMembers: null,
+      showTeam: false,
+      testimonials: null,
+      showTestimonials: false,
+      partners: null,
+      showPartners: false,
+      events: null,
+      showEvents: false,
+      faqItems: null,
+      showFaq: false,
+      showVolunteerForm: false,
+      transparencyDocs: null,
+      showTransparency: false,
+      urgentBanner: null,
+      showUrgentBanner: false,
+      googleMapsEmbed: "",
+      showGoogleMaps: false,
+      showDonationPopup: false,
+      donationPopupDelay: 15,
+      donationPopupText: "",
+      seoTitle: "",
+      seoDescription: "",
+      seoKeywords: "",
+      counterStats: null,
+      showCounterStats: false,
       customCss: "",
       customSections: null,
       isPublished: false,
@@ -89,6 +117,39 @@ export async function GET() {
   }
 }
 
+// All config field names that can be saved
+const CONFIG_FIELDS = [
+  "heroTitle", "heroDescription", "heroCtaText",
+  "aboutText", "aboutImageUrl", "missionText", "impactText",
+  "contactEmail", "contactPhone", "contactAddress",
+  "cui", "registrationNr", "bankAccount", "bankName",
+  "socialFacebook", "socialInstagram", "socialLinkedin",
+  "socialTwitter", "socialYoutube", "socialTiktok",
+  "primaryColor", "accentColor", "theme",
+  "showNewsletter", "showDonation", "showUpdates",
+  "showAbout", "showMission", "showImpact",
+  "showContact", "showSocial", "showFormular230", "showContract",
+  "formular230EmbedCode", "formular230PdfUrl", "formular230Address",
+  "templateStyle", "customCss", "isPublished",
+  // New fields
+  "videoUrl", "showVideo",
+  "showTeam", "showTestimonials", "showPartners",
+  "showEvents", "showFaq", "showVolunteerForm",
+  "showTransparency", "showUrgentBanner",
+  "googleMapsEmbed", "showGoogleMaps",
+  "showDonationPopup", "donationPopupDelay", "donationPopupText",
+  "seoTitle", "seoDescription", "seoKeywords",
+  "showCounterStats",
+];
+
+// Json fields that need `as any` casting
+const JSON_FIELDS = [
+  "miniSiteCampaigns", "customSections",
+  "teamMembers", "testimonials", "partners",
+  "events", "faqItems", "transparencyDocs",
+  "urgentBanner", "counterStats",
+];
+
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -103,68 +164,15 @@ export async function PUT(request: NextRequest) {
 
     const body = await request.json();
 
-    const {
-      // NGO fields
-      ngoName,
-      description,
-      shortDescription,
-      logoUrl,
-      coverImageUrl,
-      websiteUrl,
-      category,
-      // MiniSiteConfig fields
-      heroTitle,
-      heroDescription,
-      heroCtaText,
-      aboutText,
-      aboutImageUrl,
-      missionText,
-      impactText,
-      contactEmail,
-      contactPhone,
-      contactAddress,
-      cui,
-      registrationNr,
-      bankAccount,
-      bankName,
-      socialFacebook,
-      socialInstagram,
-      socialLinkedin,
-      socialTwitter,
-      socialYoutube,
-      socialTiktok,
-      primaryColor,
-      accentColor,
-      theme,
-      showNewsletter,
-      showDonation,
-      showUpdates,
-      showAbout,
-      showMission,
-      showImpact,
-      showContact,
-      showSocial,
-      showFormular230,
-      showContract,
-      formular230EmbedCode,
-      formular230PdfUrl,
-      formular230Address,
-      miniSiteCampaigns,
-      templateStyle,
-      customCss,
-      customSections,
-      isPublished,
-    } = body;
-
     // Update NGO fields
     const ngoUpdateData: any = {};
-    if (ngoName !== undefined && ngoName.trim()) ngoUpdateData.name = ngoName.trim();
-    if (description !== undefined) ngoUpdateData.description = description;
-    if (shortDescription !== undefined) ngoUpdateData.shortDescription = shortDescription;
-    if (logoUrl !== undefined) ngoUpdateData.logoUrl = logoUrl;
-    if (coverImageUrl !== undefined) ngoUpdateData.coverImageUrl = coverImageUrl;
-    if (websiteUrl !== undefined) ngoUpdateData.websiteUrl = websiteUrl;
-    if (category !== undefined) ngoUpdateData.category = category;
+    if (body.ngoName !== undefined && body.ngoName.trim()) ngoUpdateData.name = body.ngoName.trim();
+    if (body.description !== undefined) ngoUpdateData.description = body.description;
+    if (body.shortDescription !== undefined) ngoUpdateData.shortDescription = body.shortDescription;
+    if (body.logoUrl !== undefined) ngoUpdateData.logoUrl = body.logoUrl;
+    if (body.coverImageUrl !== undefined) ngoUpdateData.coverImageUrl = body.coverImageUrl;
+    if (body.websiteUrl !== undefined) ngoUpdateData.websiteUrl = body.websiteUrl;
+    if (body.category !== undefined) ngoUpdateData.category = body.category;
 
     if (Object.keys(ngoUpdateData).length > 0) {
       await prisma.ngo.update({
@@ -175,47 +183,20 @@ export async function PUT(request: NextRequest) {
 
     // Build minisite config data
     const configData: any = {};
-    if (heroTitle !== undefined) configData.heroTitle = heroTitle;
-    if (heroDescription !== undefined) configData.heroDescription = heroDescription;
-    if (heroCtaText !== undefined) configData.heroCtaText = heroCtaText;
-    if (aboutText !== undefined) configData.aboutText = aboutText;
-    if (aboutImageUrl !== undefined) configData.aboutImageUrl = aboutImageUrl;
-    if (missionText !== undefined) configData.missionText = missionText;
-    if (impactText !== undefined) configData.impactText = impactText;
-    if (contactEmail !== undefined) configData.contactEmail = contactEmail;
-    if (contactPhone !== undefined) configData.contactPhone = contactPhone;
-    if (contactAddress !== undefined) configData.contactAddress = contactAddress;
-    if (cui !== undefined) configData.cui = cui;
-    if (registrationNr !== undefined) configData.registrationNr = registrationNr;
-    if (bankAccount !== undefined) configData.bankAccount = bankAccount;
-    if (bankName !== undefined) configData.bankName = bankName;
-    if (socialFacebook !== undefined) configData.socialFacebook = socialFacebook;
-    if (socialInstagram !== undefined) configData.socialInstagram = socialInstagram;
-    if (socialLinkedin !== undefined) configData.socialLinkedin = socialLinkedin;
-    if (socialTwitter !== undefined) configData.socialTwitter = socialTwitter;
-    if (socialYoutube !== undefined) configData.socialYoutube = socialYoutube;
-    if (socialTiktok !== undefined) configData.socialTiktok = socialTiktok;
-    if (primaryColor !== undefined) configData.primaryColor = primaryColor;
-    if (accentColor !== undefined) configData.accentColor = accentColor;
-    if (theme !== undefined) configData.theme = theme;
-    if (showNewsletter !== undefined) configData.showNewsletter = showNewsletter;
-    if (showDonation !== undefined) configData.showDonation = showDonation;
-    if (showUpdates !== undefined) configData.showUpdates = showUpdates;
-    if (showAbout !== undefined) configData.showAbout = showAbout;
-    if (showMission !== undefined) configData.showMission = showMission;
-    if (showImpact !== undefined) configData.showImpact = showImpact;
-    if (showContact !== undefined) configData.showContact = showContact;
-    if (showSocial !== undefined) configData.showSocial = showSocial;
-    if (showFormular230 !== undefined) configData.showFormular230 = showFormular230;
-    if (showContract !== undefined) configData.showContract = showContract;
-    if (formular230EmbedCode !== undefined) configData.formular230EmbedCode = formular230EmbedCode;
-    if (formular230PdfUrl !== undefined) configData.formular230PdfUrl = formular230PdfUrl;
-    if (formular230Address !== undefined) configData.formular230Address = formular230Address;
-    if (miniSiteCampaigns !== undefined) configData.miniSiteCampaigns = miniSiteCampaigns as any;
-    if (templateStyle !== undefined) configData.templateStyle = templateStyle;
-    if (customCss !== undefined) configData.customCss = customCss;
-    if (customSections !== undefined) configData.customSections = customSections as any;
-    if (isPublished !== undefined) configData.isPublished = isPublished;
+
+    // Regular fields
+    for (const field of CONFIG_FIELDS) {
+      if (body[field] !== undefined) {
+        configData[field] = body[field];
+      }
+    }
+
+    // Json fields (need casting)
+    for (const field of JSON_FIELDS) {
+      if (body[field] !== undefined) {
+        configData[field] = body[field] as any;
+      }
+    }
 
     // Upsert MiniSiteConfig
     const miniSiteConfig = await prisma.miniSiteConfig.upsert({
