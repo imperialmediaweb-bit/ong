@@ -79,6 +79,7 @@ interface MiniSiteState {
   heroTitle: string;
   heroDescription: string;
   aboutText: string;
+  aboutImageUrl: string;
   missionText: string;
   impactText: string;
 
@@ -114,9 +115,6 @@ interface MiniSiteCampaign {
   goalAmount: number;
   raisedAmount: number;
   imageUrl: string;
-  ctaText: string;
-  ctaLink: string;
-  category: string;
   isActive: boolean;
 }
 
@@ -148,6 +146,7 @@ const DEFAULT_STATE: MiniSiteState = {
   heroTitle: "",
   heroDescription: "",
   aboutText: "",
+  aboutImageUrl: "",
   missionText: "",
   impactText: "",
   primaryColor: "#6366f1",
@@ -168,18 +167,6 @@ const DEFAULT_STATE: MiniSiteState = {
   miniSiteCampaigns: [],
   templateStyle: "modern",
 };
-
-const CAMPAIGN_CATEGORIES = [
-  "Strangere de fonduri",
-  "Proiect social",
-  "Educatie",
-  "Sanatate",
-  "Mediu",
-  "Urgenta",
-  "Constructie",
-  "Echipament",
-  "Altele",
-];
 
 const CATEGORIES = [
   "Social",
@@ -268,6 +255,7 @@ export default function MiniSiteBuilderPage() {
           heroTitle: data.heroTitle || "",
           heroDescription: data.heroDescription || "",
           aboutText: data.aboutText || "",
+          aboutImageUrl: data.aboutImageUrl || "",
           missionText: data.missionText || "",
           impactText: data.impactText || "",
           primaryColor: data.primaryColor || "#6366f1",
@@ -1149,9 +1137,6 @@ export default function MiniSiteBuilderPage() {
                       goalAmount: 0,
                       raisedAmount: 0,
                       imageUrl: "",
-                      ctaText: "Doneaza acum",
-                      ctaLink: "",
-                      category: "Strangere de fonduri",
                       isActive: true,
                     };
                     setState((prev) => ({
@@ -1173,7 +1158,7 @@ export default function MiniSiteBuilderPage() {
                   <h3 className="font-semibold text-lg mb-1">Nicio campanie inca</h3>
                   <p className="text-sm text-muted-foreground mb-4 max-w-md mx-auto">
                     Adauga prima ta campanie de strangere de fonduri.
-                    Va aparea pe mini-site-ul tau cu un card dedicat.
+                    Donatiile se vor face prin platforma noastra.
                   </p>
                   <Button
                     onClick={() => {
@@ -1184,9 +1169,6 @@ export default function MiniSiteBuilderPage() {
                         goalAmount: 0,
                         raisedAmount: 0,
                         imageUrl: "",
-                        ctaText: "Doneaza acum",
-                        ctaLink: "",
-                        category: "Strangere de fonduri",
                         isActive: true,
                       };
                       setState((prev) => ({
@@ -1246,8 +1228,8 @@ export default function MiniSiteBuilderPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="grid gap-2 sm:col-span-2">
+                    <div className="space-y-4">
+                      <div className="grid gap-2">
                         <Label>Titlu campanie *</Label>
                         <Input
                           placeholder="Ex: Ajuta 100 de copii sa mearga la scoala"
@@ -1263,10 +1245,10 @@ export default function MiniSiteBuilderPage() {
                         />
                       </div>
 
-                      <div className="grid gap-2 sm:col-span-2">
+                      <div className="grid gap-2">
                         <Label>Descriere</Label>
                         <Textarea
-                          placeholder="Descrierea campaniei - ce doriti sa realizati, de ce e important, cum vor fi folositi banii..."
+                          placeholder="Ce doriti sa realizati, de ce e important, cum vor fi folositi banii..."
                           rows={3}
                           value={campaign.description}
                           onChange={(e) => {
@@ -1280,41 +1262,46 @@ export default function MiniSiteBuilderPage() {
                         />
                       </div>
 
-                      <div className="grid gap-2">
-                        <Label>Obiectiv (RON)</Label>
-                        <Input
-                          type="number"
-                          placeholder="10000"
-                          value={campaign.goalAmount || ""}
-                          onChange={(e) => {
-                            setState((prev) => ({
-                              ...prev,
-                              miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
-                                i === idx ? { ...c, goalAmount: parseFloat(e.target.value) || 0 } : c
-                              ),
-                            }));
-                          }}
-                        />
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="grid gap-2">
+                          <Label>Obiectiv (RON)</Label>
+                          <Input
+                            type="number"
+                            placeholder="10000"
+                            value={campaign.goalAmount || ""}
+                            onChange={(e) => {
+                              setState((prev) => ({
+                                ...prev,
+                                miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                  i === idx ? { ...c, goalAmount: parseFloat(e.target.value) || 0 } : c
+                                ),
+                              }));
+                            }}
+                          />
+                        </div>
+
+                        <div className="grid gap-2">
+                          <Label>Suma stransa (RON)</Label>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            value={campaign.raisedAmount || ""}
+                            onChange={(e) => {
+                              setState((prev) => ({
+                                ...prev,
+                                miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                  i === idx ? { ...c, raisedAmount: parseFloat(e.target.value) || 0 } : c
+                                ),
+                              }));
+                            }}
+                          />
+                          <p className="text-xs text-muted-foreground">
+                            Se va actualiza automat din donatiile prin platforma
+                          </p>
+                        </div>
                       </div>
 
                       <div className="grid gap-2">
-                        <Label>Suma stransa (RON)</Label>
-                        <Input
-                          type="number"
-                          placeholder="2500"
-                          value={campaign.raisedAmount || ""}
-                          onChange={(e) => {
-                            setState((prev) => ({
-                              ...prev,
-                              miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
-                                i === idx ? { ...c, raisedAmount: parseFloat(e.target.value) || 0 } : c
-                              ),
-                            }));
-                          }}
-                        />
-                      </div>
-
-                      <div className="grid gap-2 sm:col-span-2">
                         <Label>Imagine campanie (URL)</Label>
                         <Input
                           placeholder="https://exemplu.ro/imagine-campanie.jpg"
@@ -1333,63 +1320,11 @@ export default function MiniSiteBuilderPage() {
                         </p>
                       </div>
 
-                      <div className="grid gap-2">
-                        <Label>Text buton</Label>
-                        <Input
-                          placeholder="Doneaza acum"
-                          value={campaign.ctaText}
-                          onChange={(e) => {
-                            setState((prev) => ({
-                              ...prev,
-                              miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
-                                i === idx ? { ...c, ctaText: e.target.value } : c
-                              ),
-                            }));
-                          }}
-                        />
-                      </div>
-
-                      <div className="grid gap-2">
-                        <Label>Link buton (optional)</Label>
-                        <Input
-                          placeholder="https://donate.stripe.com/..."
-                          value={campaign.ctaLink}
-                          onChange={(e) => {
-                            setState((prev) => ({
-                              ...prev,
-                              miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
-                                i === idx ? { ...c, ctaLink: e.target.value } : c
-                              ),
-                            }));
-                          }}
-                        />
-                      </div>
-
-                      <div className="grid gap-2">
-                        <Label>Categorie</Label>
-                        <div className="flex flex-wrap gap-2">
-                          {CAMPAIGN_CATEGORIES.map((cat) => (
-                            <button
-                              key={cat}
-                              type="button"
-                              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-                                campaign.category === cat
-                                  ? "bg-primary text-white"
-                                  : "bg-muted text-muted-foreground hover:bg-muted/80"
-                              }`}
-                              onClick={() => {
-                                setState((prev) => ({
-                                  ...prev,
-                                  miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
-                                    i === idx ? { ...c, category: cat } : c
-                                  ),
-                                }));
-                              }}
-                            >
-                              {cat}
-                            </button>
-                          ))}
-                        </div>
+                      <div className="rounded-lg bg-blue-50 border border-blue-200 p-3">
+                        <p className="text-xs text-blue-700">
+                          <strong>Donatiile se fac prin platforma.</strong> Butonul &quot;Doneaza acum&quot; de pe mini-site va duce donatorii
+                          direct pe pagina de donatie a organizatiei tale.
+                        </p>
                       </div>
                     </div>
 
@@ -1572,6 +1507,35 @@ export default function MiniSiteBuilderPage() {
                       placeholder="Prezentarea organizatiei..."
                       rows={5}
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="aboutImageUrl" className="flex items-center gap-2 font-medium">
+                      <Image className="h-4 w-4" />
+                      Imagine sectiune Despre noi (optional)
+                    </Label>
+                    <Input
+                      id="aboutImageUrl"
+                      placeholder="https://exemplu.ro/echipa.jpg"
+                      value={state.aboutImageUrl}
+                      onChange={(e) => updateField("aboutImageUrl", e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      O poza cu echipa, sediul sau activitatile organizatiei. Arata frumos si fara poza.
+                    </p>
+                    {state.aboutImageUrl && (
+                      <div className="mt-2 border rounded-md overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={state.aboutImageUrl}
+                          alt="About preview"
+                          className="w-full h-40 object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">

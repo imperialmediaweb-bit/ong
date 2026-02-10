@@ -31,6 +31,7 @@ export async function GET() {
       heroDescription: "",
       heroCtaText: "Doneaza acum",
       aboutText: "",
+      aboutImageUrl: "",
       missionText: "",
       impactText: "",
       contactEmail: "",
@@ -116,6 +117,7 @@ export async function PUT(request: NextRequest) {
       heroDescription,
       heroCtaText,
       aboutText,
+      aboutImageUrl,
       missionText,
       impactText,
       contactEmail,
@@ -177,6 +179,7 @@ export async function PUT(request: NextRequest) {
     if (heroDescription !== undefined) configData.heroDescription = heroDescription;
     if (heroCtaText !== undefined) configData.heroCtaText = heroCtaText;
     if (aboutText !== undefined) configData.aboutText = aboutText;
+    if (aboutImageUrl !== undefined) configData.aboutImageUrl = aboutImageUrl;
     if (missionText !== undefined) configData.missionText = missionText;
     if (impactText !== undefined) configData.impactText = impactText;
     if (contactEmail !== undefined) configData.contactEmail = contactEmail;

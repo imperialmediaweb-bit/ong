@@ -85,7 +85,9 @@ export default async function MiniSitePage({ params }: Props) {
 
   const heroTitle = config?.heroTitle || ngo.name;
   const heroDescription = config?.heroDescription || ngo.description || "";
+  const shortDescription = ngo.shortDescription || config?.shortDescription || "";
   const heroCtaText = config?.heroCtaText || "Doneaza acum";
+  const coverImageUrl = ngo.coverImageUrl || config?.coverImageUrl || "";
 
   const showAbout = config?.showAbout !== false;
   const showMission = config?.showMission !== false;
@@ -141,7 +143,8 @@ export default async function MiniSitePage({ params }: Props) {
     ? (config as any).miniSiteCampaigns.filter((c: any) => c.isActive)
     : [];
 
-  const showCampaigns = showFormular230 || showContract || showDonation || miniSiteCampaigns.length > 0;
+  const showRedirectImpozit = showFormular230 || showContract || showDonation;
+  const showCampaigns = miniSiteCampaigns.length > 0;
 
   return (
     <div
@@ -158,13 +161,7 @@ export default async function MiniSitePage({ params }: Props) {
     >
       {/* ── Sticky Navigation Bar ────────────────────────────────────── */}
       <nav
-        className="fixed left-0 right-0 top-0 z-50 transition-all duration-300"
-        style={{
-          backgroundColor: `rgba(${primaryRgb}, 0.92)`,
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-          borderBottom: `1px solid rgba(255, 255, 255, 0.1)`,
-        }}
+        className="fixed left-0 right-0 top-0 z-50 border-b border-gray-100 bg-white shadow-sm"
       >
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           {/* Logo + Name */}
@@ -173,14 +170,17 @@ export default async function MiniSitePage({ params }: Props) {
               <img
                 src={ngo.logoUrl}
                 alt={ngo.name}
-                className="h-9 w-9 rounded-lg object-cover shadow-sm ring-2 ring-white/20"
+                className="h-10 w-auto max-w-[160px] object-contain"
               />
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/20 shadow-sm">
-                <Heart className="h-5 w-5 text-white" />
+              <div
+                className="flex h-9 w-9 items-center justify-center rounded-lg"
+                style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+              >
+                <Heart className="h-5 w-5" style={{ color: primaryColor }} />
               </div>
             )}
-            <span className="hidden text-base font-bold text-white sm:inline">
+            <span className="hidden text-base font-bold text-gray-900 sm:inline">
               {ngo.name}
             </span>
           </a>
@@ -189,14 +189,14 @@ export default async function MiniSitePage({ params }: Props) {
           <div className="hidden items-center gap-1 md:flex">
             <a
               href="#"
-              className="rounded-lg px-3 py-2 text-sm font-medium text-white/90 transition-colors duration-200 hover:bg-white/10 hover:text-white"
+              className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
             >
               Acasa
             </a>
             {(showAbout || showMission) && (
               <a
                 href="#despre"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-white/90 transition-colors duration-200 hover:bg-white/10 hover:text-white"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
               >
                 Despre noi
               </a>
@@ -204,15 +204,23 @@ export default async function MiniSitePage({ params }: Props) {
             {showCampaigns && (
               <a
                 href="#campanii"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-white/90 transition-colors duration-200 hover:bg-white/10 hover:text-white"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
               >
                 Campanii
+              </a>
+            )}
+            {!showCampaigns && showRedirectImpozit && (
+              <a
+                href="#donatie"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
+              >
+                Contribuie
               </a>
             )}
             {blogPosts.length > 0 && (
               <a
                 href="#blog"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-white/90 transition-colors duration-200 hover:bg-white/10 hover:text-white"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
               >
                 Blog
               </a>
@@ -220,7 +228,7 @@ export default async function MiniSitePage({ params }: Props) {
             {showContact && hasContact && (
               <a
                 href="#contact"
-                className="rounded-lg px-3 py-2 text-sm font-medium text-white/90 transition-colors duration-200 hover:bg-white/10 hover:text-white"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
               >
                 Contact
               </a>
@@ -231,32 +239,31 @@ export default async function MiniSitePage({ params }: Props) {
           {showDonation && (
             <a
               href="#donatie"
-              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl"
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg"
               style={{
-                backgroundColor: accentColor,
-                boxShadow: `0 4px 14px rgba(${accentRgb}, 0.4)`,
+                backgroundColor: primaryColor,
+                boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.3)`,
               }}
             >
               <Heart className="h-4 w-4" />
-              <span className="hidden sm:inline">Doneaza</span>
-              <span className="sm:hidden">Doneaza</span>
+              <span>Doneaza</span>
             </a>
           )}
         </div>
 
-        {/* Mobile Navigation - CSS only collapsible using :target */}
-        <div className="border-t border-white/10 md:hidden">
+        {/* Mobile Navigation */}
+        <div className="border-t border-gray-100 md:hidden">
           <div className="flex flex-wrap items-center justify-center gap-1 px-4 py-2">
             <a
               href="#"
-              className="rounded-md px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
             >
               Acasa
             </a>
             {(showAbout || showMission) && (
               <a
                 href="#despre"
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 Despre
               </a>
@@ -264,15 +271,23 @@ export default async function MiniSitePage({ params }: Props) {
             {showCampaigns && (
               <a
                 href="#campanii"
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 Campanii
+              </a>
+            )}
+            {!showCampaigns && showRedirectImpozit && (
+              <a
+                href="#donatie"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              >
+                Contribuie
               </a>
             )}
             {blogPosts.length > 0 && (
               <a
                 href="#blog"
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 Blog
               </a>
@@ -280,7 +295,7 @@ export default async function MiniSitePage({ params }: Props) {
             {showContact && hasContact && (
               <a
                 href="#contact"
-                className="rounded-md px-3 py-1.5 text-xs font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 Contact
               </a>
@@ -290,107 +305,139 @@ export default async function MiniSitePage({ params }: Props) {
       </nav>
 
       {/* ── Hero Section ─────────────────────────────────────────────── */}
-      <section
-        className="relative overflow-hidden pt-16"
-        style={{
-          background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 50%, ${primaryColor}bb 100%)`,
-        }}
-      >
+      <section className="relative overflow-hidden pt-16" style={{ minHeight: "85vh" }}>
+        {/* Background: cover image or gradient */}
+        {coverImageUrl ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={coverImageUrl}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(180deg, ${primaryColor}cc 0%, ${primaryColor}99 35%, ${primaryColor}77 60%, ${primaryColor}bb 100%)`,
+              }}
+            />
+          </>
+        ) : (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, ${primaryColor} 0%, ${primaryColor}dd 50%, ${primaryColor}bb 100%)`,
+            }}
+          />
+        )}
+
         {/* Pattern overlay */}
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0 opacity-[0.07]"
           style={{
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
           }}
         />
 
-        {/* Floating shapes for depth */}
+        {/* Floating shapes */}
         <div
-          className="absolute -left-20 top-20 h-72 w-72 rounded-full opacity-10"
-          style={{ backgroundColor: accentColor, filter: "blur(60px)" }}
+          className="absolute -left-32 top-1/4 h-96 w-96 rounded-full opacity-15"
+          style={{ backgroundColor: accentColor, filter: "blur(100px)" }}
         />
         <div
-          className="absolute -right-20 bottom-20 h-96 w-96 rounded-full opacity-10"
-          style={{ backgroundColor: "white", filter: "blur(80px)" }}
+          className="absolute -right-32 bottom-1/4 h-[500px] w-[500px] rounded-full opacity-10"
+          style={{ backgroundColor: "white", filter: "blur(120px)" }}
         />
 
-        <div className="relative z-10 px-4 py-20 sm:py-28 md:py-36">
-          <div className="mx-auto max-w-4xl text-center">
-            {/* Logo */}
-            {ngo.logoUrl ? (
-              <div className="mb-8 flex justify-center">
-                <div className="rounded-2xl bg-white/20 p-2.5 shadow-2xl backdrop-blur-sm ring-1 ring-white/30">
+        {/* Content */}
+        <div className="relative z-10 flex min-h-[85vh] items-center px-4 sm:px-6">
+          <div className="mx-auto w-full max-w-6xl">
+            <div className="mx-auto max-w-4xl text-center">
+              {/* Organization badge */}
+              <div className="mb-6 inline-flex items-center gap-3 rounded-full bg-white/15 px-5 py-2.5 backdrop-blur-md ring-1 ring-white/20">
+                {ngo.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={ngo.logoUrl}
                     alt={ngo.name}
-                    className="h-20 w-20 rounded-xl object-cover sm:h-24 sm:w-24"
+                    className="h-8 w-8 rounded-lg object-cover ring-1 ring-white/30"
                   />
-                </div>
+                ) : (
+                  <Heart className="h-5 w-5 text-white" />
+                )}
+                <span className="text-sm font-semibold text-white/90">{ngo.name}</span>
+                {ngo.category && (
+                  <>
+                    <span className="h-4 w-px bg-white/30" />
+                    <span className="text-xs font-medium text-white/70">{ngo.category}</span>
+                  </>
+                )}
               </div>
-            ) : (
-              <div className="mb-8 flex justify-center">
-                <div className="rounded-2xl bg-white/20 p-5 shadow-2xl backdrop-blur-sm ring-1 ring-white/30">
-                  <Heart className="h-12 w-12 text-white sm:h-14 sm:w-14" />
-                </div>
+
+              {/* Hero Title */}
+              <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
+                {heroTitle}
+              </h1>
+
+              {/* Short description - always visible */}
+              {(shortDescription || heroDescription) && (
+                <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-white/85 sm:text-lg md:text-xl">
+                  {shortDescription || heroDescription}
+                </p>
+              )}
+
+              {/* Extended description if both exist */}
+              {shortDescription && heroDescription && shortDescription !== heroDescription && (
+                <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-white/65 sm:text-base">
+                  {heroDescription}
+                </p>
+              )}
+
+              {/* CTA Buttons */}
+              <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+                {showDonation && (
+                  <a
+                    href="#donatie"
+                    className="inline-flex items-center gap-2.5 rounded-full px-8 py-4 text-base font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl sm:text-lg"
+                    style={{
+                      backgroundColor: accentColor,
+                      color: "white",
+                      boxShadow: `0 8px 30px rgba(${accentRgb}, 0.4)`,
+                    }}
+                  >
+                    <Heart className="h-5 w-5" />
+                    {heroCtaText}
+                    <ArrowRight className="h-4 w-4" />
+                  </a>
+                )}
+                {(showAbout || showMission) && (
+                  <a
+                    href="#despre"
+                    className="inline-flex items-center gap-2 rounded-full border-2 border-white/30 bg-white/10 px-8 py-4 text-base font-bold text-white shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white/20 sm:text-lg"
+                  >
+                    Afla mai multe
+                    <ChevronRight className="h-4 w-4" />
+                  </a>
+                )}
               </div>
-            )}
 
-            {/* Title */}
-            <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
-              {heroTitle}
-            </h1>
-
-            {/* Description */}
-            {heroDescription && (
-              <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-white/90 sm:text-xl">
-                {heroDescription}
-              </p>
-            )}
-
-            {/* CTA Buttons */}
-            <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-              {showDonation && (
-                <a
-                  href="#donatie"
-                  className="inline-flex items-center gap-2 rounded-full px-8 py-4 text-base font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl sm:text-lg"
-                  style={{
-                    backgroundColor: accentColor,
-                    color: "white",
-                    boxShadow: `0 8px 30px rgba(${accentRgb}, 0.4)`,
-                  }}
-                >
-                  <Heart className="h-5 w-5" />
-                  {heroCtaText}
-                  <ArrowRight className="h-4 w-4" />
-                </a>
-              )}
-              {(showAbout || showMission) && (
-                <a
-                  href="#despre"
-                  className="inline-flex items-center gap-2 rounded-full border-2 border-white/30 bg-white/10 px-8 py-4 text-base font-bold text-white shadow-lg backdrop-blur-sm transition-all duration-300 hover:bg-white/20 sm:text-lg"
-                >
-                  Afla mai multe
-                  <ChevronRight className="h-4 w-4" />
-                </a>
-              )}
-            </div>
-
-            {/* Trust badges */}
-            <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-white/60">
-              {config?.cui && (
-                <span className="flex items-center gap-1.5">
-                  <Shield className="h-4 w-4" />
-                  Organizatie inregistrata
+              {/* Trust badges */}
+              <div className="mt-12 flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+                {config?.cui && (
+                  <span className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white/70 backdrop-blur-sm ring-1 ring-white/10 sm:text-sm">
+                    <Shield className="h-3.5 w-3.5" />
+                    Organizatie inregistrata
+                  </span>
+                )}
+                <span className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white/70 backdrop-blur-sm ring-1 ring-white/10 sm:text-sm">
+                  <Users className="h-3.5 w-3.5" />
+                  {ngo.donorCountPublic || 0} donatori
                 </span>
-              )}
-              <span className="flex items-center gap-1.5">
-                <Users className="h-4 w-4" />
-                {ngo.donorCountPublic || 0} donatori
-              </span>
-              <span className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4" />
-                {yearsActive} {yearsActive === 1 ? "an" : "ani"} de activitate
-              </span>
+                <span className="flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-xs font-medium text-white/70 backdrop-blur-sm ring-1 ring-white/10 sm:text-sm">
+                  <Clock className="h-3.5 w-3.5" />
+                  {yearsActive} {yearsActive === 1 ? "an" : "ani"} de activitate
+                </span>
+              </div>
             </div>
           </div>
         </div>
@@ -398,14 +445,14 @@ export default async function MiniSitePage({ params }: Props) {
         {/* Bottom wave */}
         <div className="absolute bottom-0 left-0 right-0">
           <svg
-            viewBox="0 0 1440 100"
+            viewBox="0 0 1440 120"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
             className="w-full"
             preserveAspectRatio="none"
           >
             <path
-              d="M0 100V60C180 20 360 0 540 10C720 20 900 50 1080 55C1260 60 1380 40 1440 30V100H0Z"
+              d="M0 120V80C240 30 480 0 720 20C960 40 1200 80 1440 60V120H0Z"
               fill="#f9fafb"
             />
           </svg>
@@ -414,128 +461,26 @@ export default async function MiniSitePage({ params }: Props) {
 
       {/* ── Main Content ─────────────────────────────────────────────── */}
       <main>
-        {/* ── Campaigns Cards Section ──────────────────────────────────── */}
-        {showCampaigns && (
-          <section id="campanii" className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
+        {/* ── Redirectioneaza Impozit Section ─────────────────────────────── */}
+        {showRedirectImpozit && (
+          <section className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
             <div className="mx-auto max-w-6xl px-4 sm:px-6">
               <div className="mb-12 text-center">
                 <div
                   className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-                  style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
+                  style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
                 >
-                  <Target className="h-7 w-7" style={{ color: accentColor }} />
+                  <Shield className="h-7 w-7" style={{ color: primaryColor }} />
                 </div>
                 <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
-                  Campanii active
+                  Sustine cauza noastra
                 </h2>
                 <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
-                  Alege cum vrei sa contribui la misiunea noastra
+                  Redirectioneaza impozitul sau doneaza direct - fara costuri suplimentare
                 </p>
               </div>
 
-              {/* Dynamic campaigns from builder */}
-              {miniSiteCampaigns.length > 0 && (
-                <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 mb-12">
-                  {miniSiteCampaigns.map((camp: any, idx: number) => (
-                    <div
-                      key={camp.id || idx}
-                      className="group relative overflow-hidden rounded-3xl bg-white shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
-                      style={{ border: `1px solid rgba(${primaryRgb}, 0.1)` }}
-                    >
-                      {/* Campaign image */}
-                      {camp.imageUrl ? (
-                        <div className="relative h-52 overflow-hidden">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={camp.imageUrl}
-                            alt={camp.title}
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                          {camp.category && (
-                            <span
-                              className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold text-white backdrop-blur-sm"
-                              style={{ backgroundColor: `${primaryColor}cc` }}
-                            >
-                              {camp.category}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <div
-                          className="relative h-36 overflow-hidden"
-                          style={{ background: `linear-gradient(135deg, ${primaryColor}20, ${accentColor}20)` }}
-                        >
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <Target className="h-16 w-16" style={{ color: `${primaryColor}40` }} />
-                          </div>
-                          {camp.category && (
-                            <span
-                              className="absolute left-4 top-4 rounded-full px-3 py-1 text-xs font-bold text-white"
-                              style={{ backgroundColor: primaryColor }}
-                            >
-                              {camp.category}
-                            </span>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="p-6">
-                        <h3 className="text-lg font-bold text-gray-900 leading-snug">
-                          {camp.title}
-                        </h3>
-                        {camp.description && (
-                          <p className="mt-2 text-sm text-gray-500 leading-relaxed line-clamp-3">
-                            {camp.description}
-                          </p>
-                        )}
-
-                        {/* Progress bar */}
-                        {camp.goalAmount > 0 && (
-                          <div className="mt-4">
-                            <div className="flex justify-between text-sm mb-1.5">
-                              <span className="font-bold" style={{ color: primaryColor }}>
-                                {Number(camp.raisedAmount || 0).toLocaleString("ro-RO")} RON
-                              </span>
-                              <span className="text-gray-400">
-                                / {Number(camp.goalAmount).toLocaleString("ro-RO")} RON
-                              </span>
-                            </div>
-                            <div className="h-3 rounded-full bg-gray-100 overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all duration-1000"
-                                style={{
-                                  width: `${Math.min(100, ((camp.raisedAmount || 0) / camp.goalAmount) * 100)}%`,
-                                  background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
-                                }}
-                              />
-                            </div>
-                            <p className="text-xs text-gray-400 mt-1.5">
-                              {Math.round(((camp.raisedAmount || 0) / camp.goalAmount) * 100)}% din obiectiv
-                            </p>
-                          </div>
-                        )}
-
-                        {/* CTA Button */}
-                        <a
-                          href={camp.ctaLink || "#donatie"}
-                          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
-                          style={{
-                            background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
-                            boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.25)`,
-                          }}
-                        >
-                          {camp.ctaText || "Doneaza acum"}
-                          <Heart className="h-4 w-4" />
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Static cards: Formular 230, Contract, Donate */}
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 {/* Card: Formular 230 */}
                 {showFormular230 && (
                   <div
@@ -633,6 +578,142 @@ export default async function MiniSitePage({ params }: Props) {
           </section>
         )}
 
+        {/* ── User Campaigns Section ─────────────────────────────────────── */}
+        {showCampaigns && (
+          <section id="campanii" className="scroll-mt-20 bg-white py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
+                >
+                  <Target className="h-7 w-7" style={{ color: accentColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Campanii active
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Sustine campaniile noastre de strangere de fonduri
+                </p>
+              </div>
+
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {miniSiteCampaigns.map((camp: any, idx: number) => {
+                  const progress = camp.goalAmount > 0 ? Math.min(100, Math.round(((camp.raisedAmount || 0) / camp.goalAmount) * 100)) : 0;
+                  return (
+                    <div
+                      key={camp.id || idx}
+                      className="group relative overflow-hidden rounded-3xl bg-white shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
+                      style={{ border: `1px solid rgba(${primaryRgb}, 0.1)` }}
+                    >
+                      {/* Campaign image */}
+                      {camp.imageUrl ? (
+                        <div className="relative h-52 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={camp.imageUrl}
+                            alt={camp.title}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+                          {camp.goalAmount > 0 && (
+                            <div className="absolute bottom-4 left-4 right-4">
+                              <div className="flex items-baseline justify-between text-white mb-1.5">
+                                <span className="text-lg font-extrabold">
+                                  {Number(camp.raisedAmount || 0).toLocaleString("ro-RO")} RON
+                                </span>
+                                <span className="text-sm text-white/80">
+                                  din {Number(camp.goalAmount).toLocaleString("ro-RO")} RON
+                                </span>
+                              </div>
+                              <div className="h-2 rounded-full bg-white/30 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all duration-1000"
+                                  style={{
+                                    width: `${progress}%`,
+                                    background: `linear-gradient(90deg, ${accentColor}, white)`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          className="relative h-40 overflow-hidden"
+                          style={{ background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})` }}
+                        >
+                          <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                            <Heart className="h-24 w-24 text-white" />
+                          </div>
+                          {camp.goalAmount > 0 && (
+                            <div className="absolute bottom-4 left-4 right-4">
+                              <div className="flex items-baseline justify-between text-white mb-1.5">
+                                <span className="text-lg font-extrabold">
+                                  {Number(camp.raisedAmount || 0).toLocaleString("ro-RO")} RON
+                                </span>
+                                <span className="text-sm text-white/80">
+                                  din {Number(camp.goalAmount).toLocaleString("ro-RO")} RON
+                                </span>
+                              </div>
+                              <div className="h-2 rounded-full bg-white/30 overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all duration-1000"
+                                  style={{
+                                    width: `${progress}%`,
+                                    background: `linear-gradient(90deg, ${accentColor}, white)`,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="p-6">
+                        <h3 className="text-lg font-bold text-gray-900 leading-snug">
+                          {camp.title}
+                        </h3>
+                        {camp.description && (
+                          <p className="mt-2 text-sm text-gray-500 leading-relaxed line-clamp-3">
+                            {camp.description}
+                          </p>
+                        )}
+
+                        {camp.goalAmount > 0 && (
+                          <div className="mt-3 flex items-center gap-2">
+                            <div
+                              className="flex h-8 w-8 items-center justify-center rounded-lg"
+                              style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                            >
+                              <Target className="h-4 w-4" style={{ color: primaryColor }} />
+                            </div>
+                            <span className="text-sm font-semibold" style={{ color: primaryColor }}>
+                              {progress}% din obiectiv atins
+                            </span>
+                          </div>
+                        )}
+
+                        <a
+                          href={`/donate/${ngo.slug}`}
+                          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
+                          style={{
+                            background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                            boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.25)`,
+                          }}
+                        >
+                          <Heart className="h-4 w-4" />
+                          Doneaza acum
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* ── About & Mission Section ──────────────────────────────────── */}
         {(showAbout || showMission) && (config?.aboutText || config?.missionText) && (
           <section id="despre" className="scroll-mt-20 bg-white py-16 sm:py-20">
@@ -649,42 +730,58 @@ export default async function MiniSitePage({ params }: Props) {
                 </h2>
               </div>
 
-              <div className={`grid gap-8 ${showAbout && config?.aboutText && showMission && config?.missionText ? "lg:grid-cols-2" : "lg:grid-cols-1 lg:max-w-3xl lg:mx-auto"}`}>
-                {/* About Card */}
-                {showAbout && config?.aboutText && (
-                  <div className="overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100">
+              {/* About section with optional image */}
+              {showAbout && config?.aboutText && (
+                <div className="mb-10">
+                  <div className={`overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100 ${config?.aboutImageUrl ? "" : "mx-auto max-w-3xl"}`}>
                     <div
                       className="h-1.5"
                       style={{
                         background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
                       }}
                     />
-                    <div className="p-6 sm:p-8 md:p-10">
-                      <div className="mb-6 flex items-center gap-3">
-                        <div
-                          className="flex h-11 w-11 items-center justify-center rounded-xl"
-                          style={{
-                            backgroundColor: `rgba(${primaryRgb}, 0.12)`,
-                          }}
-                        >
-                          <Heart
-                            className="h-5 w-5"
-                            style={{ color: primaryColor }}
+                    <div className={config?.aboutImageUrl ? "grid lg:grid-cols-2" : ""}>
+                      {/* Image side */}
+                      {config?.aboutImageUrl && (
+                        <div className="relative h-64 lg:h-full lg:min-h-[320px]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={config.aboutImageUrl}
+                            alt="Despre noi"
+                            className="h-full w-full object-cover"
                           />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">
-                          Povestea noastra
-                        </h3>
+                      )}
+                      {/* Text side */}
+                      <div className="p-6 sm:p-8 md:p-10">
+                        <div className="mb-6 flex items-center gap-3">
+                          <div
+                            className="flex h-11 w-11 items-center justify-center rounded-xl"
+                            style={{
+                              backgroundColor: `rgba(${primaryRgb}, 0.12)`,
+                            }}
+                          >
+                            <Heart
+                              className="h-5 w-5"
+                              style={{ color: primaryColor }}
+                            />
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900">
+                            Povestea noastra
+                          </h3>
+                        </div>
+                        <p className="text-base leading-relaxed text-gray-600 sm:text-lg">
+                          {config.aboutText}
+                        </p>
                       </div>
-                      <p className="text-base leading-relaxed text-gray-600 sm:text-lg">
-                        {config.aboutText}
-                      </p>
                     </div>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Mission Card */}
-                {showMission && config?.missionText && (
+              {/* Mission Card */}
+              {showMission && config?.missionText && (
+                <div className="mx-auto max-w-3xl">
                   <div
                     className="overflow-hidden rounded-2xl shadow-sm"
                     style={{
@@ -720,8 +817,8 @@ export default async function MiniSitePage({ params }: Props) {
                       </p>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </section>
         )}

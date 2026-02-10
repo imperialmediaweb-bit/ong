@@ -530,6 +530,7 @@ model MiniSiteConfig {
 
   // About & Mission (AI-generated)
   aboutText       String?
+  aboutImageUrl   String?
   missionText     String?
   impactText      String?
 
