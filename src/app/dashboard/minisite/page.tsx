@@ -76,6 +76,9 @@ interface MiniSiteState {
   missionText: string;
   impactText: string;
 
+  // Formular 230 embed
+  formular230EmbedCode: string;
+
   // Customization (Tab 4)
   primaryColor: string;
   accentColor: string;
@@ -116,6 +119,7 @@ const DEFAULT_STATE: MiniSiteState = {
   socialYoutube: "",
   socialTiktok: "",
   socialTwitter: "",
+  formular230EmbedCode: "",
   heroTitle: "",
   heroDescription: "",
   aboutText: "",
@@ -219,6 +223,7 @@ export default function MiniSiteBuilderPage() {
           socialYoutube: data.socialYoutube || "",
           socialTiktok: data.socialTiktok || "",
           socialTwitter: data.socialTwitter || "",
+          formular230EmbedCode: data.formular230EmbedCode || "",
           heroTitle: data.heroTitle || "",
           heroDescription: data.heroDescription || "",
           aboutText: data.aboutText || "",
@@ -919,6 +924,35 @@ export default function MiniSiteBuilderPage() {
                     />
                   </div>
                 </div>
+              </div>
+
+              {/* Formular 230 Embed Code */}
+              <div className="space-y-3 border-t pt-6">
+                <Label className="text-base font-semibold flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Cod embed Formular 230 (formular230.ro)
+                </Label>
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    Daca ai cont pe <strong>formular230.ro</strong>, copiaza codul embed generat
+                    de ei si lipeste-l mai jos. Acesta va fi afisat pe pagina Formular 230
+                    a mini-site-ului tau, permitand donatorilor sa completeze formularul direct online.
+                  </p>
+                </div>
+                <Textarea
+                  id="formular230EmbedCode"
+                  placeholder={'<iframe src="https://formular230.ro/organizatia-ta" width="100%" height="600" ...></iframe>'}
+                  value={state.formular230EmbedCode}
+                  onChange={(e) => updateField("formular230EmbedCode", e.target.value)}
+                  rows={5}
+                  className="font-mono text-sm"
+                />
+                {state.formular230EmbedCode && (
+                  <div className="flex items-center gap-2 text-sm text-green-700">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Cod embed configurat - va fi afisat pe pagina Formular 230
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

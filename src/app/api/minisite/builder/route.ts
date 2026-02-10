@@ -59,6 +59,7 @@ export async function GET() {
       showSocial: true,
       showFormular230: false,
       showContract: false,
+      formular230EmbedCode: "",
       customCss: "",
       customSections: null,
       isPublished: false,
@@ -139,6 +140,7 @@ export async function PUT(request: NextRequest) {
       showSocial,
       showFormular230,
       showContract,
+      formular230EmbedCode,
       customCss,
       customSections,
       isPublished,
@@ -195,6 +197,7 @@ export async function PUT(request: NextRequest) {
     if (showSocial !== undefined) configData.showSocial = showSocial;
     if (showFormular230 !== undefined) configData.showFormular230 = showFormular230;
     if (showContract !== undefined) configData.showContract = showContract;
+    if (formular230EmbedCode !== undefined) configData.formular230EmbedCode = formular230EmbedCode;
     if (customCss !== undefined) configData.customCss = customCss;
     if (customSections !== undefined) configData.customSections = customSections as any;
     if (isPublished !== undefined) configData.isPublished = isPublished;

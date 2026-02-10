@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Printer, CheckCircle2, Heart, Loader2 } from "lucide-react";
+import { FileText, Printer, CheckCircle2, Heart, Loader2, ArrowLeft, Shield } from "lucide-react";
 
 interface Props {
   params: { slug: string };
@@ -93,6 +93,107 @@ export default function FormularAnafPage({ params }: Props) {
       </div>
     );
   }
+
+  // ─── If NGO has formular230.ro embed code, show it ─────────────────
+  if (ngo.formular230EmbedCode) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
+        {/* Header */}
+        <div className="bg-white border-b">
+          <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+            <a
+              href={`/s/${params.slug}`}
+              className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Inapoi la {ngo.name}
+            </a>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Shield className="h-3.5 w-3.5" />
+              Formular securizat
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+          {/* Info card */}
+          <div className="text-center space-y-3">
+            <Heart className="h-10 w-10 text-primary mx-auto" />
+            <h1 className="text-2xl sm:text-3xl font-bold">
+              Redirectioneaza 3,5% din impozit
+            </h1>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Completeaza formularul de mai jos pentru a redirectiona 3,5% din
+              impozitul pe venit catre <strong>{ngo.name}</strong>. Nu te costa
+              nimic - banii merg din impozitul pe care oricum il platesti statului.
+            </p>
+          </div>
+
+          {/* NGO info badge */}
+          <div className="flex justify-center">
+            <div className="inline-flex items-center gap-3 bg-white rounded-full px-6 py-3 shadow-sm border">
+              {ngo.logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={ngo.logoUrl} alt="" className="h-8 w-8 rounded-full object-cover" />
+              )}
+              <div className="text-sm">
+                <span className="font-semibold">{ngo.name}</span>
+                {ngo.cui && (
+                  <span className="text-muted-foreground ml-2">CUI: {ngo.cui}</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Embed from formular230.ro */}
+          <Card className="overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-blue-600" />
+                Formular 230 Online
+              </CardTitle>
+              <CardDescription>
+                Formularul este furnizat de formular230.ro - completati datele si trimiteti online
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div
+                className="formular230-embed w-full"
+                dangerouslySetInnerHTML={{ __html: ngo.formular230EmbedCode }}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Trust footer */}
+          <div className="text-center space-y-2 pb-8">
+            <p className="text-xs text-muted-foreground">
+              Datele sunt procesate in siguranta de formular230.ro conform GDPR.
+            </p>
+            <a
+              href={`/s/${params.slug}`}
+              className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Inapoi la pagina {ngo.name}
+            </a>
+          </div>
+        </div>
+
+        <style jsx>{`
+          .formular230-embed iframe {
+            width: 100% !important;
+            min-height: 700px;
+            border: none;
+          }
+          .formular230-embed {
+            min-height: 200px;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // ─── Fallback: manual form (no embed code) ─────────────────────────
 
   if (submitted) {
     return (
@@ -202,10 +303,18 @@ export default function FormularAnafPage({ params }: Props) {
     );
   }
 
-  // Form input page
+  // Form input page (fallback when no embed code)
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background py-8 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
+        <a
+          href={`/s/${params.slug}`}
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Inapoi la {ngo.name}
+        </a>
+
         <div className="text-center">
           <Heart className="h-10 w-10 text-primary mx-auto mb-3" />
           <h1 className="text-2xl font-bold">Redirectioneaza 3,5% din impozit</h1>
@@ -353,7 +462,7 @@ export default function FormularAnafPage({ params }: Props) {
               <div className="grid gap-2">
                 <Label htmlFor="county">Judet *</Label>
                 <Select
-                  value={form.county}
+                  value={form.county || undefined}
                   onValueChange={(v) => setForm({ ...form, county: v })}
                 >
                   <SelectTrigger>
