@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-
-async function getOpenAI() {
-  if (!process.env.OPENAI_API_KEY) return null;
-  const { default: OpenAI } = await import("openai");
-  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-}
+import { callAI, parseAiJson, getAvailableProviders } from "@/lib/ai-providers";
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,9 +13,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { tool, context } = body;
 
-    const openai = await getOpenAI();
-    if (!openai) {
-      return NextResponse.json({ error: "AI nu este configurat" }, { status: 500 });
+    const providers = getAvailableProviders();
+    if (providers.length === 0) {
+      return NextResponse.json({ error: "Niciun provider AI nu este configurat (OPENAI_API_KEY, ANTHROPIC_API_KEY, sau GOOGLE_AI_API_KEY)" }, { status: 500 });
     }
 
     let prompt = "";
@@ -182,34 +177,25 @@ Genereaza 4 statistici relevante: beneficiari ajutati, proiecte implementate, vo
         return NextResponse.json({ error: "Unknown tool" }, { status: 400 });
     }
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemMsg },
-        { role: "user", content: prompt },
-      ],
+    const preferredProvider = context?.aiProvider as "openai" | "claude" | "gemini" | undefined;
+    const aiResult = await callAI(systemMsg, prompt, {
       temperature: 0.9,
-      max_tokens: 2000,
+      maxTokens: 2000,
+      preferredProvider,
     });
 
-    const responseText = completion.choices[0]?.message?.content?.trim();
-    if (!responseText) {
+    if (!aiResult) {
       return NextResponse.json({ error: "AI nu a generat continut" }, { status: 500 });
     }
 
     let result;
     try {
-      result = JSON.parse(responseText);
+      result = parseAiJson(aiResult.text);
     } catch {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        result = JSON.parse(jsonMatch[0]);
-      } else {
-        return NextResponse.json({ error: "Raspunsul AI nu este valid" }, { status: 500 });
-      }
+      return NextResponse.json({ error: "Raspunsul AI nu este valid" }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, result });
+    return NextResponse.json({ success: true, result, provider: aiResult.provider });
   } catch (error) {
     console.error("AI tools error:", error);
     return NextResponse.json({ error: "Eroare la generarea continutului AI" }, { status: 500 });

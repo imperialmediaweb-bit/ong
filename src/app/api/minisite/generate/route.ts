@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { callAI, parseAiJson } from "@/lib/ai-providers";
 
 const CATEGORY_COLORS: Record<string, { primary: string; accent: string }[]> = {
   Social: [
@@ -125,21 +126,20 @@ export async function POST(request: NextRequest) {
 
     let generated;
     let isDemo = true;
+    let aiProvider = "demo";
 
-    if (process.env.OPENAI_API_KEY) {
-      try {
-        const { default: OpenAI } = await import("openai");
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    // Try AI generation with multi-provider fallback
+    try {
+      const contextParts: string[] = [];
+      contextParts.push(`Numele organizatiei: ${name}`);
+      if (cui) contextParts.push(`CUI: ${cui}`);
+      if (category) contextParts.push(`Domeniu: ${category}`);
+      if (description) contextParts.push(`Descriere: ${description}`);
+      if (shortDescription) contextParts.push(`Descriere scurta: ${shortDescription}`);
+      if (contactAddress) contextParts.push(`Sediu: ${contactAddress}`);
 
-        const contextParts: string[] = [];
-        contextParts.push(`Numele organizatiei: ${name}`);
-        if (cui) contextParts.push(`CUI: ${cui}`);
-        if (category) contextParts.push(`Domeniu: ${category}`);
-        if (description) contextParts.push(`Descriere: ${description}`);
-        if (shortDescription) contextParts.push(`Descriere scurta: ${shortDescription}`);
-        if (contactAddress) contextParts.push(`Sediu: ${contactAddress}`);
-
-        const prompt = `Esti un expert in comunicare si marketing pentru ONG-uri din Romania.
+      const systemMsg = "Raspunde DOAR cu JSON valid. Fara markdown, fara text suplimentar. Fii CREATIV si UNIC la fiecare generare.";
+      const prompt = `Esti un expert in comunicare si marketing pentru ONG-uri din Romania.
 Stilul tau de scriere: ${writingStyle}.
 Template vizual ales: ${templateStyle}.
 
@@ -188,32 +188,24 @@ REGULI CRITICE:
 - Counter stats: 4 statistici realiste de impact cu numere
 - DOAR JSON valid, fara markdown, fara backticks`;
 
-        const completion = await openai.chat.completions.create({
-          model: "gpt-4o-mini",
-          messages: [
-            { role: "system", content: "Raspunde DOAR cu JSON valid. Fara markdown, fara text suplimentar. Fii CREATIV si UNIC la fiecare generare." },
-            { role: "user", content: prompt },
-          ],
-          temperature: 1.0,
-          max_tokens: 3000,
-        });
+      const preferredProvider = body.aiProvider as "openai" | "claude" | "gemini" | undefined;
+      const aiResult = await callAI(systemMsg, prompt, {
+        temperature: 1.0,
+        maxTokens: 3000,
+        preferredProvider,
+      });
 
-        const responseText = completion.choices[0]?.message?.content?.trim();
-        if (responseText) {
-          try {
-            generated = JSON.parse(responseText);
-            isDemo = false;
-          } catch {
-            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-              generated = JSON.parse(jsonMatch[0]);
-              isDemo = false;
-            }
-          }
+      if (aiResult) {
+        try {
+          generated = parseAiJson(aiResult.text);
+          isDemo = false;
+          aiProvider = aiResult.provider;
+        } catch (parseErr) {
+          console.error("AI JSON parse error:", parseErr);
         }
-      } catch (aiError) {
-        console.error("AI generation error:", aiError);
       }
+    } catch (aiError) {
+      console.error("AI generation error:", aiError);
     }
 
     if (!generated) {
@@ -312,6 +304,7 @@ REGULI CRITICE:
         success: true,
         generated: result,
         isDemo,
+        aiProvider,
         saved: true,
         published: autoPublish !== false,
         siteUrl: `/s/${ngo?.slug}`,
@@ -323,6 +316,7 @@ REGULI CRITICE:
       success: true,
       generated: result,
       isDemo,
+      aiProvider,
       saved: false,
       templateStyle,
     });
