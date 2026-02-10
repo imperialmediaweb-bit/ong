@@ -301,7 +301,7 @@ export default function MiniSiteBuilderPage() {
 
   // ─── AI Generate ─────────────────────────────────────────────────
 
-  const handleAiGenerate = async () => {
+  const handleAiGenerate = async (saveAndPublish = false) => {
     try {
       setGenerating(true);
       setSaveMessage(null);
@@ -310,10 +310,28 @@ export default function MiniSiteBuilderPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          ngoName: state.ngoName,
+          name: state.ngoName,
           description: state.description,
           shortDescription: state.shortDescription,
           category: state.category,
+          cui: state.cui,
+          registrationNr: state.registrationNr,
+          bankAccount: state.bankAccount,
+          bankName: state.bankName,
+          contactEmail: state.contactEmail,
+          contactPhone: state.contactPhone,
+          contactAddress: state.contactAddress,
+          socialFacebook: state.socialFacebook,
+          socialInstagram: state.socialInstagram,
+          socialLinkedin: state.socialLinkedin,
+          socialYoutube: state.socialYoutube,
+          socialTiktok: state.socialTiktok,
+          socialTwitter: state.socialTwitter,
+          logoUrl: state.logoUrl,
+          websiteUrl: state.websiteUrl,
+          coverImageUrl: state.coverImageUrl,
+          autoSave: saveAndPublish,
+          autoPublish: saveAndPublish,
         }),
       });
 
@@ -325,22 +343,35 @@ export default function MiniSiteBuilderPage() {
       }
 
       const data = await res.json();
+      const gen = data.generated || data;
 
       setState((prev) => ({
         ...prev,
-        heroTitle: data.heroTitle || prev.heroTitle,
-        heroDescription: data.heroDescription || prev.heroDescription,
-        aboutText: data.aboutText || prev.aboutText,
-        missionText: data.missionText || prev.missionText,
-        impactText: data.impactText || prev.impactText,
+        heroTitle: gen.heroTitle || prev.heroTitle,
+        heroDescription: gen.heroDescription || prev.heroDescription,
+        aboutText: gen.aboutText || prev.aboutText,
+        missionText: gen.missionText || prev.missionText,
+        impactText: gen.impactText || prev.impactText,
+        heroCtaText: gen.heroCtaText || prev.heroCtaText,
+        primaryColor: gen.primaryColor || prev.primaryColor,
+        accentColor: gen.accentColor || prev.accentColor,
+        isPublished: data.published || prev.isPublished,
       }));
 
       setAiGenerated(true);
-      setSaveMessage({
-        type: "success",
-        text: "Continutul a fost generat cu succes! Puteti edita textele mai jos.",
-      });
-      clearSaveMessage();
+
+      if (data.saved && data.siteUrl) {
+        setSaveMessage({
+          type: "success",
+          text: `Site-ul a fost generat si publicat! Viziteaza: ${window.location.origin}${data.siteUrl}`,
+        });
+      } else {
+        setSaveMessage({
+          type: "success",
+          text: "Continutul a fost generat cu succes! Puteti edita textele si apoi salva.",
+        });
+        clearSaveMessage();
+      }
     } catch (err) {
       console.error("Error generating AI content:", err);
       setSaveMessage({
@@ -425,6 +456,61 @@ export default function MiniSiteBuilderPage() {
           )}
         </div>
       </div>
+
+      {/* ── One-Click AI Site Generator ───────────────────────────── */}
+      <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10">
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <div className="flex-1 text-center sm:text-left">
+              <h2 className="text-xl font-bold flex items-center gap-2 justify-center sm:justify-start">
+                <Sparkles className="h-6 w-6 text-primary" />
+                Genereaza si publica site-ul cu AI
+              </h2>
+              <p className="text-sm text-muted-foreground mt-2">
+                Completeaza datele de mai jos, apoi apasa butonul. AI-ul genereaza automat tot continutul,
+                salveaza si publica site-ul tau instant la adresa <strong>/s/{state.slug || "..."}</strong>
+              </p>
+            </div>
+            <Button
+              size="lg"
+              className="px-8 py-6 text-lg font-bold shadow-lg gap-3"
+              disabled={generating || !state.ngoName}
+              onClick={() => handleAiGenerate(true)}
+            >
+              {generating ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  AI genereaza site-ul...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-5 w-5" />
+                  Genereaza si publica
+                </>
+              )}
+            </Button>
+          </div>
+          {saveMessage && (
+            <div className={`mt-4 p-3 rounded-lg text-sm ${
+              saveMessage.type === "success"
+                ? "bg-green-50 text-green-800 border border-green-200"
+                : "bg-red-50 text-red-800 border border-red-200"
+            }`}>
+              {saveMessage.text}
+              {saveMessage.type === "success" && state.slug && (
+                <a
+                  href={`/s/${state.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-2 inline-flex items-center gap-1 font-semibold underline"
+                >
+                  Deschide site-ul <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Tabs wizard */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -916,7 +1002,7 @@ export default function MiniSiteBuilderPage() {
                 <Button
                   size="lg"
                   className="w-full gap-2"
-                  onClick={handleAiGenerate}
+                  onClick={() => handleAiGenerate(false)}
                   disabled={generating}
                 >
                   {generating ? (
