@@ -2,6 +2,11 @@ import { notFound } from "next/navigation";
 import prisma from "@/lib/db";
 import { MiniSiteDonation } from "@/components/minisite/donation-form";
 import { MiniSiteNewsletter } from "@/components/minisite/newsletter-form";
+import { CounterAnimation } from "@/components/minisite/counter-animation";
+import { FaqAccordion } from "@/components/minisite/faq-accordion";
+import { VolunteerForm } from "@/components/minisite/volunteer-form";
+import { DonationPopup } from "@/components/minisite/donation-popup";
+import { UrgentBanner } from "@/components/minisite/urgent-banner";
 import {
   Heart,
   Target,
@@ -27,6 +32,15 @@ import {
   Shield,
   Building2,
   CreditCard,
+  Play,
+  HelpCircle,
+  Download,
+  Star,
+  MessageSquare,
+  UserPlus,
+  CalendarDays,
+  Handshake,
+  Quote,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -55,6 +69,29 @@ function formatCurrency(amount: number): string {
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").replace(/&[^;]+;/g, " ").trim();
+}
+
+function getVideoEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  // YouTube
+  const ytMatch = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/
+  );
+  if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`;
+  // Vimeo
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+  // Return as-is if already an embed URL
+  return url;
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase()
+    .substring(0, 2);
 }
 
 export default async function MiniSitePage({ params }: Props) {
@@ -146,6 +183,48 @@ export default async function MiniSitePage({ params }: Props) {
   const showRedirectImpozit = showFormular230 || showContract || showDonation;
   const showCampaigns = miniSiteCampaigns.length > 0;
 
+  // ── New section data ────────────────────────────────────────────
+  const urgentBanner = (config as any)?.urgentBanner;
+  const showUrgentBanner = urgentBanner?.active && urgentBanner?.text;
+
+  const videoSection = (config as any)?.videoSection;
+  const videoEmbedUrl = videoSection?.url ? getVideoEmbedUrl(videoSection.url) : null;
+
+  const teamMembers: any[] = Array.isArray((config as any)?.teamMembers)
+    ? (config as any).teamMembers
+    : [];
+
+  const testimonials: any[] = Array.isArray((config as any)?.testimonials)
+    ? (config as any).testimonials
+    : [];
+
+  const partners: any[] = Array.isArray((config as any)?.partners)
+    ? (config as any).partners
+    : [];
+
+  const counterStats: any[] = Array.isArray((config as any)?.counterStats)
+    ? (config as any).counterStats
+    : [];
+
+  const events: any[] = Array.isArray((config as any)?.events)
+    ? (config as any).events
+    : [];
+
+  const faqItems: any[] = Array.isArray((config as any)?.faqItems)
+    ? (config as any).faqItems
+    : [];
+
+  const transparencyDocs: any[] = Array.isArray((config as any)?.transparencyDocs)
+    ? (config as any).transparencyDocs
+    : [];
+
+  const showVolunteerForm = (config as any)?.showVolunteerForm === true;
+
+  const googleMapsUrl = (config as any)?.googleMapsUrl || "";
+
+  const donationPopup = (config as any)?.donationPopup;
+  const showDonationPopup = donationPopup?.active && showDonation;
+
   return (
     <div
       style={
@@ -159,6 +238,17 @@ export default async function MiniSitePage({ params }: Props) {
       }
       className="min-h-screen bg-gray-50 antialiased"
     >
+      {/* ── Urgent Banner (above everything) ───────────────────────── */}
+      {showUrgentBanner && (
+        <UrgentBanner
+          text={urgentBanner.text}
+          linkUrl={urgentBanner.linkUrl}
+          linkText={urgentBanner.linkText}
+          bgColor={urgentBanner.bgColor}
+          primaryColor={primaryColor}
+        />
+      )}
+
       {/* ── Sticky Navigation Bar ────────────────────────────────────── */}
       <nav
         className="fixed left-0 right-0 top-0 z-50 border-b border-gray-100 bg-white shadow-sm"
@@ -819,10 +909,290 @@ export default async function MiniSitePage({ params }: Props) {
           </section>
         )}
 
-        {/* ── Impact Stats Section ─────────────────────────────────────── */}
+        {/* ── Video Section ────────────────────────────────────────────── */}
+        {videoEmbedUrl && (
+          <section className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
+                >
+                  <Play className="h-7 w-7" style={{ color: accentColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  {videoSection?.title || "Descopera povestea noastra"}
+                </h2>
+                {videoSection?.subtitle && (
+                  <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                    {videoSection.subtitle}
+                  </p>
+                )}
+              </div>
+
+              <div className="mx-auto max-w-4xl">
+                <div
+                  className="overflow-hidden rounded-3xl shadow-xl ring-1 ring-gray-200"
+                  style={{ boxShadow: `0 20px 60px rgba(${primaryRgb}, 0.15)` }}
+                >
+                  <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                    <iframe
+                      src={videoEmbedUrl}
+                      title={videoSection?.title || "Video"}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="absolute inset-0 h-full w-full"
+                      style={{ border: "none" }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Team Section ─────────────────────────────────────────────── */}
+        {teamMembers.length > 0 && (
+          <section id="echipa" className="scroll-mt-20 bg-white py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                >
+                  <Users className="h-7 w-7" style={{ color: primaryColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Echipa noastra
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Oamenii dedicati care fac totul posibil
+                </p>
+              </div>
+
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {teamMembers.map((member: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="group overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  >
+                    {/* Photo or Initials */}
+                    <div className="relative flex items-center justify-center overflow-hidden pt-8 pb-4">
+                      {member.photoUrl ? (
+                        <div
+                          className="h-28 w-28 overflow-hidden rounded-2xl shadow-lg transition-transform duration-300 group-hover:scale-105"
+                          style={{ boxShadow: `0 0 0 4px rgba(${primaryRgb}, 0.15), 0 10px 15px -3px rgba(0,0,0,0.1)` }}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={member.photoUrl}
+                            alt={member.name}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="flex h-28 w-28 items-center justify-center rounded-2xl text-2xl font-extrabold text-white shadow-lg transition-transform duration-300 group-hover:scale-105"
+                          style={{
+                            background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                          }}
+                        >
+                          {getInitials(member.name)}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Info */}
+                    <div className="px-5 pb-6 text-center">
+                      <h3 className="text-base font-bold text-gray-900">
+                        {member.name}
+                      </h3>
+                      {member.role && (
+                        <p
+                          className="mt-1 text-sm font-semibold"
+                          style={{ color: primaryColor }}
+                        >
+                          {member.role}
+                        </p>
+                      )}
+                      {member.bio && (
+                        <p className="mt-3 text-xs leading-relaxed text-gray-500 line-clamp-3">
+                          {member.bio}
+                        </p>
+                      )}
+                      {/* Decorative line */}
+                      <div
+                        className="mx-auto mt-4 h-1 w-10 rounded-full transition-all duration-300 group-hover:w-16"
+                        style={{ backgroundColor: `rgba(${primaryRgb}, 0.2)` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Testimonials Section ─────────────────────────────────────── */}
+        {testimonials.length > 0 && (
+          <section className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
+                >
+                  <MessageSquare className="h-7 w-7" style={{ color: accentColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Ce spun sustinatorii nostri
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Povesti reale de la oamenii care ne-au sprijinit
+                </p>
+              </div>
+
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {testimonials.map((testimonial: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className="group relative overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-8"
+                  >
+                    {/* Large decorative quote */}
+                    <div
+                      className="absolute -right-2 -top-2 text-8xl font-serif leading-none opacity-[0.07]"
+                      style={{ color: primaryColor }}
+                    >
+                      &ldquo;
+                    </div>
+
+                    {/* Top accent bar */}
+                    <div
+                      className="absolute left-0 top-0 h-1 w-full"
+                      style={{
+                        background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
+                      }}
+                    />
+
+                    {/* Stars */}
+                    <div className="mb-4 flex gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className="h-4 w-4"
+                          style={{ color: accentColor, fill: accentColor }}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Quote text */}
+                    <p className="relative z-10 text-sm leading-relaxed text-gray-600 italic sm:text-base">
+                      &ldquo;{testimonial.text}&rdquo;
+                    </p>
+
+                    {/* Author */}
+                    <div className="mt-6 flex items-center gap-3">
+                      {testimonial.photoUrl ? (
+                        <div className="h-10 w-10 overflow-hidden rounded-full" style={{ boxShadow: `0 0 0 2px rgba(${primaryRgb}, 0.15)` }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={testimonial.photoUrl}
+                            alt={testimonial.name}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white"
+                          style={{
+                            background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                          }}
+                        >
+                          {getInitials(testimonial.name)}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">
+                          {testimonial.name}
+                        </p>
+                        {testimonial.role && (
+                          <p className="text-xs text-gray-400">
+                            {testimonial.role}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Partners Section ─────────────────────────────────────────── */}
+        {partners.length > 0 && (
+          <section className="scroll-mt-20 bg-white py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                >
+                  <Handshake className="h-7 w-7" style={{ color: primaryColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Partenerii nostri
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Impreuna facem mai mult. Multumim partenerilor nostri!
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8">
+                {partners.map((partner: any, idx: number) => {
+                  const PartnerWrapper = partner.websiteUrl ? "a" : "div";
+                  const linkProps = partner.websiteUrl
+                    ? { href: partner.websiteUrl, target: "_blank", rel: "noopener noreferrer" }
+                    : {};
+                  return (
+                    <PartnerWrapper
+                      key={idx}
+                      {...linkProps}
+                      className="group flex h-24 w-40 items-center justify-center overflow-hidden rounded-2xl bg-gray-50 p-4 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:h-28 sm:w-48"
+                    >
+                      {partner.logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={partner.logoUrl}
+                          alt={partner.name}
+                          className="max-h-full max-w-full object-contain opacity-70 transition-opacity duration-300 group-hover:opacity-100"
+                        />
+                      ) : (
+                        <div className="text-center">
+                          <div
+                            className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-xl"
+                            style={{ backgroundColor: `rgba(${primaryRgb}, 0.08)` }}
+                          >
+                            <Building2 className="h-5 w-5 text-gray-400 transition-colors duration-300 group-hover:text-gray-600" />
+                          </div>
+                          <span className="text-xs font-semibold text-gray-500 transition-colors duration-300 group-hover:text-gray-700">
+                            {partner.name}
+                          </span>
+                        </div>
+                      )}
+                    </PartnerWrapper>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Impact / Counter Stats Section ───────────────────────────── */}
         {showImpact && (
           <section
-            className="py-16 sm:py-20"
+            id="impact"
+            className="scroll-mt-20 py-16 sm:py-20"
             style={{
               background: `linear-gradient(135deg, ${primaryColor}08, ${accentColor}08)`,
             }}
@@ -845,80 +1215,334 @@ export default async function MiniSitePage({ params }: Props) {
                 )}
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-3">
-                {/* Total raised */}
-                <div className="group overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-8">
-                  <div
-                    className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-                    style={{
-                      backgroundColor: `rgba(${primaryRgb}, 0.1)`,
-                    }}
-                  >
-                    <TrendingUp
-                      className="h-7 w-7"
+              {/* Use animated CounterAnimation if counterStats exist, else fallback to static */}
+              {counterStats.length > 0 ? (
+                <CounterAnimation
+                  stats={counterStats}
+                  primaryColor={primaryColor}
+                  accentColor={accentColor}
+                  primaryRgb={primaryRgb}
+                  accentRgb={accentRgb}
+                />
+              ) : (
+                <div className="grid gap-6 sm:grid-cols-3">
+                  {/* Total raised */}
+                  <div className="group overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-8">
+                    <div
+                      className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
+                      style={{
+                        backgroundColor: `rgba(${primaryRgb}, 0.1)`,
+                      }}
+                    >
+                      <TrendingUp
+                        className="h-7 w-7"
+                        style={{ color: primaryColor }}
+                      />
+                    </div>
+                    <div
+                      className="text-3xl font-extrabold sm:text-4xl"
                       style={{ color: primaryColor }}
-                    />
+                    >
+                      {formatCurrency(ngo.totalRaised || 0)}
+                      <span className="ml-1 text-base font-semibold text-gray-400">
+                        RON
+                      </span>
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-gray-500">
+                      Strangeri prin donatii
+                    </p>
                   </div>
-                  <div
-                    className="text-3xl font-extrabold sm:text-4xl"
-                    style={{ color: primaryColor }}
-                  >
-                    {formatCurrency(ngo.totalRaised || 0)}
-                    <span className="ml-1 text-base font-semibold text-gray-400">
-                      RON
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm font-medium text-gray-500">
-                    Strangeri prin donatii
-                  </p>
-                </div>
 
-                {/* Donor count */}
-                <div className="group overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-8">
-                  <div
-                    className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-                    style={{
-                      backgroundColor: `rgba(${accentRgb}, 0.12)`,
-                    }}
-                  >
-                    <Users
-                      className="h-7 w-7"
+                  {/* Donor count */}
+                  <div className="group overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-8">
+                    <div
+                      className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
+                      style={{
+                        backgroundColor: `rgba(${accentRgb}, 0.12)`,
+                      }}
+                    >
+                      <Users
+                        className="h-7 w-7"
+                        style={{ color: accentColor }}
+                      />
+                    </div>
+                    <div
+                      className="text-3xl font-extrabold sm:text-4xl"
                       style={{ color: accentColor }}
-                    />
+                    >
+                      {ngo.donorCountPublic || 0}
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-gray-500">
+                      Donatori
+                    </p>
                   </div>
-                  <div
-                    className="text-3xl font-extrabold sm:text-4xl"
-                    style={{ color: accentColor }}
-                  >
-                    {ngo.donorCountPublic || 0}
-                  </div>
-                  <p className="mt-2 text-sm font-medium text-gray-500">
-                    Donatori
-                  </p>
-                </div>
 
-                {/* Years active */}
-                <div className="group overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-8">
-                  <div
-                    className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
-                    style={{
-                      backgroundColor: `rgba(${primaryRgb}, 0.1)`,
-                    }}
-                  >
-                    <Clock
-                      className="h-7 w-7"
+                  {/* Years active */}
+                  <div className="group overflow-hidden rounded-2xl bg-white p-6 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-8">
+                    <div
+                      className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
+                      style={{
+                        backgroundColor: `rgba(${primaryRgb}, 0.1)`,
+                      }}
+                    >
+                      <Clock
+                        className="h-7 w-7"
+                        style={{ color: primaryColor }}
+                      />
+                    </div>
+                    <div
+                      className="text-3xl font-extrabold sm:text-4xl"
                       style={{ color: primaryColor }}
-                    />
+                    >
+                      {yearsActive}
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-gray-500">
+                      {yearsActive === 1 ? "An de activitate" : "Ani de activitate"}
+                    </p>
                   </div>
-                  <div
-                    className="text-3xl font-extrabold sm:text-4xl"
-                    style={{ color: primaryColor }}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* ── Events Section ───────────────────────────────────────────── */}
+        {events.length > 0 && (
+          <section id="evenimente" className="scroll-mt-20 bg-white py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
+                >
+                  <CalendarDays className="h-7 w-7" style={{ color: accentColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Evenimente
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Participa la evenimentele noastre si fii parte din comunitate
+                </p>
+              </div>
+
+              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {events.map((event: any, idx: number) => {
+                  const eventDate = event.date ? new Date(event.date) : null;
+                  const day = eventDate
+                    ? eventDate.toLocaleDateString("ro-RO", { day: "numeric" })
+                    : "";
+                  const month = eventDate
+                    ? eventDate.toLocaleDateString("ro-RO", { month: "short" }).toUpperCase()
+                    : "";
+
+                  return (
+                    <div
+                      key={idx}
+                      className="group relative overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                    >
+                      {/* Gradient top border */}
+                      <div
+                        className="h-1.5"
+                        style={{
+                          background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
+                        }}
+                      />
+
+                      <div className="flex gap-5 p-6 sm:p-7">
+                        {/* Date badge */}
+                        {eventDate && (
+                          <div
+                            className="flex h-20 w-20 flex-shrink-0 flex-col items-center justify-center rounded-2xl text-white shadow-md transition-transform duration-300 group-hover:scale-105"
+                            style={{
+                              background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                            }}
+                          >
+                            <span className="text-2xl font-extrabold leading-none">
+                              {day}
+                            </span>
+                            <span className="mt-1 text-[10px] font-bold uppercase tracking-wider opacity-80">
+                              {month}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Event info */}
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-base font-bold text-gray-900 leading-snug">
+                            {event.title}
+                          </h3>
+                          {event.location && (
+                            <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-400">
+                              <MapPin className="h-3.5 w-3.5" style={{ color: primaryColor }} />
+                              {event.location}
+                            </p>
+                          )}
+                          {event.description && (
+                            <p className="mt-2.5 text-sm leading-relaxed text-gray-500 line-clamp-3">
+                              {event.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── FAQ Section ──────────────────────────────────────────────── */}
+        {faqItems.length > 0 && (
+          <section id="faq" className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                >
+                  <HelpCircle className="h-7 w-7" style={{ color: primaryColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Intrebari frecvente
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Raspunsuri la cele mai comune intrebari
+                </p>
+              </div>
+
+              <div className="mx-auto max-w-3xl">
+                <FaqAccordion
+                  items={faqItems}
+                  primaryColor={primaryColor}
+                  primaryRgb={primaryRgb}
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Transparency Documents Section ───────────────────────────── */}
+        {transparencyDocs.length > 0 && (
+          <section id="transparenta" className="scroll-mt-20 bg-white py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
+                >
+                  <Shield className="h-7 w-7" style={{ color: accentColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Transparenta
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Rapoarte si documente publice ale organizatiei
+                </p>
+              </div>
+
+              <div className="mx-auto grid max-w-4xl gap-4 sm:grid-cols-2">
+                {transparencyDocs.map((doc: any, idx: number) => (
+                  <a
+                    key={idx}
+                    href={doc.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-4 overflow-hidden rounded-2xl bg-gray-50 p-5 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:p-6"
                   >
-                    {yearsActive}
-                  </div>
-                  <p className="mt-2 text-sm font-medium text-gray-500">
-                    {yearsActive === 1 ? "An de activitate" : "Ani de activitate"}
-                  </p>
+                    {/* PDF Icon */}
+                    <div
+                      className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-110"
+                      style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                    >
+                      <FileText className="h-7 w-7" style={{ color: primaryColor }} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-bold text-gray-900 sm:text-base">
+                        {doc.title}
+                      </h3>
+                      {doc.description && (
+                        <p className="mt-1 text-xs leading-relaxed text-gray-400 line-clamp-2">
+                          {doc.description}
+                        </p>
+                      )}
+                    </div>
+                    <Download
+                      className="h-5 w-5 flex-shrink-0 text-gray-300 transition-colors duration-300 group-hover:text-gray-600"
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Volunteer Form Section ───────────────────────────────────── */}
+        {showVolunteerForm && (
+          <section id="voluntariat" className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                >
+                  <UserPlus className="h-7 w-7" style={{ color: primaryColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Devino voluntar
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Alatura-te echipei noastre de voluntari si fa o diferenta
+                </p>
+              </div>
+
+              <div className="mx-auto max-w-2xl">
+                <VolunteerForm
+                  ngoSlug={ngo.slug}
+                  ngoName={ngo.name}
+                  primaryColor={primaryColor}
+                  primaryRgb={primaryRgb}
+                  accentColor={accentColor}
+                  accentRgb={accentRgb}
+                />
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Google Maps Section ──────────────────────────────────────── */}
+        {googleMapsUrl && (
+          <section className="scroll-mt-20 bg-white py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${accentRgb}, 0.1)` }}
+                >
+                  <MapPin className="h-7 w-7" style={{ color: accentColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Unde ne gasesti
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Vino sa ne vizitezi sau contacteaza-ne pentru mai multe detalii
+                </p>
+              </div>
+
+              <div
+                className="mx-auto max-w-4xl overflow-hidden rounded-3xl shadow-lg ring-1 ring-gray-200"
+                style={{ boxShadow: `0 10px 40px rgba(${primaryRgb}, 0.1)` }}
+              >
+                <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                  <iframe
+                    src={googleMapsUrl}
+                    title="Locatie pe harta"
+                    allowFullScreen
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                    className="absolute inset-0 h-full w-full"
+                    style={{ border: "none" }}
+                  />
                 </div>
               </div>
             </div>
@@ -927,7 +1551,7 @@ export default async function MiniSitePage({ params }: Props) {
 
         {/* ── Blog / News Section ──────────────────────────────────────── */}
         {blogPosts.length > 0 && (
-          <section id="blog" className="scroll-mt-20 bg-white py-16 sm:py-20">
+          <section id="blog" className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
             <div className="mx-auto max-w-6xl px-4 sm:px-6">
               <div className="mb-12 text-center">
                 <div
@@ -958,7 +1582,7 @@ export default async function MiniSitePage({ params }: Props) {
                   return (
                     <article
                       key={post.id}
-                      className="group flex flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                      className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                     >
                       {/* Cover Image */}
                       {post.coverImage && (
@@ -1027,7 +1651,7 @@ export default async function MiniSitePage({ params }: Props) {
 
         {/* Placeholder if no blog posts */}
         {blogPosts.length === 0 && showNewsletter && (
-          <section id="blog" className="scroll-mt-20 bg-white py-16 sm:py-20">
+          <section id="blog" className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
             <div className="mx-auto max-w-6xl px-4 sm:px-6">
               <div className="mx-auto max-w-2xl text-center">
                 <div
@@ -1586,6 +2210,19 @@ export default async function MiniSitePage({ params }: Props) {
           </div>
         </div>
       </footer>
+
+      {/* ── Donation Popup (outside main) ──────────────────────────── */}
+      {showDonationPopup && (
+        <DonationPopup
+          delay={donationPopup.delay || 15}
+          text={donationPopup.text || ""}
+          ngoSlug={ngo.slug}
+          primaryColor={primaryColor}
+          accentColor={accentColor}
+          primaryRgb={primaryRgb}
+          accentRgb={accentRgb}
+        />
+      )}
     </div>
   );
 }

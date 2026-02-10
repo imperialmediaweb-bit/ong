@@ -581,6 +581,59 @@ model MiniSiteConfig {
   // AI template style (for unique sites)
   templateStyle        String?  @default("modern")
 
+  // Video embed (YouTube/Vimeo)
+  videoUrl             String?
+  showVideo            Boolean  @default(false)
+
+  // Team members [{name, role, photoUrl, bio}]
+  teamMembers          Json?
+  showTeam             Boolean  @default(false)
+
+  // Testimonials [{name, role, text, photoUrl}]
+  testimonials         Json?
+  showTestimonials     Boolean  @default(false)
+
+  // Partners [{name, logoUrl, websiteUrl}]
+  partners             Json?
+  showPartners         Boolean  @default(false)
+
+  // Events [{title, date, location, description, imageUrl}]
+  events               Json?
+  showEvents           Boolean  @default(false)
+
+  // FAQ [{question, answer}]
+  faqItems             Json?
+  showFaq              Boolean  @default(false)
+
+  // Volunteer form
+  showVolunteerForm    Boolean  @default(false)
+
+  // Transparency docs [{title, year, pdfUrl}]
+  transparencyDocs     Json?
+  showTransparency     Boolean  @default(false)
+
+  // Urgent banner {text, ctaText, ctaUrl, isActive, bgColor}
+  urgentBanner         Json?
+  showUrgentBanner     Boolean  @default(false)
+
+  // Google Maps embed
+  googleMapsEmbed      String?
+  showGoogleMaps       Boolean  @default(false)
+
+  // Donation popup
+  showDonationPopup    Boolean  @default(false)
+  donationPopupDelay   Int?     @default(15)
+  donationPopupText    String?
+
+  // SEO
+  seoTitle             String?
+  seoDescription       String?
+  seoKeywords          String?
+
+  // Counter stats [{label, value, suffix}]
+  counterStats         Json?
+  showCounterStats     Boolean  @default(false)
+
   // Extra
   customCss       String?
   customSections  Json?    // [{title, content, icon}]

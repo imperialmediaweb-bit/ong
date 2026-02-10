@@ -45,6 +45,18 @@ import {
   Plus,
   Trash2,
   Target,
+  Settings,
+  Video,
+  Users,
+  MessageSquareQuote,
+  Handshake,
+  CalendarDays,
+  HelpCircle,
+  FileDown,
+  Map,
+  Bell,
+  Search,
+  BarChart3,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -106,6 +118,34 @@ interface MiniSiteState {
   isPublished: boolean;
   miniSiteCampaigns: MiniSiteCampaign[];
   templateStyle: string;
+  // New features
+  videoUrl: string;
+  showVideo: boolean;
+  teamMembers: TeamMember[];
+  showTeam: boolean;
+  testimonials: Testimonial[];
+  showTestimonials: boolean;
+  partners: Partner[];
+  showPartners: boolean;
+  events: EventItem[];
+  showEvents: boolean;
+  faqItems: FaqItem[];
+  showFaq: boolean;
+  showVolunteerForm: boolean;
+  transparencyDocs: TransparencyDoc[];
+  showTransparency: boolean;
+  urgentBanner: UrgentBanner;
+  showUrgentBanner: boolean;
+  googleMapsEmbed: string;
+  showGoogleMaps: boolean;
+  showDonationPopup: boolean;
+  donationPopupDelay: number;
+  donationPopupText: string;
+  seoTitle: string;
+  seoDescription: string;
+  seoKeywords: string;
+  counterStats: CounterStat[];
+  showCounterStats: boolean;
 }
 
 interface MiniSiteCampaign {
@@ -117,6 +157,15 @@ interface MiniSiteCampaign {
   imageUrl: string;
   isActive: boolean;
 }
+
+interface TeamMember { id: string; name: string; role: string; photoUrl: string; bio: string; }
+interface Testimonial { id: string; name: string; role: string; text: string; photoUrl: string; }
+interface Partner { id: string; name: string; logoUrl: string; websiteUrl: string; }
+interface EventItem { id: string; title: string; date: string; location: string; description: string; imageUrl: string; }
+interface FaqItem { id: string; question: string; answer: string; }
+interface TransparencyDoc { id: string; title: string; year: string; pdfUrl: string; }
+interface UrgentBanner { text: string; ctaText: string; ctaUrl: string; isActive: boolean; bgColor: string; }
+interface CounterStat { id: string; label: string; value: number; suffix: string; }
 
 const DEFAULT_STATE: MiniSiteState = {
   ngoName: "",
@@ -166,6 +215,33 @@ const DEFAULT_STATE: MiniSiteState = {
   isPublished: false,
   miniSiteCampaigns: [],
   templateStyle: "modern",
+  videoUrl: "",
+  showVideo: false,
+  teamMembers: [],
+  showTeam: false,
+  testimonials: [],
+  showTestimonials: false,
+  partners: [],
+  showPartners: false,
+  events: [],
+  showEvents: false,
+  faqItems: [],
+  showFaq: false,
+  showVolunteerForm: false,
+  transparencyDocs: [],
+  showTransparency: false,
+  urgentBanner: { text: "", ctaText: "", ctaUrl: "", isActive: false, bgColor: "#dc2626" },
+  showUrgentBanner: false,
+  googleMapsEmbed: "",
+  showGoogleMaps: false,
+  showDonationPopup: false,
+  donationPopupDelay: 15,
+  donationPopupText: "",
+  seoTitle: "",
+  seoDescription: "",
+  seoKeywords: "",
+  counterStats: [],
+  showCounterStats: false,
 };
 
 const CATEGORIES = [
@@ -199,6 +275,7 @@ export default function MiniSiteBuilderPage() {
     text: string;
   } | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [aiToolLoading, setAiToolLoading] = useState<string | null>(null);
 
   // ─── Helpers ─────────────────────────────────────────────────────
 
@@ -275,6 +352,33 @@ export default function MiniSiteBuilderPage() {
           isPublished: data.isPublished ?? false,
           miniSiteCampaigns: Array.isArray(data.miniSiteCampaigns) ? data.miniSiteCampaigns : [],
           templateStyle: data.templateStyle || "modern",
+          videoUrl: data.videoUrl || "",
+          showVideo: data.showVideo ?? false,
+          teamMembers: Array.isArray(data.teamMembers) ? data.teamMembers : [],
+          showTeam: data.showTeam ?? false,
+          testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
+          showTestimonials: data.showTestimonials ?? false,
+          partners: Array.isArray(data.partners) ? data.partners : [],
+          showPartners: data.showPartners ?? false,
+          events: Array.isArray(data.events) ? data.events : [],
+          showEvents: data.showEvents ?? false,
+          faqItems: Array.isArray(data.faqItems) ? data.faqItems : [],
+          showFaq: data.showFaq ?? false,
+          showVolunteerForm: data.showVolunteerForm ?? false,
+          transparencyDocs: Array.isArray(data.transparencyDocs) ? data.transparencyDocs : [],
+          showTransparency: data.showTransparency ?? false,
+          urgentBanner: data.urgentBanner || { text: "", ctaText: "", ctaUrl: "", isActive: false, bgColor: "#dc2626" },
+          showUrgentBanner: data.showUrgentBanner ?? false,
+          googleMapsEmbed: data.googleMapsEmbed || "",
+          showGoogleMaps: data.showGoogleMaps ?? false,
+          showDonationPopup: data.showDonationPopup ?? false,
+          donationPopupDelay: data.donationPopupDelay ?? 15,
+          donationPopupText: data.donationPopupText || "",
+          seoTitle: data.seoTitle || "",
+          seoDescription: data.seoDescription || "",
+          seoKeywords: data.seoKeywords || "",
+          counterStats: Array.isArray(data.counterStats) ? data.counterStats : [],
+          showCounterStats: data.showCounterStats ?? false,
         }));
 
         if (data.heroTitle || data.aboutText || data.missionText) {
@@ -392,6 +496,14 @@ export default function MiniSiteBuilderPage() {
         primaryColor: gen.primaryColor || prev.primaryColor,
         accentColor: gen.accentColor || prev.accentColor,
         isPublished: data.published || prev.isPublished,
+        faqItems: Array.isArray(gen.faqItems) ? gen.faqItems.map((f: any, i: number) => ({ ...f, id: f.id || `faq-${Date.now()}-${i}` })) : prev.faqItems,
+        testimonials: Array.isArray(gen.testimonials) ? gen.testimonials.map((t: any, i: number) => ({ ...t, id: t.id || `test-${Date.now()}-${i}` })) : prev.testimonials,
+        counterStats: Array.isArray(gen.counterStats) ? gen.counterStats.map((c: any, i: number) => ({ ...c, id: c.id || `stat-${Date.now()}-${i}` })) : prev.counterStats,
+        showFaq: Array.isArray(gen.faqItems) && gen.faqItems.length > 0 ? true : prev.showFaq,
+        showTestimonials: Array.isArray(gen.testimonials) && gen.testimonials.length > 0 ? true : prev.showTestimonials,
+        showDonationPopup: data.published ? true : prev.showDonationPopup,
+        seoTitle: gen.seoTitle || prev.seoTitle,
+        seoDescription: gen.seoDescription || prev.seoDescription,
       }));
 
       setAiGenerated(true);
@@ -428,6 +540,81 @@ export default function MiniSiteBuilderPage() {
   const handlePreview = () => {
     if (state.slug) {
       window.open(`/s/${state.slug}`, "_blank");
+    }
+  };
+
+  // ─── AI Tool Generate (per-section) ─────────────────────────────
+
+  const handleAiToolGenerate = async (toolName: string) => {
+    try {
+      setAiToolLoading(toolName);
+      setSaveMessage(null);
+      const res = await fetch("/api/minisite/ai-tools", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tool: toolName,
+          ngoName: state.ngoName,
+          description: state.description,
+          category: state.category,
+          shortDescription: state.shortDescription,
+        }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error || "Eroare la generarea cu AI.");
+      }
+      const data = await res.json();
+      if (toolName === "faq" && Array.isArray(data.faqItems)) {
+        updateField("faqItems", data.faqItems.map((f: any, i: number) => ({ ...f, id: f.id || `faq-${Date.now()}-${i}` })) as any);
+      }
+      if (toolName === "testimonials" && Array.isArray(data.testimonials)) {
+        updateField("testimonials", data.testimonials.map((t: any, i: number) => ({ ...t, id: t.id || `test-${Date.now()}-${i}` })) as any);
+      }
+      if (toolName === "counterStats" && Array.isArray(data.counterStats)) {
+        updateField("counterStats", data.counterStats.map((c: any, i: number) => ({ ...c, id: c.id || `stat-${Date.now()}-${i}` })) as any);
+      }
+      if (toolName === "team" && Array.isArray(data.teamMembers)) {
+        updateField("teamMembers", data.teamMembers.map((m: any, i: number) => ({ ...m, id: m.id || `tm-${Date.now()}-${i}` })) as any);
+      }
+      if (toolName === "events" && Array.isArray(data.events)) {
+        updateField("events", data.events.map((e: any, i: number) => ({ ...e, id: e.id || `ev-${Date.now()}-${i}` })) as any);
+      }
+      if (toolName === "partners" && Array.isArray(data.partners)) {
+        updateField("partners", data.partners.map((p: any, i: number) => ({ ...p, id: p.id || `par-${Date.now()}-${i}` })) as any);
+      }
+      if (toolName === "transparency" && Array.isArray(data.transparencyDocs)) {
+        updateField("transparencyDocs", data.transparencyDocs.map((d: any, i: number) => ({ ...d, id: d.id || `doc-${Date.now()}-${i}` })) as any);
+      }
+      if (toolName === "seo" && data.seoTitle) {
+        setState((prev) => ({
+          ...prev,
+          seoTitle: data.seoTitle || prev.seoTitle,
+          seoDescription: data.seoDescription || prev.seoDescription,
+          seoKeywords: data.seoKeywords || prev.seoKeywords,
+        }));
+      }
+      if (toolName === "urgentBanner" && data.urgentBanner) {
+        updateField("urgentBanner", data.urgentBanner as any);
+      }
+      if (toolName === "donationPopup" && data.donationPopupText) {
+        setState((prev) => ({
+          ...prev,
+          donationPopupText: data.donationPopupText || prev.donationPopupText,
+          donationPopupDelay: data.donationPopupDelay ?? prev.donationPopupDelay,
+        }));
+      }
+      setSaveMessage({ type: "success", text: "Continut generat cu AI cu succes!" });
+      clearSaveMessage();
+    } catch (err) {
+      console.error("AI tool error:", err);
+      setSaveMessage({
+        type: "error",
+        text: err instanceof Error ? err.message : "Eroare la generarea cu AI.",
+      });
+      clearSaveMessage();
+    } finally {
+      setAiToolLoading(null);
     }
   };
 
@@ -550,14 +737,14 @@ export default function MiniSiteBuilderPage() {
 
       {/* Tabs wizard */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
           <TabsTrigger value="date-ong" className="gap-1.5">
             <Building className="h-4 w-4" />
             <span className="hidden sm:inline">Date ONG</span>
           </TabsTrigger>
           <TabsTrigger value="date-asociatie" className="gap-1.5">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Date asociatie</span>
+            <span className="hidden sm:inline">Asociatie</span>
           </TabsTrigger>
           <TabsTrigger value="campanii" className="gap-1.5">
             <Heart className="h-4 w-4" />
@@ -565,11 +752,15 @@ export default function MiniSiteBuilderPage() {
           </TabsTrigger>
           <TabsTrigger value="genereaza-ai" className="gap-1.5">
             <Wand2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Genereaza AI</span>
+            <span className="hidden sm:inline">AI</span>
+          </TabsTrigger>
+          <TabsTrigger value="functionalitati" className="gap-1.5">
+            <Settings className="h-4 w-4" />
+            <span className="hidden sm:inline">Extra</span>
           </TabsTrigger>
           <TabsTrigger value="personalizeaza" className="gap-1.5">
             <Palette className="h-4 w-4" />
-            <span className="hidden sm:inline">Personalizeaza</span>
+            <span className="hidden sm:inline">Design</span>
           </TabsTrigger>
         </TabsList>
 
@@ -1573,6 +1764,408 @@ export default function MiniSiteBuilderPage() {
           </div>
         </TabsContent>
 
+        {/* ─── Tab: Functionalitati ────────────────────────────── */}
+        <TabsContent value="functionalitati">
+          <div className="space-y-6">
+            {/* ── SEO ───────────────────────────────────── */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Search className="h-5 w-5" />
+                  SEO - Optimizare motoare de cautare
+                </CardTitle>
+                <CardDescription>Meta tags pentru Google si alte motoare de cautare</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Titlu SEO (max 60 caractere)</Label>
+                  <Input placeholder="Titlu optimizat pentru Google..." value={state.seoTitle} onChange={(e) => updateField("seoTitle", e.target.value)} maxLength={60} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Descriere SEO (max 155 caractere)</Label>
+                  <Textarea placeholder="Descriere captivanta pentru rezultatele Google..." value={state.seoDescription} onChange={(e) => updateField("seoDescription", e.target.value)} rows={2} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Cuvinte cheie (separate prin virgula)</Label>
+                  <Input placeholder="ONG, donatii, voluntariat, ..." value={state.seoKeywords} onChange={(e) => updateField("seoKeywords", e.target.value)} />
+                </div>
+                <Button variant="outline" size="sm" className="gap-2" disabled={aiToolLoading === "seo"} onClick={() => handleAiToolGenerate("seo")}>
+                  {aiToolLoading === "seo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />} Genereaza cu AI
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* ── Video ─────────────────────────────────── */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Video className="h-5 w-5" /> Video embed</CardTitle>
+                <CardDescription>Adauga un video YouTube sau Vimeo pe mini-site</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label>URL Video (YouTube sau Vimeo)</Label>
+                  <Input placeholder="https://www.youtube.com/watch?v=..." value={state.videoUrl} onChange={(e) => updateField("videoUrl", e.target.value)} />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* ── Team ──────────────────────────────────── */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" /> Echipa</CardTitle>
+                    <CardDescription>Membrii echipei organizatiei</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-1" disabled={aiToolLoading === "team"} onClick={() => handleAiToolGenerate("team")}>
+                      {aiToolLoading === "team" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} AI
+                    </Button>
+                    <Button size="sm" onClick={() => setState(p => ({ ...p, teamMembers: [...p.teamMembers, { id: Date.now().toString(), name: "", role: "", photoUrl: "", bio: "" }] }))}>
+                      <Plus className="h-4 w-4 mr-1" /> Adauga
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {state.teamMembers.map((m, idx) => (
+                  <div key={m.id} className="border rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Badge variant="outline">Membru {idx + 1}</Badge>
+                      <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700" onClick={() => setState(p => ({ ...p, teamMembers: p.teamMembers.filter((_, i) => i !== idx) }))}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input placeholder="Nume" value={m.name} onChange={(e) => setState(p => ({ ...p, teamMembers: p.teamMembers.map((t, i) => i === idx ? { ...t, name: e.target.value } : t) }))} />
+                      <Input placeholder="Rol / Functie" value={m.role} onChange={(e) => setState(p => ({ ...p, teamMembers: p.teamMembers.map((t, i) => i === idx ? { ...t, role: e.target.value } : t) }))} />
+                    </div>
+                    <Input placeholder="URL poza (optional)" value={m.photoUrl} onChange={(e) => setState(p => ({ ...p, teamMembers: p.teamMembers.map((t, i) => i === idx ? { ...t, photoUrl: e.target.value } : t) }))} />
+                    <Textarea placeholder="Scurta descriere..." rows={2} value={m.bio} onChange={(e) => setState(p => ({ ...p, teamMembers: p.teamMembers.map((t, i) => i === idx ? { ...t, bio: e.target.value } : t) }))} />
+                  </div>
+                ))}
+                {state.teamMembers.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">Niciun membru adaugat. Apasa &quot;Adauga&quot; sau genereaza cu AI.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* ── Testimonials ──────────────────────────── */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><MessageSquareQuote className="h-5 w-5" /> Testimoniale</CardTitle>
+                    <CardDescription>Povesti de la beneficiari, donatori si voluntari</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-1" disabled={aiToolLoading === "testimonials"} onClick={() => handleAiToolGenerate("testimonials")}>
+                      {aiToolLoading === "testimonials" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} AI
+                    </Button>
+                    <Button size="sm" onClick={() => setState(p => ({ ...p, testimonials: [...p.testimonials, { id: Date.now().toString(), name: "", role: "", text: "", photoUrl: "" }] }))}>
+                      <Plus className="h-4 w-4 mr-1" /> Adauga
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {state.testimonials.map((t, idx) => (
+                  <div key={t.id} className="border rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Badge variant="outline">Testimonial {idx + 1}</Badge>
+                      <Button variant="ghost" size="sm" className="text-red-500" onClick={() => setState(p => ({ ...p, testimonials: p.testimonials.filter((_, i) => i !== idx) }))}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input placeholder="Nume" value={t.name} onChange={(e) => setState(p => ({ ...p, testimonials: p.testimonials.map((x, i) => i === idx ? { ...x, name: e.target.value } : x) }))} />
+                      <Input placeholder="Rol (Donator/Beneficiar/Voluntar)" value={t.role} onChange={(e) => setState(p => ({ ...p, testimonials: p.testimonials.map((x, i) => i === idx ? { ...x, role: e.target.value } : x) }))} />
+                    </div>
+                    <Textarea placeholder="Text testimonial..." rows={3} value={t.text} onChange={(e) => setState(p => ({ ...p, testimonials: p.testimonials.map((x, i) => i === idx ? { ...x, text: e.target.value } : x) }))} />
+                  </div>
+                ))}
+                {state.testimonials.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">Niciun testimonial adaugat. Apasa &quot;Adauga&quot; sau genereaza cu AI.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* ── FAQ ───────────────────────────────────── */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><HelpCircle className="h-5 w-5" /> Intrebari frecvente (FAQ)</CardTitle>
+                    <CardDescription>Intrebari si raspunsuri afisate ca accordion</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-1" disabled={aiToolLoading === "faq"} onClick={() => handleAiToolGenerate("faq")}>
+                      {aiToolLoading === "faq" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} AI
+                    </Button>
+                    <Button size="sm" onClick={() => setState(p => ({ ...p, faqItems: [...p.faqItems, { id: Date.now().toString(), question: "", answer: "" }] }))}>
+                      <Plus className="h-4 w-4 mr-1" /> Adauga
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {state.faqItems.map((f, idx) => (
+                  <div key={f.id} className="border rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Badge variant="outline">Intrebarea {idx + 1}</Badge>
+                      <Button variant="ghost" size="sm" className="text-red-500" onClick={() => setState(p => ({ ...p, faqItems: p.faqItems.filter((_, i) => i !== idx) }))}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <Input placeholder="Intrebare..." value={f.question} onChange={(e) => setState(p => ({ ...p, faqItems: p.faqItems.map((x, i) => i === idx ? { ...x, question: e.target.value } : x) }))} />
+                    <Textarea placeholder="Raspuns..." rows={3} value={f.answer} onChange={(e) => setState(p => ({ ...p, faqItems: p.faqItems.map((x, i) => i === idx ? { ...x, answer: e.target.value } : x) }))} />
+                  </div>
+                ))}
+                {state.faqItems.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">Niciun FAQ adaugat. Apasa &quot;Adauga&quot; sau genereaza cu AI.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* ── Partners ──────────────────────────────── */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><Handshake className="h-5 w-5" /> Parteneri / Sponsori</CardTitle>
+                    <CardDescription>Logo-uri parteneri afisate in grid</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-1" disabled={aiToolLoading === "partners"} onClick={() => handleAiToolGenerate("partners")}>
+                      {aiToolLoading === "partners" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} AI
+                    </Button>
+                    <Button size="sm" onClick={() => setState(p => ({ ...p, partners: [...p.partners, { id: Date.now().toString(), name: "", logoUrl: "", websiteUrl: "" }] }))}>
+                      <Plus className="h-4 w-4 mr-1" /> Adauga
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {state.partners.map((partner, idx) => (
+                  <div key={partner.id} className="border rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Badge variant="outline">Partener {idx + 1}</Badge>
+                      <Button variant="ghost" size="sm" className="text-red-500" onClick={() => setState(prev => ({ ...prev, partners: prev.partners.filter((_, i) => i !== idx) }))}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <Input placeholder="Nume partener" value={partner.name} onChange={(e) => setState(prev => ({ ...prev, partners: prev.partners.map((x, i) => i === idx ? { ...x, name: e.target.value } : x) }))} />
+                      <Input placeholder="URL logo" value={partner.logoUrl} onChange={(e) => setState(prev => ({ ...prev, partners: prev.partners.map((x, i) => i === idx ? { ...x, logoUrl: e.target.value } : x) }))} />
+                      <Input placeholder="Website" value={partner.websiteUrl} onChange={(e) => setState(prev => ({ ...prev, partners: prev.partners.map((x, i) => i === idx ? { ...x, websiteUrl: e.target.value } : x) }))} />
+                    </div>
+                  </div>
+                ))}
+                {state.partners.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">Niciun partener adaugat.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* ── Events ────────────────────────────────── */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5" /> Evenimente</CardTitle>
+                    <CardDescription>Evenimente viitoare cu data, locatie si descriere</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-1" disabled={aiToolLoading === "events"} onClick={() => handleAiToolGenerate("events")}>
+                      {aiToolLoading === "events" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} AI
+                    </Button>
+                    <Button size="sm" onClick={() => setState(p => ({ ...p, events: [...p.events, { id: Date.now().toString(), title: "", date: "", location: "", description: "", imageUrl: "" }] }))}>
+                      <Plus className="h-4 w-4 mr-1" /> Adauga
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {state.events.map((ev, idx) => (
+                  <div key={ev.id} className="border rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Badge variant="outline">Eveniment {idx + 1}</Badge>
+                      <Button variant="ghost" size="sm" className="text-red-500" onClick={() => setState(p => ({ ...p, events: p.events.filter((_, i) => i !== idx) }))}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Input placeholder="Titlu eveniment" value={ev.title} onChange={(e) => setState(p => ({ ...p, events: p.events.map((x, i) => i === idx ? { ...x, title: e.target.value } : x) }))} />
+                      <Input type="date" value={ev.date} onChange={(e) => setState(p => ({ ...p, events: p.events.map((x, i) => i === idx ? { ...x, date: e.target.value } : x) }))} />
+                    </div>
+                    <Input placeholder="Locatie" value={ev.location} onChange={(e) => setState(p => ({ ...p, events: p.events.map((x, i) => i === idx ? { ...x, location: e.target.value } : x) }))} />
+                    <Textarea placeholder="Descriere..." rows={2} value={ev.description} onChange={(e) => setState(p => ({ ...p, events: p.events.map((x, i) => i === idx ? { ...x, description: e.target.value } : x) }))} />
+                  </div>
+                ))}
+                {state.events.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">Niciun eveniment adaugat. Apasa &quot;Adauga&quot; sau genereaza cu AI.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* ── Counter Stats ─────────────────────────── */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Statistici animate</CardTitle>
+                    <CardDescription>Numere care se animeaza la scroll (beneficiari, proiecte, etc.)</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-1" disabled={aiToolLoading === "counterStats"} onClick={() => handleAiToolGenerate("counterStats")}>
+                      {aiToolLoading === "counterStats" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} AI
+                    </Button>
+                    <Button size="sm" onClick={() => setState(p => ({ ...p, counterStats: [...p.counterStats, { id: Date.now().toString(), label: "", value: 0, suffix: "" }] }))}>
+                      <Plus className="h-4 w-4 mr-1" /> Adauga
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {state.counterStats.map((cs, idx) => (
+                  <div key={cs.id} className="border rounded-xl p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <Badge variant="outline">Statistica {idx + 1}</Badge>
+                      <Button variant="ghost" size="sm" className="text-red-500" onClick={() => setState(p => ({ ...p, counterStats: p.counterStats.filter((_, i) => i !== idx) }))}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <Input placeholder="Eticheta" value={cs.label} onChange={(e) => setState(p => ({ ...p, counterStats: p.counterStats.map((x, i) => i === idx ? { ...x, label: e.target.value } : x) }))} />
+                      <Input type="number" placeholder="Valoare" value={cs.value || ""} onChange={(e) => setState(p => ({ ...p, counterStats: p.counterStats.map((x, i) => i === idx ? { ...x, value: parseInt(e.target.value) || 0 } : x) }))} />
+                      <Input placeholder="Sufix (+, %, etc)" value={cs.suffix} onChange={(e) => setState(p => ({ ...p, counterStats: p.counterStats.map((x, i) => i === idx ? { ...x, suffix: e.target.value } : x) }))} />
+                    </div>
+                  </div>
+                ))}
+                {state.counterStats.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">Nicio statistica adaugata. Apasa &quot;Adauga&quot; sau genereaza cu AI.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* ── Transparency Docs ─────────────────────── */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><FileDown className="h-5 w-5" /> Documente transparenta</CardTitle>
+                    <CardDescription>Rapoarte anuale si documente descarcabile</CardDescription>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="gap-1" disabled={aiToolLoading === "transparency"} onClick={() => handleAiToolGenerate("transparency")}>
+                      {aiToolLoading === "transparency" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} AI
+                    </Button>
+                    <Button size="sm" onClick={() => setState(p => ({ ...p, transparencyDocs: [...p.transparencyDocs, { id: Date.now().toString(), title: "", year: new Date().getFullYear().toString(), pdfUrl: "" }] }))}>
+                      <Plus className="h-4 w-4 mr-1" /> Adauga
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {state.transparencyDocs.map((doc, idx) => (
+                  <div key={doc.id} className="border rounded-xl p-4">
+                    <div className="flex justify-between items-center mb-3">
+                      <Badge variant="outline">Document {idx + 1}</Badge>
+                      <Button variant="ghost" size="sm" className="text-red-500" onClick={() => setState(p => ({ ...p, transparencyDocs: p.transparencyDocs.filter((_, i) => i !== idx) }))}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <Input placeholder="Titlu document" value={doc.title} onChange={(e) => setState(p => ({ ...p, transparencyDocs: p.transparencyDocs.map((x, i) => i === idx ? { ...x, title: e.target.value } : x) }))} />
+                      <Input placeholder="An" value={doc.year} onChange={(e) => setState(p => ({ ...p, transparencyDocs: p.transparencyDocs.map((x, i) => i === idx ? { ...x, year: e.target.value } : x) }))} />
+                      <Input placeholder="URL PDF" value={doc.pdfUrl} onChange={(e) => setState(p => ({ ...p, transparencyDocs: p.transparencyDocs.map((x, i) => i === idx ? { ...x, pdfUrl: e.target.value } : x) }))} />
+                    </div>
+                  </div>
+                ))}
+                {state.transparencyDocs.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">Niciun document adaugat.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* ── Google Maps ───────────────────────────── */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><Map className="h-5 w-5" /> Harta Google Maps</CardTitle>
+                <CardDescription>Copiaza codul embed iframe de la Google Maps</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Textarea placeholder={'<iframe src="https://www.google.com/maps/embed?..." ...></iframe>'} value={state.googleMapsEmbed} onChange={(e) => updateField("googleMapsEmbed", e.target.value)} rows={3} className="font-mono text-sm" />
+              </CardContent>
+            </Card>
+
+            {/* ── Urgent Banner ─────────────────────────── */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5" /> Banner urgent</CardTitle>
+                    <CardDescription>Banner colorat afisat sus pe pagina pentru campanii urgente</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" className="gap-1" disabled={aiToolLoading === "urgentBanner"} onClick={() => handleAiToolGenerate("urgentBanner")}>
+                    {aiToolLoading === "urgentBanner" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} AI
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Text banner</Label>
+                    <Input placeholder="Campanie urgenta! Ajuta-ne..." value={state.urgentBanner.text} onChange={(e) => setState(p => ({ ...p, urgentBanner: { ...p.urgentBanner, text: e.target.value } }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Text buton CTA</Label>
+                    <Input placeholder="Doneaza acum" value={state.urgentBanner.ctaText} onChange={(e) => setState(p => ({ ...p, urgentBanner: { ...p.urgentBanner, ctaText: e.target.value } }))} />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Link buton</Label>
+                    <Input placeholder="#donatie" value={state.urgentBanner.ctaUrl} onChange={(e) => setState(p => ({ ...p, urgentBanner: { ...p.urgentBanner, ctaUrl: e.target.value } }))} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Culoare fundal</Label>
+                    <div className="flex items-center gap-3">
+                      <input type="color" value={state.urgentBanner.bgColor || "#dc2626"} onChange={(e) => setState(p => ({ ...p, urgentBanner: { ...p.urgentBanner, bgColor: e.target.value } }))} className="h-10 w-14 cursor-pointer rounded border border-input" />
+                      <Input value={state.urgentBanner.bgColor || "#dc2626"} onChange={(e) => setState(p => ({ ...p, urgentBanner: { ...p.urgentBanner, bgColor: e.target.value } }))} className="font-mono w-32" />
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* ── Donation Popup ────────────────────────── */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2"><Heart className="h-5 w-5" /> Popup donatie</CardTitle>
+                    <CardDescription>Popup care apare dupa cateva secunde pentru a incuraja donatiile</CardDescription>
+                  </div>
+                  <Button variant="outline" size="sm" className="gap-1" disabled={aiToolLoading === "donationPopup"} onClick={() => handleAiToolGenerate("donationPopup")}>
+                    {aiToolLoading === "donationPopup" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />} AI
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Delay (secunde pana la aparitie)</Label>
+                  <Input type="number" value={state.donationPopupDelay} onChange={(e) => updateField("donationPopupDelay", parseInt(e.target.value) || 15)} className="w-32" />
+                </div>
+                <div className="space-y-2">
+                  <Label>Text popup</Label>
+                  <Textarea placeholder="Fiecare donatie conteaza..." value={state.donationPopupText} onChange={(e) => updateField("donationPopupText", e.target.value)} rows={3} />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
         {/* ─── Tab 4: Personalizeaza ────────────────────────────── */}
         <TabsContent value="personalizeaza">
           <div className="space-y-6">
@@ -1725,6 +2318,54 @@ export default function MiniSiteBuilderPage() {
                       {
                         key: "showContract" as const,
                         label: "Contract sponsorizare",
+                      },
+                      {
+                        key: "showVideo" as const,
+                        label: "Video embed",
+                      },
+                      {
+                        key: "showTeam" as const,
+                        label: "Echipa",
+                      },
+                      {
+                        key: "showTestimonials" as const,
+                        label: "Testimoniale",
+                      },
+                      {
+                        key: "showPartners" as const,
+                        label: "Parteneri",
+                      },
+                      {
+                        key: "showEvents" as const,
+                        label: "Evenimente",
+                      },
+                      {
+                        key: "showFaq" as const,
+                        label: "Intrebari frecvente (FAQ)",
+                      },
+                      {
+                        key: "showVolunteerForm" as const,
+                        label: "Formular voluntariat",
+                      },
+                      {
+                        key: "showTransparency" as const,
+                        label: "Documente transparenta",
+                      },
+                      {
+                        key: "showUrgentBanner" as const,
+                        label: "Banner urgent",
+                      },
+                      {
+                        key: "showGoogleMaps" as const,
+                        label: "Harta Google Maps",
+                      },
+                      {
+                        key: "showDonationPopup" as const,
+                        label: "Popup donatie",
+                      },
+                      {
+                        key: "showCounterStats" as const,
+                        label: "Statistici cu numaratoare",
                       },
                     ] as const
                   ).map(({ key, label }) => (
