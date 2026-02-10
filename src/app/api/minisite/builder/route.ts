@@ -60,6 +60,8 @@ export async function GET() {
       showFormular230: false,
       showContract: false,
       formular230EmbedCode: "",
+      formular230PdfUrl: "",
+      formular230Address: "",
       customCss: "",
       customSections: null,
       isPublished: false,
@@ -141,6 +143,8 @@ export async function PUT(request: NextRequest) {
       showFormular230,
       showContract,
       formular230EmbedCode,
+      formular230PdfUrl,
+      formular230Address,
       customCss,
       customSections,
       isPublished,
@@ -198,6 +202,8 @@ export async function PUT(request: NextRequest) {
     if (showFormular230 !== undefined) configData.showFormular230 = showFormular230;
     if (showContract !== undefined) configData.showContract = showContract;
     if (formular230EmbedCode !== undefined) configData.formular230EmbedCode = formular230EmbedCode;
+    if (formular230PdfUrl !== undefined) configData.formular230PdfUrl = formular230PdfUrl;
+    if (formular230Address !== undefined) configData.formular230Address = formular230Address;
     if (customCss !== undefined) configData.customCss = customCss;
     if (customSections !== undefined) configData.customSections = customSections as any;
     if (isPublished !== undefined) configData.isPublished = isPublished;

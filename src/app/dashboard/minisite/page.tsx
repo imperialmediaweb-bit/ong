@@ -39,6 +39,8 @@ import {
   EyeOff,
   Image,
   Type,
+  Download,
+  MapPin as MapPinIcon,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -76,8 +78,10 @@ interface MiniSiteState {
   missionText: string;
   impactText: string;
 
-  // Formular 230 embed
+  // Formular 230
   formular230EmbedCode: string;
+  formular230PdfUrl: string;
+  formular230Address: string;
 
   // Customization (Tab 4)
   primaryColor: string;
@@ -120,6 +124,8 @@ const DEFAULT_STATE: MiniSiteState = {
   socialTiktok: "",
   socialTwitter: "",
   formular230EmbedCode: "",
+  formular230PdfUrl: "",
+  formular230Address: "",
   heroTitle: "",
   heroDescription: "",
   aboutText: "",
@@ -224,6 +230,8 @@ export default function MiniSiteBuilderPage() {
           socialTiktok: data.socialTiktok || "",
           socialTwitter: data.socialTwitter || "",
           formular230EmbedCode: data.formular230EmbedCode || "",
+          formular230PdfUrl: data.formular230PdfUrl || "",
+          formular230Address: data.formular230Address || "",
           heroTitle: data.heroTitle || "",
           heroDescription: data.heroDescription || "",
           aboutText: data.aboutText || "",
@@ -926,31 +934,127 @@ export default function MiniSiteBuilderPage() {
                 </div>
               </div>
 
-              {/* Formular 230 Embed Code */}
-              <div className="space-y-3 border-t pt-6">
-                <Label className="text-base font-semibold flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Cod embed Formular 230 (formular230.ro)
-                </Label>
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-sm text-blue-800">
-                    Daca ai cont pe <strong>formular230.ro</strong>, copiaza codul embed generat
-                    de ei si lipeste-l mai jos. Acesta va fi afisat pe pagina Formular 230
-                    a mini-site-ului tau, permitand donatorilor sa completeze formularul direct online.
+              {/* ── Formular 230 - Full Section ────────────────── */}
+              <div className="space-y-6 border-t pt-6">
+                <div>
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Formular 230 - Redirectionare 3,5%
+                  </Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Configureaza pagina Formular 230 a mini-site-ului tau pentru
+                    a permite donatorilor sa redirectioneze 3,5% din impozit
                   </p>
                 </div>
-                <Textarea
-                  id="formular230EmbedCode"
-                  placeholder={'<iframe src="https://formular230.ro/organizatia-ta" width="100%" height="600" ...></iframe>'}
-                  value={state.formular230EmbedCode}
-                  onChange={(e) => updateField("formular230EmbedCode", e.target.value)}
-                  rows={5}
-                  className="font-mono text-sm"
-                />
-                {state.formular230EmbedCode && (
-                  <div className="flex items-center gap-2 text-sm text-green-700">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Cod embed configurat - va fi afisat pe pagina Formular 230
+
+                {/* Instructions box */}
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
+                  <h4 className="font-semibold text-blue-900 text-sm">
+                    Cum functioneaza?
+                  </h4>
+                  <ol className="text-sm text-blue-800 space-y-2 list-decimal ml-4">
+                    <li>
+                      Creeaza-ti un cont gratuit pe <strong>formular230.ro</strong> si
+                      completeaza datele organizatiei tale (CUI, IBAN, denumire, etc.)
+                    </li>
+                    <li>
+                      Dupa configurare, formular230.ro iti genereaza un <strong>cod embed</strong> (un
+                      cod HTML cu iframe) pe care il copiezi si il lipesti mai jos
+                    </li>
+                    <li>
+                      Codul embed va fi afisat pe pagina Formular 230 a mini-site-ului
+                      tau, permitand donatorilor sa completeze si sa trimita formularul
+                      <strong> direct online</strong>
+                    </li>
+                    <li>
+                      Optional, poti urca si un <strong>PDF</strong> cu Formularul 230
+                      pre-completat pe care donatorii il pot descarca, printa, semna
+                      si trimite prin posta la adresa pe care o specifici
+                    </li>
+                  </ol>
+                </div>
+
+                {/* Embed code */}
+                <div className="space-y-2">
+                  <Label htmlFor="formular230EmbedCode" className="font-medium">
+                    Cod embed de la formular230.ro
+                  </Label>
+                  <Textarea
+                    id="formular230EmbedCode"
+                    placeholder={'<iframe src="https://formular230.ro/organizatia-ta" width="100%" height="600" ...></iframe>'}
+                    value={state.formular230EmbedCode}
+                    onChange={(e) => updateField("formular230EmbedCode", e.target.value)}
+                    rows={4}
+                    className="font-mono text-sm"
+                  />
+                  {state.formular230EmbedCode && (
+                    <div className="flex items-center gap-2 text-sm text-green-700">
+                      <CheckCircle2 className="h-4 w-4" />
+                      Cod embed configurat - formularul online va fi afisat pe pagina 230
+                    </div>
+                  )}
+                </div>
+
+                {/* PDF URL */}
+                <div className="space-y-2">
+                  <Label htmlFor="formular230PdfUrl" className="font-medium flex items-center gap-2">
+                    <Download className="h-4 w-4" />
+                    Link PDF Formular 230 (optional)
+                  </Label>
+                  <Input
+                    id="formular230PdfUrl"
+                    placeholder="https://drive.google.com/... sau https://exemplu.ro/formular-230.pdf"
+                    value={state.formular230PdfUrl}
+                    onChange={(e) => updateField("formular230PdfUrl", e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Urca PDF-ul pe Google Drive, Dropbox sau alt serviciu si lipeste link-ul aici.
+                    Donatorii vor putea descarca formularul pre-completat cu datele asociatiei.
+                  </p>
+                </div>
+
+                {/* Mailing address */}
+                <div className="space-y-2">
+                  <Label htmlFor="formular230Address" className="font-medium flex items-center gap-2">
+                    <MapPinIcon className="h-4 w-4" />
+                    Adresa pentru trimiterea formularului prin posta (optional)
+                  </Label>
+                  <Textarea
+                    id="formular230Address"
+                    placeholder={"Administratia Finantelor Publice Sector 1\nStr. Exemplu nr. 10\nBucuresti, 010101"}
+                    value={state.formular230Address}
+                    onChange={(e) => updateField("formular230Address", e.target.value)}
+                    rows={3}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Adresa ANAF sau a asociatiei unde donatorii trimit formularul completat si semnat.
+                  </p>
+                </div>
+
+                {/* Summary of what's configured */}
+                {(state.formular230EmbedCode || state.formular230PdfUrl || state.formular230Address) && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm font-medium text-green-800 mb-2">Configurare Formular 230:</p>
+                    <ul className="text-sm text-green-700 space-y-1">
+                      {state.formular230EmbedCode && (
+                        <li className="flex items-center gap-2">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Formular online (embed formular230.ro)
+                        </li>
+                      )}
+                      {state.formular230PdfUrl && (
+                        <li className="flex items-center gap-2">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          PDF descarcabil configurat
+                        </li>
+                      )}
+                      {state.formular230Address && (
+                        <li className="flex items-center gap-2">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Adresa de trimitere configurata
+                        </li>
+                      )}
+                    </ul>
                   </div>
                 )}
               </div>

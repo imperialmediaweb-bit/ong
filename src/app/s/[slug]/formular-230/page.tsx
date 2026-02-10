@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Printer, CheckCircle2, Heart, Loader2, ArrowLeft, Shield } from "lucide-react";
+import { FileText, Printer, CheckCircle2, Heart, Loader2, ArrowLeft, Shield, Download, MapPin, Info, Mail } from "lucide-react";
 
 interface Props {
   params: { slug: string };
@@ -94,8 +94,12 @@ export default function FormularAnafPage({ params }: Props) {
     );
   }
 
-  // ─── If NGO has formular230.ro embed code, show it ─────────────────
-  if (ngo.formular230EmbedCode) {
+  // ─── Has embed code, PDF, or address: show rich page ────────────────
+  const hasEmbed = !!ngo.formular230EmbedCode;
+  const hasPdf = !!ngo.formular230PdfUrl;
+  const hasAddress = !!ngo.formular230Address;
+
+  if (hasEmbed || hasPdf) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
         {/* Header */}
@@ -115,17 +119,17 @@ export default function FormularAnafPage({ params }: Props) {
           </div>
         </div>
 
-        <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-          {/* Info card */}
+        <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+          {/* Hero */}
           <div className="text-center space-y-3">
             <Heart className="h-10 w-10 text-primary mx-auto" />
             <h1 className="text-2xl sm:text-3xl font-bold">
               Redirectioneaza 3,5% din impozit
             </h1>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Completeaza formularul de mai jos pentru a redirectiona 3,5% din
-              impozitul pe venit catre <strong>{ngo.name}</strong>. Nu te costa
-              nimic - banii merg din impozitul pe care oricum il platesti statului.
+              Redirectioneaza 3,5% din impozitul pe venit catre{" "}
+              <strong>{ngo.name}</strong>. Nu te costa nimic - banii merg din
+              impozitul pe care oricum il platesti statului.
             </p>
           </div>
 
@@ -145,30 +149,158 @@ export default function FormularAnafPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Embed from formular230.ro */}
-          <Card className="overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5 text-blue-600" />
-                Formular 230 Online
-              </CardTitle>
-              <CardDescription>
-                Formularul este furnizat de formular230.ro - completati datele si trimiteti online
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div
-                className="formular230-embed w-full"
-                dangerouslySetInnerHTML={{ __html: ngo.formular230EmbedCode }}
-              />
+          {/* What is Formular 230? */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex gap-4">
+                <Info className="h-5 w-5 text-blue-500 mt-0.5 shrink-0" />
+                <div className="space-y-2">
+                  <h3 className="font-semibold">Ce este Formularul 230?</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Formularul 230 este documentul oficial prin care orice persoana fizica
+                    poate redirectiona <strong>3,5% din impozitul pe venit</strong> catre
+                    o organizatie nonprofit. Nu platesti nimic in plus - aceasta suma
+                    se scade din impozitul pe care il platesti oricum catre stat.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Termenul limita pentru depunere este de obicei <strong>25 mai</strong> al
+                    fiecarui an, pentru veniturile din anul anterior.
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
+          {/* How to steps */}
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="bg-white rounded-xl border p-5 text-center space-y-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center mx-auto text-lg">
+                1
+              </div>
+              <h4 className="font-semibold text-sm">Completeaza formularul</h4>
+              <p className="text-xs text-muted-foreground">
+                {hasEmbed
+                  ? "Completeaza formularul online mai jos sau descarca PDF-ul"
+                  : "Descarca PDF-ul si completeaza-l cu datele tale"}
+              </p>
+            </div>
+            <div className="bg-white rounded-xl border p-5 text-center space-y-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center mx-auto text-lg">
+                2
+              </div>
+              <h4 className="font-semibold text-sm">Semneaza</h4>
+              <p className="text-xs text-muted-foreground">
+                {hasEmbed
+                  ? "Daca completezi online, semnatura se face electronic"
+                  : "Printeaza formularul completat si semneaza-l"}
+              </p>
+            </div>
+            <div className="bg-white rounded-xl border p-5 text-center space-y-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-600 font-bold flex items-center justify-center mx-auto text-lg">
+                3
+              </div>
+              <h4 className="font-semibold text-sm">Trimite</h4>
+              <p className="text-xs text-muted-foreground">
+                {hasEmbed
+                  ? "Trimite online sau depune la ANAF"
+                  : hasAddress
+                    ? "Trimite formularul prin posta la adresa de mai jos"
+                    : "Depune formularul la administratia financiara (ANAF)"}
+              </p>
+            </div>
+          </div>
+
+          {/* Embed from formular230.ro */}
+          {hasEmbed && (
+            <Card className="overflow-hidden">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-blue-600" />
+                  Completeaza Formularul 230 Online
+                </CardTitle>
+                <CardDescription>
+                  Formularul este furnizat de formular230.ro - completati datele si trimiteti direct online
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div
+                  className="formular230-embed w-full"
+                  dangerouslySetInnerHTML={{ __html: ngo.formular230EmbedCode }}
+                />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* PDF Download + Mailing Address */}
+          {(hasPdf || hasAddress) && (
+            <div className="grid gap-6 sm:grid-cols-2">
+              {/* PDF Download */}
+              {hasPdf && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Download className="h-5 w-5 text-green-600" />
+                      Descarca Formularul 230
+                    </CardTitle>
+                    <CardDescription>
+                      PDF pre-completat cu datele {ngo.name}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Descarca formularul PDF pre-completat cu datele organizatiei.
+                      Trebuie doar sa adaugi datele tale personale, sa semnezi si sa
+                      il trimiti.
+                    </p>
+                    <a
+                      href={ngo.formular230PdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors shadow-sm"
+                    >
+                      <Download className="h-4 w-4" />
+                      Descarca PDF
+                    </a>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Mailing Address */}
+              {hasAddress && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-lg">
+                      <Mail className="h-5 w-5 text-orange-600" />
+                      Unde trimiti formularul?
+                    </CardTitle>
+                    <CardDescription>
+                      Adresa pentru trimiterea prin posta
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-muted-foreground">
+                      Dupa ce completezi si semnezi formularul, trimite-l prin posta
+                      la urmatoarea adresa:
+                    </p>
+                    <div className="flex gap-3 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                      <MapPin className="h-5 w-5 text-orange-600 mt-0.5 shrink-0" />
+                      <p className="text-sm font-medium whitespace-pre-line">
+                        {ngo.formular230Address}
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
           {/* Trust footer */}
-          <div className="text-center space-y-2 pb-8">
-            <p className="text-xs text-muted-foreground">
-              Datele sunt procesate in siguranta de formular230.ro conform GDPR.
-            </p>
+          <div className="text-center space-y-3 pb-8">
+            {hasEmbed && (
+              <p className="text-xs text-muted-foreground">
+                Formularul online este procesat in siguranta de formular230.ro conform GDPR.
+              </p>
+            )}
             <a
               href={`/s/${params.slug}`}
               className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
@@ -193,7 +325,7 @@ export default function FormularAnafPage({ params }: Props) {
     );
   }
 
-  // ─── Fallback: manual form (no embed code) ─────────────────────────
+  // ─── Fallback: manual form (no embed code and no PDF) ──────────────
 
   if (submitted) {
     return (

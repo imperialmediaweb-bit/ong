@@ -569,8 +569,10 @@ model MiniSiteConfig {
   showFormular230 Boolean  @default(false)
   showContract    Boolean  @default(false)
 
-  // Formular 230 embed (from formular230.ro)
+  // Formular 230 (from formular230.ro)
   formular230EmbedCode String?
+  formular230PdfUrl    String?  // URL to uploaded PDF form
+  formular230Address   String?  // Mailing address for completed forms
 
   // Extra
   customCss       String?

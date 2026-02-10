@@ -26,6 +26,8 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       miniSiteConfig: {
         select: {
           formular230EmbedCode: true,
+          formular230PdfUrl: true,
+          formular230Address: true,
           bankAccount: true,
           cui: true,
         },
@@ -53,5 +55,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     county: ngo.verification?.county || null,
     city: ngo.verification?.city || null,
     formular230EmbedCode: ngo.miniSiteConfig?.formular230EmbedCode || null,
+    formular230PdfUrl: ngo.miniSiteConfig?.formular230PdfUrl || null,
+    formular230Address: ngo.miniSiteConfig?.formular230Address || null,
   });
 }
