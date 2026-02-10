@@ -1304,55 +1304,89 @@ export default async function MiniSitePage({ params }: Props) {
                   const month = eventDate
                     ? eventDate.toLocaleDateString("ro-RO", { month: "short" }).toUpperCase()
                     : "";
+                  const fullDate = eventDate
+                    ? eventDate.toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })
+                    : "";
 
                   return (
                     <div
                       key={idx}
-                      className="group relative overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                      className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                     >
-                      {/* Gradient top border */}
-                      <div
-                        className="h-1.5"
-                        style={{
-                          background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
-                        }}
-                      />
-
-                      <div className="flex gap-5 p-6 sm:p-7">
-                        {/* Date badge */}
-                        {eventDate && (
+                      {/* Event Image */}
+                      {event.imageUrl ? (
+                        <div className="relative h-48 overflow-hidden">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={event.imageUrl}
+                            alt={event.title}
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                          {/* Date badge over image */}
+                          {eventDate && (
+                            <div
+                              className="absolute bottom-4 left-4 flex h-16 w-16 flex-col items-center justify-center rounded-xl text-white shadow-lg"
+                              style={{
+                                background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                              }}
+                            >
+                              <span className="text-xl font-extrabold leading-none">{day}</span>
+                              <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wider opacity-80">{month}</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          className="relative flex h-32 items-end overflow-hidden p-4"
+                          style={{ background: `linear-gradient(135deg, ${primaryColor}15, ${accentColor}15)` }}
+                        >
                           <div
-                            className="flex h-20 w-20 flex-shrink-0 flex-col items-center justify-center rounded-2xl text-white shadow-md transition-transform duration-300 group-hover:scale-105"
-                            style={{
-                              background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
-                            }}
+                            className="absolute right-4 top-4 flex h-12 w-12 items-center justify-center rounded-xl opacity-15"
                           >
-                            <span className="text-2xl font-extrabold leading-none">
-                              {day}
-                            </span>
-                            <span className="mt-1 text-[10px] font-bold uppercase tracking-wider opacity-80">
-                              {month}
-                            </span>
+                            <CalendarDays className="h-16 w-16" style={{ color: primaryColor }} />
                           </div>
-                        )}
+                          {/* Date badge */}
+                          {eventDate && (
+                            <div
+                              className="flex h-16 w-16 flex-col items-center justify-center rounded-xl text-white shadow-md"
+                              style={{
+                                background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
+                              }}
+                            >
+                              <span className="text-xl font-extrabold leading-none">{day}</span>
+                              <span className="mt-0.5 text-[9px] font-bold uppercase tracking-wider opacity-80">{month}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
-                        {/* Event info */}
-                        <div className="min-w-0 flex-1">
-                          <h3 className="text-base font-bold text-gray-900 leading-snug">
-                            {event.title}
-                          </h3>
+                      {/* Event content */}
+                      <div className="flex flex-1 flex-col p-6">
+                        <h3 className="text-lg font-bold text-gray-900 leading-snug">
+                          {event.title}
+                        </h3>
+
+                        <div className="mt-3 flex flex-col gap-2">
+                          {fullDate && (
+                            <p className="flex items-center gap-2 text-xs font-medium text-gray-500">
+                              <Calendar className="h-3.5 w-3.5" style={{ color: accentColor }} />
+                              {fullDate}
+                            </p>
+                          )}
                           {event.location && (
-                            <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-gray-400">
+                            <p className="flex items-center gap-2 text-xs font-medium text-gray-500">
                               <MapPin className="h-3.5 w-3.5" style={{ color: primaryColor }} />
                               {event.location}
                             </p>
                           )}
-                          {event.description && (
-                            <p className="mt-2.5 text-sm leading-relaxed text-gray-500 line-clamp-3">
-                              {event.description}
-                            </p>
-                          )}
                         </div>
+
+                        {event.description && (
+                          <p className="mt-3 flex-1 text-sm leading-relaxed text-gray-500 line-clamp-3">
+                            {event.description}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );
