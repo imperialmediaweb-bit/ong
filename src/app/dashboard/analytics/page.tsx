@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -19,6 +21,15 @@ import {
   Loader2,
   ArrowUpRight,
   Calendar,
+  Sparkles,
+  Bot,
+  MessageCircle,
+  ChevronDown,
+  ChevronUp,
+  Lightbulb,
+  TrendingUp,
+  Target,
+  Zap,
 } from "lucide-react";
 import {
   BarChart,
@@ -35,6 +46,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+
+interface AgentMessage {
+  role: "user" | "assistant";
+  content: string;
+}
 
 interface AnalyticsSummary {
   totalSent: number;
@@ -99,6 +115,57 @@ export default function AnalyticsPage() {
   const [donationsByCampaign, setDonationsByCampaign] = useState<DonationByCampaign[]>([]);
   const [donorGrowth, setDonorGrowth] = useState<DonorGrowth[]>([]);
 
+  // AI Marketing Agent state
+  const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
+  const [agentInput, setAgentInput] = useState("");
+  const [agentLoading, setAgentLoading] = useState(false);
+  const [agentExpanded, setAgentExpanded] = useState(true);
+  const agentChatRef = useRef<HTMLDivElement>(null);
+
+  const sendToAgent = async (message: string) => {
+    if (!message.trim() || agentLoading) return;
+
+    const userMsg: AgentMessage = { role: "user", content: message.trim() };
+    setAgentMessages((prev) => [...prev, userMsg]);
+    setAgentInput("");
+    setAgentLoading(true);
+
+    try {
+      const res = await fetch("/api/ai/marketing-agent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: message.trim(),
+          conversationHistory: [...agentMessages, userMsg],
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Eroare la comunicarea cu agentul AI");
+      }
+
+      const data = await res.json();
+      setAgentMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: data.reply },
+      ]);
+    } catch (err: any) {
+      setAgentMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: `Eroare: ${err.message}` },
+      ]);
+    } finally {
+      setAgentLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (agentChatRef.current) {
+      agentChatRef.current.scrollTop = agentChatRef.current.scrollHeight;
+    }
+  }, [agentMessages, agentLoading]);
+
   const fetchAnalytics = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -106,13 +173,50 @@ export default function AnalyticsPage() {
       const params = new URLSearchParams({ period });
       const res = await fetch(`/api/analytics?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch analytics");
-      const data = await res.json();
+      const json = await res.json();
+      const d = json.data || json;
 
-      setSummary(data.summary || null);
-      setSendsOverTime(data.sendsOverTime || []);
-      setCampaignPerformance(data.campaignPerformance || []);
-      setDonationsByCampaign(data.donationsByCampaign || []);
-      setDonorGrowth(data.donorGrowth || []);
+      // Map API response to frontend format
+      const overview = d.overview || {};
+      const perf = d.campaignPerformance || {};
+      setSummary({
+        totalSent: perf.totalSent || 0,
+        totalDelivered: perf.totalDelivered || 0,
+        totalOpened: perf.totalOpened || 0,
+        totalClicked: perf.totalClicked || 0,
+        avgOpenRate: parseFloat(perf.openRate) || 0,
+        avgClickRate: parseFloat(perf.clickRate) || 0,
+        totalDonations: overview.totalDonationsInPeriod || 0,
+        totalDonationAmount: overview.donationSumInPeriod || 0,
+        donorCount: overview.totalDonors || 0,
+        newDonorsThisPeriod: overview.newDonorsInPeriod || 0,
+      });
+
+      // Build sendsOverTime from donationsByMonth if available
+      const byMonth = d.donationsByMonth || [];
+      setSendsOverTime(byMonth.map((m: any) => ({
+        date: m.month,
+        sent: m.count || 0,
+        delivered: m.count || 0,
+        opened: 0,
+      })));
+
+      // Build campaignPerformance list from topDonors or recentDonations
+      setCampaignPerformance([]);
+
+      // Build donationsByCampaign from donorsByChannel or recentDonations
+      const donations = d.recentDonations || [];
+      const campaignMap = new Map<string, number>();
+      donations.forEach((don: any) => {
+        const name = don.campaign?.name || "Donatie directa";
+        campaignMap.set(name, (campaignMap.get(name) || 0) + (don.amount || 0));
+      });
+      setDonationsByCampaign(
+        Array.from(campaignMap.entries()).map(([name, amount]) => ({ name, amount: Number(amount) }))
+      );
+
+      // Donor growth - use donorsByChannel for now
+      setDonorGrowth([]);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -166,6 +270,164 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* ── Super AI Marketing Agent ───────────────────────────────── */}
+      <Card className="border-0 shadow-lg overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        <CardHeader
+          className="cursor-pointer border-b bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
+          onClick={() => setAgentExpanded(!agentExpanded)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+                <Bot className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-white text-lg">Super Agent Marketing AI</CardTitle>
+                <CardDescription className="text-white/70 text-xs">
+                  Analizeaza datele, ofera sfaturi si strategii de marketing
+                </CardDescription>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-white/20 text-white border-0 text-xs">
+                <Sparkles className="h-3 w-3 mr-1" />
+                Powered by AI
+              </Badge>
+              {agentExpanded ? (
+                <ChevronUp className="h-5 w-5 text-white/70" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-white/70" />
+              )}
+            </div>
+          </div>
+        </CardHeader>
+
+        {agentExpanded && (
+          <CardContent className="p-0">
+            {/* Quick action buttons */}
+            {agentMessages.length === 0 && (
+              <div className="p-6 border-b">
+                <p className="text-sm text-gray-500 mb-4">
+                  Intreaba agentul orice despre performanta ONG-ului tau. Iata cateva sugestii:
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {[
+                    { icon: TrendingUp, label: "Analizeaza performanta generala", prompt: "Analizeaza performanta generala a organizatiei noastre si da-mi un raport complet cu ce merge bine si ce trebuie imbunatatit." },
+                    { icon: Target, label: "Strategii de crestere donatori", prompt: "Ce strategii concrete pot folosi pentru a creste numarul de donatori? Da-mi un plan de actiune detaliat." },
+                    { icon: Lightbulb, label: "Idei campanii de fundraising", prompt: "Propune 5 idei de campanii de fundraising creative adaptate pentru organizatia noastra, cu texte si strategii concrete." },
+                    { icon: Zap, label: "Optimizeaza ratele de conversie", prompt: "Analizeaza ratele noastre de deschidere si click si sugereaza cum le putem imbunatati. Ce tip de subiecte si continut functioneaza mai bine?" },
+                  ].map((suggestion) => (
+                    <button
+                      key={suggestion.label}
+                      onClick={() => sendToAgent(suggestion.prompt)}
+                      className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-3 text-left text-sm transition-all hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-sm"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100">
+                        <suggestion.icon className="h-4 w-4 text-indigo-600" />
+                      </div>
+                      <span className="font-medium text-gray-700">{suggestion.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Chat messages */}
+            {agentMessages.length > 0 && (
+              <div
+                ref={agentChatRef}
+                className="max-h-[500px] overflow-y-auto p-6 space-y-4"
+              >
+                {agentMessages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    {msg.role === "assistant" && (
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500">
+                        <Bot className="h-4 w-4 text-white" />
+                      </div>
+                    )}
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                        msg.role === "user"
+                          ? "bg-indigo-600 text-white"
+                          : "bg-white border border-gray-200 text-gray-800 shadow-sm"
+                      }`}
+                    >
+                      {msg.role === "assistant" ? (
+                        <div
+                          className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-gray-900"
+                          dangerouslySetInnerHTML={{
+                            __html: msg.content
+                              .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                              .replace(/\n\n/g, "<br/><br/>")
+                              .replace(/\n- /g, "<br/>&#8226; ")
+                              .replace(/\n(\d+)\. /g, "<br/>$1. ")
+                              .replace(/\n/g, "<br/>"),
+                          }}
+                        />
+                      ) : (
+                        msg.content
+                      )}
+                    </div>
+                    {msg.role === "user" && (
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-100">
+                        <MessageCircle className="h-4 w-4 text-indigo-600" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {agentLoading && (
+                  <div className="flex gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500">
+                      <Bot className="h-4 w-4 text-white" />
+                    </div>
+                    <div className="rounded-2xl bg-white border border-gray-200 px-4 py-3 shadow-sm">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Agentul analizeaza datele...
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Input */}
+            <div className="border-t bg-white p-4">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  sendToAgent(agentInput);
+                }}
+                className="flex gap-2"
+              >
+                <Input
+                  value={agentInput}
+                  onChange={(e) => setAgentInput(e.target.value)}
+                  placeholder="Intreaba agentul AI despre marketing, campanii, strategie..."
+                  disabled={agentLoading}
+                  className="h-11"
+                />
+                <Button
+                  type="submit"
+                  disabled={agentLoading || !agentInput.trim()}
+                  className="h-11 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                >
+                  {agentLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                </Button>
+              </form>
+            </div>
+          </CardContent>
+        )}
+      </Card>
 
       {/* Summary Cards */}
       {summary && (
@@ -235,6 +497,54 @@ export default function AnalyticsPage() {
                   +{summary.newDonorsThisPeriod} noi in aceasta perioada
                 </p>
               </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Donation Stats Cards */}
+      {summary && (summary.totalDonations > 0 || summary.totalDonationAmount > 0) && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Card className="border-0 shadow-md bg-gradient-to-br from-green-50 to-emerald-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-700 font-medium">Total donatii</p>
+                  <p className="text-2xl font-bold text-green-900">{summary.totalDonations.toLocaleString()}</p>
+                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100">
+                  <Target className="h-5 w-5 text-green-600" />
+                </div>
+              </div>
+              <p className="text-xs text-green-600 mt-2">In perioada selectata</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md bg-gradient-to-br from-emerald-50 to-teal-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-emerald-700 font-medium">Venituri donatii</p>
+                  <p className="text-2xl font-bold text-emerald-900">{formatCurrency(summary.totalDonationAmount)}</p>
+                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100">
+                  <TrendingUp className="h-5 w-5 text-emerald-600" />
+                </div>
+              </div>
+              <p className="text-xs text-emerald-600 mt-2">Suma totala colectata</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md bg-gradient-to-br from-violet-50 to-purple-50">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-violet-700 font-medium">Donatori noi</p>
+                  <p className="text-2xl font-bold text-violet-900">+{summary.newDonorsThisPeriod}</p>
+                </div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-violet-100">
+                  <Users className="h-5 w-5 text-violet-600" />
+                </div>
+              </div>
+              <p className="text-xs text-violet-600 mt-2">In aceasta perioada</p>
             </CardContent>
           </Card>
         </div>

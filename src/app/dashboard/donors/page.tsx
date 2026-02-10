@@ -157,10 +157,10 @@ export default function DonorsPage() {
 
       const res = await fetch(`/api/donors?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch donors");
-      const data: DonorsResponse = await res.json();
-      setDonors(data.donors);
-      setTotal(data.total);
-      setTotalPages(data.totalPages);
+      const data = await res.json();
+      setDonors(data.data || []);
+      setTotal(data.pagination?.total || 0);
+      setTotalPages(data.pagination?.totalPages || 0);
     } catch (err: any) {
       setError(err.message);
     } finally {
