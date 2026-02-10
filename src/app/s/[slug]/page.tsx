@@ -318,7 +318,7 @@ export default async function MiniSitePage({ params }: Props) {
             <div
               className="absolute inset-0"
               style={{
-                background: `linear-gradient(180deg, ${primaryColor}ee 0%, ${primaryColor}cc 40%, ${primaryColor}aa 70%, ${primaryColor}dd 100%)`,
+                background: `linear-gradient(180deg, ${primaryColor}cc 0%, ${primaryColor}99 35%, ${primaryColor}77 60%, ${primaryColor}bb 100%)`,
               }}
             />
           </>
@@ -730,42 +730,58 @@ export default async function MiniSitePage({ params }: Props) {
                 </h2>
               </div>
 
-              <div className={`grid gap-8 ${showAbout && config?.aboutText && showMission && config?.missionText ? "lg:grid-cols-2" : "lg:grid-cols-1 lg:max-w-3xl lg:mx-auto"}`}>
-                {/* About Card */}
-                {showAbout && config?.aboutText && (
-                  <div className="overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100">
+              {/* About section with optional image */}
+              {showAbout && config?.aboutText && (
+                <div className="mb-10">
+                  <div className={`overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100 ${config?.aboutImageUrl ? "" : "mx-auto max-w-3xl"}`}>
                     <div
                       className="h-1.5"
                       style={{
                         background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
                       }}
                     />
-                    <div className="p-6 sm:p-8 md:p-10">
-                      <div className="mb-6 flex items-center gap-3">
-                        <div
-                          className="flex h-11 w-11 items-center justify-center rounded-xl"
-                          style={{
-                            backgroundColor: `rgba(${primaryRgb}, 0.12)`,
-                          }}
-                        >
-                          <Heart
-                            className="h-5 w-5"
-                            style={{ color: primaryColor }}
+                    <div className={config?.aboutImageUrl ? "grid lg:grid-cols-2" : ""}>
+                      {/* Image side */}
+                      {config?.aboutImageUrl && (
+                        <div className="relative h-64 lg:h-full lg:min-h-[320px]">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={config.aboutImageUrl}
+                            alt="Despre noi"
+                            className="h-full w-full object-cover"
                           />
                         </div>
-                        <h3 className="text-xl font-bold text-gray-900">
-                          Povestea noastra
-                        </h3>
+                      )}
+                      {/* Text side */}
+                      <div className="p-6 sm:p-8 md:p-10">
+                        <div className="mb-6 flex items-center gap-3">
+                          <div
+                            className="flex h-11 w-11 items-center justify-center rounded-xl"
+                            style={{
+                              backgroundColor: `rgba(${primaryRgb}, 0.12)`,
+                            }}
+                          >
+                            <Heart
+                              className="h-5 w-5"
+                              style={{ color: primaryColor }}
+                            />
+                          </div>
+                          <h3 className="text-xl font-bold text-gray-900">
+                            Povestea noastra
+                          </h3>
+                        </div>
+                        <p className="text-base leading-relaxed text-gray-600 sm:text-lg">
+                          {config.aboutText}
+                        </p>
                       </div>
-                      <p className="text-base leading-relaxed text-gray-600 sm:text-lg">
-                        {config.aboutText}
-                      </p>
                     </div>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Mission Card */}
-                {showMission && config?.missionText && (
+              {/* Mission Card */}
+              {showMission && config?.missionText && (
+                <div className="mx-auto max-w-3xl">
                   <div
                     className="overflow-hidden rounded-2xl shadow-sm"
                     style={{
@@ -801,8 +817,8 @@ export default async function MiniSitePage({ params }: Props) {
                       </p>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </section>
         )}

@@ -79,6 +79,7 @@ interface MiniSiteState {
   heroTitle: string;
   heroDescription: string;
   aboutText: string;
+  aboutImageUrl: string;
   missionText: string;
   impactText: string;
 
@@ -145,6 +146,7 @@ const DEFAULT_STATE: MiniSiteState = {
   heroTitle: "",
   heroDescription: "",
   aboutText: "",
+  aboutImageUrl: "",
   missionText: "",
   impactText: "",
   primaryColor: "#6366f1",
@@ -253,6 +255,7 @@ export default function MiniSiteBuilderPage() {
           heroTitle: data.heroTitle || "",
           heroDescription: data.heroDescription || "",
           aboutText: data.aboutText || "",
+          aboutImageUrl: data.aboutImageUrl || "",
           missionText: data.missionText || "",
           impactText: data.impactText || "",
           primaryColor: data.primaryColor || "#6366f1",
@@ -1504,6 +1507,35 @@ export default function MiniSiteBuilderPage() {
                       placeholder="Prezentarea organizatiei..."
                       rows={5}
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="aboutImageUrl" className="flex items-center gap-2 font-medium">
+                      <Image className="h-4 w-4" />
+                      Imagine sectiune Despre noi (optional)
+                    </Label>
+                    <Input
+                      id="aboutImageUrl"
+                      placeholder="https://exemplu.ro/echipa.jpg"
+                      value={state.aboutImageUrl}
+                      onChange={(e) => updateField("aboutImageUrl", e.target.value)}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      O poza cu echipa, sediul sau activitatile organizatiei. Arata frumos si fara poza.
+                    </p>
+                    {state.aboutImageUrl && (
+                      <div className="mt-2 border rounded-md overflow-hidden">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={state.aboutImageUrl}
+                          alt="About preview"
+                          className="w-full h-40 object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = "none";
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
