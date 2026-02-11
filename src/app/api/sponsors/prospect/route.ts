@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { callAI, parseAiJson } from "@/lib/ai-providers";
+import { callAI, parseAiJson, getAvailableProviders } from "@/lib/ai-providers";
 import prisma from "@/lib/db";
 
 export async function POST(request: NextRequest) {
@@ -21,6 +21,15 @@ export async function POST(request: NextRequest) {
 
     if (!keywords && !industry) {
       return NextResponse.json({ error: "Introduceti cuvinte cheie sau industrie" }, { status: 400 });
+    }
+
+    // Check if any AI provider is available
+    const providers = await getAvailableProviders();
+    if (providers.length === 0) {
+      return NextResponse.json({
+        error: "Niciun provider AI configurat. Configurati chei API in Super Admin > Setari.",
+        noProvider: true,
+      }, { status: 503 });
     }
 
     // Get NGO info for context
@@ -60,11 +69,23 @@ Raspunde cu JSON:
       "industry": "IT / Constructii / Retail / Financiar / Productie / FMCG / etc",
       "city": "orasul sediului",
       "website": "website-ul real al companiei (daca il stii, altfel pune domeniu probabil)",
-      "linkedinUrl": "URL LinkedIn al companiei (daca il stii)",
+      "linkedinUrl": "https://linkedin.com/company/nume-companie",
       "description": "scurta descriere 1-2 propozitii despre companie",
       "whySponsor": "de ce ar fi sponsor bun pentru acest ONG - 1-2 propozitii",
       "estimatedSize": "mica / medie / mare / corporatie",
-      "contactTip": "sfat scurt cum sa ii abordezi (ex: prin HR, prin CSR department, prin directorul general)"
+      "contactTip": "sfat scurt cum sa ii abordezi",
+      "decisionMakers": [
+        {
+          "title": "Director General / CEO",
+          "department": "Management",
+          "linkedinSearch": "https://www.linkedin.com/search/results/people/?keywords=CEO%20NumeCompanie&origin=GLOBAL_SEARCH_HEADER"
+        },
+        {
+          "title": "Director CSR / Responsabilitate Sociala",
+          "department": "CSR / Marketing",
+          "linkedinSearch": "https://www.linkedin.com/search/results/people/?keywords=CSR%20NumeCompanie&origin=GLOBAL_SEARCH_HEADER"
+        }
+      ]
     }
   ]
 }
@@ -75,22 +96,26 @@ IMPORTANT:
 - Fiecare companie sa aiba o legatura logica cu cauza ONG-ului
 - Sugereaza strategia de abordare specifica fiecarei companii
 - Include URL-uri LinkedIn cat mai realiste (linkedin.com/company/nume-companie)
-- Pune website-uri reale sau cele mai probabile domenii`;
+- Pune website-uri reale sau cele mai probabile domenii
+- Pentru decisionMakers, include 2-3 roluri relevante de factori de decizie cu link-uri de cautare LinkedIn
+- Link-urile LinkedIn search sa fie reale si functionale`;
 
     const aiResult = await callAI(systemMsg, prompt, {
       temperature: 0.8,
-      maxTokens: 3000,
+      maxTokens: 4000,
     });
 
     if (!aiResult) {
-      return NextResponse.json({ error: "AI nu a putut genera rezultate" }, { status: 500 });
+      return NextResponse.json({
+        error: `AI nu a putut genera rezultate. Provideri incercati: ${providers.join(", ")}. Verificati cheile API.`,
+      }, { status: 500 });
     }
 
     let result;
     try {
       result = parseAiJson(aiResult.text);
     } catch {
-      return NextResponse.json({ error: "Raspunsul AI nu este valid" }, { status: 500 });
+      return NextResponse.json({ error: "Raspunsul AI nu este valid. Incercati din nou." }, { status: 500 });
     }
 
     // Filter out already existing companies

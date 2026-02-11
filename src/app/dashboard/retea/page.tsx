@@ -11,6 +11,7 @@ import {
   Users, Search, MessageCircle, UserPlus, Check, X,
   Loader2, Send, Building, Heart, Globe, ChevronRight, Briefcase,
   Sparkles, Linkedin, Copy, Mail, ExternalLink, Save, MapPin, Target,
+  UserSearch, ArrowRight, Phone, AlertTriangle, Settings, Zap,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { SponsorCRM } from "@/components/dashboard/sponsor-crm";
@@ -377,12 +378,15 @@ export default function ReteaPage() {
           count: 8,
         }),
       });
+      const data = await res.json();
       if (!res.ok) {
-        const data = await res.json().catch(() => null);
-        alert(data?.error || "Eroare la cautare");
+        if (data?.noProvider) {
+          alert("Niciun provider AI configurat. Mergeti la Super Admin > Setari pentru a adauga chei API (OpenAI, Claude sau Gemini).");
+        } else {
+          alert(data?.error || "Eroare la cautare");
+        }
         return;
       }
-      const data = await res.json();
       setProspectResults(data.companies || []);
     } catch (err) {
       console.error("Prospect search error:", err);
@@ -516,11 +520,23 @@ export default function ReteaPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Prospecte AI</CardTitle>
+            <Target className="h-4 w-4 text-indigo-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{prospectResults.length}</div>
+            <p className="text-xs text-muted-foreground">
+              Companii gasite cu AI
+            </p>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Conexiuni</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <Users className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{accepted.length}</div>
@@ -531,10 +547,10 @@ export default function ReteaPage() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Conversatii</CardTitle>
-            <MessageCircle className="h-4 w-4 text-muted-foreground" />
+            <MessageCircle className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{conversations.length}</div>
@@ -545,10 +561,10 @@ export default function ReteaPage() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Organizatii</CardTitle>
-            <Building className="h-4 w-4 text-muted-foreground" />
+            <Building className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{discoverResults.length}</div>
@@ -604,17 +620,20 @@ export default function ReteaPage() {
         {/* ═══════════════════════════════════════ */}
         <TabsContent value="prospectare" className="space-y-6">
           {/* Search Form */}
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+          <Card className="border-0 shadow-md overflow-hidden">
+            <div className="h-1.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white shadow-lg">
                   <Target className="h-5 w-5" />
                 </div>
-                Prospectare companii cu AI
+                <div>
+                  <span>Prospectare Companii & Factori de Decizie</span>
+                  <p className="text-sm font-normal text-muted-foreground mt-0.5">
+                    Gaseste companii potentiale sponsor, identifica persoane de contact si genereaza mesaje personalizate
+                  </p>
+                </div>
               </CardTitle>
-              <CardDescription>
-                Cauta companii potentiale sponsor pe baza de cuvinte cheie, industrie si oras. AI-ul analizeaza potrivirea cu organizatia ta.
-              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-3">
@@ -644,11 +663,11 @@ export default function ReteaPage() {
                   />
                 </div>
               </div>
-              <div className="flex gap-3 mt-4">
+              <div className="flex flex-wrap gap-3 mt-4">
                 <Button
                   onClick={handleProspectSearch}
                   disabled={prospectLoading || (!prospectKeywords.trim() && !prospectIndustry.trim())}
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md"
                 >
                   {prospectLoading ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -657,8 +676,21 @@ export default function ReteaPage() {
                   )}
                   Cauta cu AI
                 </Button>
+                {(prospectKeywords.trim() || prospectIndustry.trim()) && (
+                  <a
+                    href={`https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent([prospectKeywords, prospectIndustry, prospectCity].filter(Boolean).join(" "))}&origin=GLOBAL_SEARCH_HEADER`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" type="button">
+                      <Linkedin className="h-4 w-4 mr-2 text-[#0A66C2]" />
+                      Cauta pe LinkedIn
+                    </Button>
+                  </a>
+                )}
                 {prospectResults.length > 0 && (
-                  <p className="text-sm text-muted-foreground self-center">
+                  <p className="text-sm text-muted-foreground self-center ml-auto">
+                    <Zap className="h-3.5 w-3.5 inline mr-1" />
                     {prospectResults.length} companii gasite
                   </p>
                 )}
@@ -666,116 +698,280 @@ export default function ReteaPage() {
             </CardContent>
           </Card>
 
-          {/* Results */}
+          {/* Quick LinkedIn search suggestions */}
+          {!prospectLoading && prospectResults.length === 0 && (
+            <>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Card className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                  onClick={() => window.open("https://www.linkedin.com/search/results/companies/?keywords=Romania&origin=GLOBAL_SEARCH_HEADER", "_blank")}>
+                  <CardContent className="p-5 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-[#0A66C2]/10 text-[#0A66C2] group-hover:bg-[#0A66C2] group-hover:text-white transition-colors">
+                      <Building className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">Cauta companii</p>
+                      <p className="text-xs text-muted-foreground">Deschide LinkedIn Companies</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </CardContent>
+                </Card>
+                <Card className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                  onClick={() => window.open("https://www.linkedin.com/search/results/people/?keywords=CSR%20Romania&origin=GLOBAL_SEARCH_HEADER", "_blank")}>
+                  <CardContent className="p-5 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-purple-100 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+                      <UserSearch className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">Factori de decizie</p>
+                      <p className="text-xs text-muted-foreground">Cauta persoane CSR / HR</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </CardContent>
+                </Card>
+                <Card className="border-0 shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                  onClick={() => window.open("https://www.linkedin.com/search/results/people/?keywords=Director%20General%20Romania&origin=GLOBAL_SEARCH_HEADER", "_blank")}>
+                  <CardContent className="p-5 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-amber-100 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                      <Briefcase className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">CEO / Directori</p>
+                      <p className="text-xs text-muted-foreground">Cauta directori executivi</p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* How it works */}
+              <Card className="border-0 shadow-sm bg-gradient-to-br from-slate-50 to-blue-50/30">
+                <CardContent className="py-8">
+                  <h3 className="text-center text-lg font-bold mb-6">Cum functioneaza prospectarea</h3>
+                  <div className="grid gap-6 sm:grid-cols-4">
+                    <div className="text-center space-y-2">
+                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mx-auto text-blue-600 font-bold text-lg">1</div>
+                      <h4 className="text-sm font-semibold">Cauta</h4>
+                      <p className="text-xs text-muted-foreground">Introdu cuvinte cheie, industrie sau oras. AI-ul gaseste companii potrivite din Romania.</p>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mx-auto text-indigo-600 font-bold text-lg">2</div>
+                      <h4 className="text-sm font-semibold">Identifica</h4>
+                      <p className="text-xs text-muted-foreground">Fiecare companie vine cu factori de decizie si link-uri LinkedIn pentru contact direct.</p>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mx-auto text-purple-600 font-bold text-lg">3</div>
+                      <h4 className="text-sm font-semibold">Contacteaza</h4>
+                      <p className="text-xs text-muted-foreground">Genereaza mesaje personalizate pentru LinkedIn sau email, copiaza si trimite direct.</p>
+                    </div>
+                    <div className="text-center space-y-2">
+                      <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-600 font-bold text-lg">4</div>
+                      <h4 className="text-sm font-semibold">Salveaza</h4>
+                      <p className="text-xs text-muted-foreground">Salveaza companiile in CRM si urmareste pipeline-ul de sponsorizare.</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
+
+          {/* Loading state */}
           {prospectLoading && (
             <div className="flex flex-col items-center justify-center py-16">
               <div className="relative">
-                <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
+                <Loader2 className="h-12 w-12 animate-spin text-blue-500" />
                 <Sparkles className="h-5 w-5 text-purple-500 absolute -top-1 -right-1 animate-pulse" />
               </div>
-              <p className="text-sm text-muted-foreground mt-4">AI cauta companii potrivite...</p>
+              <p className="text-base font-medium mt-4">AI analizeaza companii potrivite...</p>
+              <p className="text-sm text-muted-foreground mt-1">Cautam companii, factori de decizie si potrivirea cu organizatia ta</p>
             </div>
           )}
 
+          {/* Results */}
           {!prospectLoading && prospectResults.length > 0 && (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-4">
               {prospectResults.map((company, idx) => (
-                <Card key={`${company.name}-${idx}`} className="group hover:shadow-md transition-all duration-300 border-0 shadow-sm overflow-hidden">
-                  <div className="h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
+                <Card key={`${company.name}-${idx}`} className="group hover:shadow-lg transition-all duration-300 border-0 shadow-sm overflow-hidden">
+                  <div className="h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500" />
                   <CardContent className="p-5">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 flex-shrink-0">
-                        <Building className="h-5 w-5" />
-                      </div>
+                    <div className="flex flex-col lg:flex-row gap-5">
+                      {/* Left: Company info */}
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-base truncate">{company.name}</h3>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {company.industry && (
-                            <Badge variant="secondary" className="text-xs">{company.industry}</Badge>
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 flex-shrink-0">
+                            <Building className="h-6 w-6" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-base">{company.name}</h3>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                              {company.industry && (
+                                <Badge className="text-xs bg-blue-100 text-blue-700 hover:bg-blue-200">{company.industry}</Badge>
+                              )}
+                              {company.city && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <MapPin className="h-3 w-3" /> {company.city}
+                                </span>
+                              )}
+                              {company.estimatedSize && (
+                                <Badge variant="outline" className="text-xs capitalize">
+                                  {company.estimatedSize}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {company.description && (
+                          <p className="text-sm text-muted-foreground mb-3">{company.description}</p>
+                        )}
+
+                        {company.whySponsor && (
+                          <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-3">
+                            <p className="text-xs text-emerald-700">
+                              <Target className="h-3 w-3 inline mr-1" />
+                              <strong>De ce e potrivita:</strong> {company.whySponsor}
+                            </p>
+                          </div>
+                        )}
+
+                        {company.contactTip && (
+                          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3">
+                            <p className="text-xs text-amber-700">
+                              <Zap className="h-3 w-3 inline mr-1" />
+                              <strong>Strategie de abordare:</strong> {company.contactTip}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Links row */}
+                        <div className="flex flex-wrap gap-2">
+                          {company.website && (
+                            <a
+                              href={company.website.startsWith("http") ? company.website : `https://${company.website}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-xs bg-gray-100 hover:bg-gray-200 rounded-full px-3 py-1.5 text-gray-700 transition-colors"
+                            >
+                              <Globe className="h-3 w-3" /> Website
+                            </a>
                           )}
-                          {company.city && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <MapPin className="h-3 w-3" /> {company.city}
-                            </span>
+                          {company.linkedinUrl && (
+                            <a
+                              href={company.linkedinUrl.startsWith("http") ? company.linkedinUrl : `https://${company.linkedinUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-xs bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 rounded-full px-3 py-1.5 text-[#0A66C2] transition-colors"
+                            >
+                              <Linkedin className="h-3 w-3" /> Pagina LinkedIn
+                            </a>
                           )}
-                          {company.estimatedSize && (
-                            <span className="text-xs text-muted-foreground capitalize">
-                              {company.estimatedSize}
-                            </span>
+                          <a
+                            href={`https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(company.name)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 text-xs bg-indigo-100 hover:bg-indigo-200 rounded-full px-3 py-1.5 text-indigo-700 transition-colors"
+                          >
+                            <Search className="h-3 w-3" /> Cauta compania pe LinkedIn
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Right: Decision makers */}
+                      <div className="lg:w-72 flex-shrink-0">
+                        <div className="bg-slate-50 rounded-xl p-4 border">
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-3 flex items-center gap-1.5">
+                            <UserSearch className="h-3.5 w-3.5" />
+                            Factori de decizie
+                          </h4>
+                          {company.decisionMakers && company.decisionMakers.length > 0 ? (
+                            <div className="space-y-2">
+                              {company.decisionMakers.map((dm: any, dmIdx: number) => (
+                                <a
+                                  key={dmIdx}
+                                  href={dm.linkedinSearch || `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(dm.title + " " + company.name)}&origin=GLOBAL_SEARCH_HEADER`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all group/dm"
+                                >
+                                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0A66C2]/10 text-[#0A66C2] flex-shrink-0 group-hover/dm:bg-[#0A66C2] group-hover/dm:text-white transition-colors">
+                                    <Linkedin className="h-3.5 w-3.5" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-medium truncate">{dm.title}</p>
+                                    {dm.department && (
+                                      <p className="text-[10px] text-muted-foreground">{dm.department}</p>
+                                    )}
+                                  </div>
+                                  <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover/dm:opacity-100 transition-opacity flex-shrink-0" />
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="space-y-2">
+                              <a
+                                href={`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent("CEO " + company.name)}&origin=GLOBAL_SEARCH_HEADER`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all group/dm"
+                              >
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0A66C2]/10 text-[#0A66C2] flex-shrink-0">
+                                  <Linkedin className="h-3.5 w-3.5" />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-medium">CEO / Director General</p>
+                                  <p className="text-[10px] text-muted-foreground">Management</p>
+                                </div>
+                              </a>
+                              <a
+                                href={`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent("CSR " + company.name)}&origin=GLOBAL_SEARCH_HEADER`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all group/dm"
+                              >
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0A66C2]/10 text-[#0A66C2] flex-shrink-0">
+                                  <Linkedin className="h-3.5 w-3.5" />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-medium">CSR / Marketing Director</p>
+                                  <p className="text-[10px] text-muted-foreground">CSR / Marketing</p>
+                                </div>
+                              </a>
+                              <a
+                                href={`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent("HR " + company.name)}&origin=GLOBAL_SEARCH_HEADER`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-white hover:shadow-sm transition-all group/dm"
+                              >
+                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0A66C2]/10 text-[#0A66C2] flex-shrink-0">
+                                  <Linkedin className="h-3.5 w-3.5" />
+                                </div>
+                                <div>
+                                  <p className="text-xs font-medium">HR Manager</p>
+                                  <p className="text-[10px] text-muted-foreground">Resurse Umane</p>
+                                </div>
+                              </a>
+                            </div>
                           )}
                         </div>
                       </div>
                     </div>
 
-                    {company.description && (
-                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
-                        {company.description}
-                      </p>
-                    )}
-
-                    {company.whySponsor && (
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 mb-3">
-                        <p className="text-xs text-emerald-700">
-                          <strong>De ce e potrivita:</strong> {company.whySponsor}
-                        </p>
-                      </div>
-                    )}
-
-                    {company.contactTip && (
-                      <p className="text-xs text-muted-foreground mb-3">
-                        <strong>Abordare:</strong> {company.contactTip}
-                      </p>
-                    )}
-
-                    {/* Links */}
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {company.website && (
-                        <a
-                          href={company.website.startsWith("http") ? company.website : `https://${company.website}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                        >
-                          <Globe className="h-3 w-3" /> Website
-                        </a>
-                      )}
-                      {company.linkedinUrl && (
-                        <a
-                          href={company.linkedinUrl.startsWith("http") ? company.linkedinUrl : `https://${company.linkedinUrl}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-blue-700 hover:underline"
-                        >
-                          <Linkedin className="h-3 w-3" /> LinkedIn
-                        </a>
-                      )}
-                      <a
-                        href={`https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(company.name)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline"
-                      >
-                        <Search className="h-3 w-3" /> Cauta pe LinkedIn
-                      </a>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-wrap gap-2 pt-3 border-t">
+                    {/* Actions bar */}
+                    <div className="flex flex-wrap gap-2 pt-4 mt-4 border-t">
                       {prospectSaved.has(company.name) ? (
-                        <Button size="sm" variant="outline" disabled className="text-emerald-600">
-                          <Check className="h-3.5 w-3.5 mr-1" /> Salvat in CRM
+                        <Button size="sm" variant="outline" disabled className="text-emerald-600 border-emerald-300">
+                          <Check className="h-3.5 w-3.5 mr-1.5" /> Salvat in CRM
                         </Button>
                       ) : (
                         <Button
                           size="sm"
-                          variant="outline"
                           onClick={() => handleProspectSave(company)}
                           disabled={prospectSaving === company.name}
+                          className="bg-emerald-600 hover:bg-emerald-700"
                         >
                           {prospectSaving === company.name ? (
-                            <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                           ) : (
-                            <Save className="h-3.5 w-3.5 mr-1" />
+                            <Save className="h-3.5 w-3.5 mr-1.5" />
                           )}
                           Salveaza in CRM
                         </Button>
@@ -783,29 +979,43 @@ export default function ReteaPage() {
                       <Button
                         size="sm"
                         variant="outline"
+                        className="border-[#0A66C2]/30 text-[#0A66C2] hover:bg-[#0A66C2]/10"
                         onClick={() => handleProspectMessage(company, "linkedin")}
                         disabled={prospectMsg?.loading && prospectMsg.company === company.name}
                       >
                         {prospectMsg?.loading && prospectMsg.company === company.name && prospectMsg.channel === "linkedin" ? (
-                          <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                          <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                         ) : (
-                          <Linkedin className="h-3.5 w-3.5 mr-1" />
+                          <Linkedin className="h-3.5 w-3.5 mr-1.5" />
                         )}
-                        Mesaj LinkedIn
+                        Genereaza mesaj LinkedIn
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
+                        className="border-indigo-300 text-indigo-600 hover:bg-indigo-50"
                         onClick={() => handleProspectMessage(company, "email")}
                         disabled={prospectMsg?.loading && prospectMsg.company === company.name}
                       >
                         {prospectMsg?.loading && prospectMsg.company === company.name && prospectMsg.channel === "email" ? (
-                          <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                          <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                         ) : (
-                          <Mail className="h-3.5 w-3.5 mr-1" />
+                          <Mail className="h-3.5 w-3.5 mr-1.5" />
                         )}
-                        Mesaj Email
+                        Genereaza email
                       </Button>
+                      <a
+                        href={`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(company.name)}&origin=GLOBAL_SEARCH_HEADER`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-auto"
+                      >
+                        <Button size="sm" variant="ghost" className="text-[#0A66C2]">
+                          <UserSearch className="h-3.5 w-3.5 mr-1.5" />
+                          Toti angajatii pe LinkedIn
+                          <ExternalLink className="h-3 w-3 ml-1" />
+                        </Button>
+                      </a>
                     </div>
                   </CardContent>
                 </Card>
@@ -815,14 +1025,18 @@ export default function ReteaPage() {
 
           {/* Generated Message Modal */}
           {prospectMsg && !prospectMsg.loading && prospectMsg.message && (
-            <Card className="border-indigo-200 bg-indigo-50/30 shadow-sm">
+            <Card className="border-[#0A66C2]/20 bg-[#0A66C2]/5 shadow-md sticky bottom-4">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-base flex items-center gap-2">
                     {prospectMsg.channel === "linkedin" ? (
-                      <Linkedin className="h-5 w-5 text-blue-700" />
+                      <div className="p-1.5 rounded-lg bg-[#0A66C2] text-white">
+                        <Linkedin className="h-4 w-4" />
+                      </div>
                     ) : (
-                      <Mail className="h-5 w-5 text-indigo-600" />
+                      <div className="p-1.5 rounded-lg bg-indigo-600 text-white">
+                        <Mail className="h-4 w-4" />
+                      </div>
                     )}
                     Mesaj generat pentru {prospectMsg.company}
                   </CardTitle>
@@ -852,19 +1066,31 @@ export default function ReteaPage() {
                   <div className="bg-white rounded-lg p-4 border mt-1">
                     <p className="text-sm whitespace-pre-wrap">{prospectMsg.message}</p>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="mt-2"
-                    onClick={() => {
-                      const fullText = prospectMsg.subject
-                        ? `Subiect: ${prospectMsg.subject}\n\n${prospectMsg.message}`
-                        : prospectMsg.message || "";
-                      navigator.clipboard.writeText(fullText);
-                    }}
-                  >
-                    <Copy className="h-3.5 w-3.5 mr-1" /> Copiaza tot
-                  </Button>
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const fullText = prospectMsg.subject
+                          ? `Subiect: ${prospectMsg.subject}\n\n${prospectMsg.message}`
+                          : prospectMsg.message || "";
+                        navigator.clipboard.writeText(fullText);
+                      }}
+                    >
+                      <Copy className="h-3.5 w-3.5 mr-1.5" /> Copiaza mesajul
+                    </Button>
+                    {prospectMsg.channel === "linkedin" && (
+                      <a
+                        href={`https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(prospectMsg.company)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <Button size="sm" variant="outline" className="text-[#0A66C2] border-[#0A66C2]/30">
+                          <Linkedin className="h-3.5 w-3.5 mr-1.5" /> Deschide LinkedIn
+                        </Button>
+                      </a>
+                    )}
+                  </div>
                 </div>
                 {prospectMsg.tips && prospectMsg.tips.length > 0 && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
@@ -878,24 +1104,6 @@ export default function ReteaPage() {
                     </ul>
                   </div>
                 )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Empty state */}
-          {!prospectLoading && prospectResults.length === 0 && (
-            <Card className="border-0 shadow-sm">
-              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 mb-4">
-                  <Target className="h-10 w-10 text-indigo-600" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2">Gaseste companii sponsor potentiale</h3>
-                <p className="text-muted-foreground max-w-md mb-1">
-                  Introdu cuvinte cheie legate de industria companiilor pe care le cauti (ex: &quot;IT Bucuresti&quot;, &quot;constructii&quot;, &quot;banci&quot;).
-                </p>
-                <p className="text-muted-foreground max-w-md text-sm">
-                  AI-ul va cauta companii reale din Romania potrivite pentru organizatia ta si va genera mesaje personalizate de abordare.
-                </p>
               </CardContent>
             </Card>
           )}
