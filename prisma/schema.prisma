@@ -128,6 +128,13 @@ model Ngo {
   senderName        String?
   smsSenderId       String?
 
+  // Credits system
+  emailCredits      Int       @default(100)
+  smsCredits        Int       @default(50)
+  creditTransactions CreditTransaction[]
+  emailTemplates    EmailTemplate[]
+  smsTemplates      SmsTemplate[]
+
   @@index([slug])
 }
 
@@ -1123,4 +1130,69 @@ model SponsorAiMatch {
   @@index([companyId])
   @@index([ngoId])
   @@index([score])
+}
+
+// ─── Email & SMS Templates ──────────────────────────────────────
+
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  ngoId       String?
+  ngo         Ngo?     @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  name        String
+  category    String   // thank_you, newsletter, emergency, reactivation, event, impact_report
+  subject     String
+  htmlBody    String   @db.Text
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ngoId])
+  @@index([category])
+}
+
+model SmsTemplate {
+  id          String   @id @default(cuid())
+  ngoId       String?
+  ngo         Ngo?     @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  name        String
+  category    String   // thank_you, reminder, emergency, update
+  body        String
+  isSystem    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([ngoId])
+  @@index([category])
+}
+
+// ─── Credit System ──────────────────────────────────────────────
+
+model CreditTransaction {
+  id          String   @id @default(cuid())
+  ngoId       String
+  ngo         Ngo      @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  type        CreditTransactionType
+  channel     CreditChannel
+  amount      Int      // positive = credit added, negative = credit used
+  balance     Int      // balance after transaction
+  description String?
+  campaignId  String?
+  createdAt   DateTime @default(now())
+
+  @@index([ngoId])
+  @@index([type])
+  @@index([createdAt])
+}
+
+enum CreditTransactionType {
+  PURCHASE
+  USAGE
+  BONUS
+  REFUND
+  ADMIN_ADJUSTMENT
+}
+
+enum CreditChannel {
+  EMAIL
+  SMS
 }
