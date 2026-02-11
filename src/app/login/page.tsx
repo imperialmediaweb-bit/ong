@@ -95,23 +95,38 @@ export default function LoginPage() {
           </form>
 
           {/* Demo credentials */}
-          <div className="mt-4 pt-4 border-t">
-            <p className="text-xs text-muted-foreground text-center mb-2">Cont demo pentru testare:</p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="w-full text-xs"
-              onClick={() => {
-                setEmail("admin@demo-ngo.org");
-                setPassword("password123");
-              }}
-            >
-              Completeaza cu date demo
-            </Button>
-            <p className="text-[10px] text-muted-foreground text-center mt-1.5">
-              admin@demo-ngo.org / password123
-            </p>
+          <div className="mt-4 pt-4 border-t space-y-3">
+            <p className="text-xs text-muted-foreground text-center">Conturi pentru testare:</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => {
+                  setEmail("admin@demo-ngo.org");
+                  setPassword("password123");
+                }}
+              >
+                ONG Admin
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="text-xs border-purple-200 text-purple-700 hover:bg-purple-50"
+                onClick={() => {
+                  setEmail("superadmin@ngohub.ro");
+                  setPassword("password123");
+                }}
+              >
+                Super Admin
+              </Button>
+            </div>
+            <div className="text-[10px] text-muted-foreground text-center space-y-0.5">
+              <p>ONG: admin@demo-ngo.org / password123</p>
+              <p>Super Admin: superadmin@ngohub.ro / password123</p>
+            </div>
           </div>
         </CardContent>
       </Card>
