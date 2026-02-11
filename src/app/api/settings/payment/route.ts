@@ -26,6 +26,7 @@ export async function GET() {
         stripePayoutsEnabled: true,
         stripeRequirementsJson: true,
         stripeLastSyncAt: true,
+        paypalEmail: true,
         paypalClientId: true,
         paypalClientSecret: true,
         paypalMerchantId: true,
@@ -73,7 +74,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { bankName, ibanRon, ibanEur, revolutTag, revolutPhone, revolutLink, paypalClientId, paypalClientSecret, paypalMerchantId, paypalEnabled } = body;
+    const { bankName, ibanRon, ibanEur, revolutTag, revolutPhone, revolutLink, paypalEmail, paypalClientId, paypalClientSecret, paypalMerchantId, paypalEnabled } = body;
 
     // Basic IBAN validation (Romanian IBANs start with RO and are 24 chars)
     if (ibanRon && typeof ibanRon === "string") {
@@ -107,6 +108,7 @@ export async function PUT(req: NextRequest) {
     };
 
     // PayPal fields
+    if (paypalEmail !== undefined) updateData.paypalEmail = paypalEmail || null;
     if (paypalClientId !== undefined) updateData.paypalClientId = paypalClientId || null;
     if (paypalClientSecret !== undefined) updateData.paypalClientSecret = paypalClientSecret || null;
     if (paypalMerchantId !== undefined) updateData.paypalMerchantId = paypalMerchantId || null;

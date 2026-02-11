@@ -186,6 +186,7 @@ export default function SettingsPage() {
     stripeChargesEnabled: false,
     stripePayoutsEnabled: false,
     stripeLastSyncAt: null as string | null,
+    paypalEmail: "",
     paypalClientId: "",
     paypalClientSecret: "",
     paypalMerchantId: "",
@@ -335,6 +336,7 @@ export default function SettingsPage() {
           stripeChargesEnabled: data.stripeChargesEnabled || false,
           stripePayoutsEnabled: data.stripePayoutsEnabled || false,
           stripeLastSyncAt: data.stripeLastSyncAt || null,
+          paypalEmail: data.paypalEmail || "",
           paypalClientId: data.paypalClientId || "",
           paypalClientSecret: data.paypalClientSecret || "",
           paypalMerchantId: data.paypalMerchantId || "",
@@ -572,6 +574,7 @@ export default function SettingsPage() {
         revolutTag: payment.revolutTag,
         revolutPhone: payment.revolutPhone,
         revolutLink: payment.revolutLink,
+        paypalEmail: payment.paypalEmail,
         paypalMerchantId: payment.paypalMerchantId,
         paypalEnabled: payment.paypalEnabled,
       };
@@ -1199,7 +1202,7 @@ export default function SettingsPage() {
                   PayPal
                 </CardTitle>
                 <CardDescription>
-                  Configureaza PayPal pentru a primi donatii online prin contul PayPal al organizatiei.
+                  Adauga adresa de email PayPal pentru a primi donatii. Donatorii vor fi redirectionati catre PayPal pentru a finaliza plata.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1214,18 +1217,18 @@ export default function SettingsPage() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold">Status PayPal</h3>
-                          {payment.paypalEnabled && payment.paypalClientId ? (
+                          {payment.paypalEnabled && (payment.paypalEmail || payment.paypalClientId) ? (
                             <Badge className="bg-green-600 text-white">Activ</Badge>
-                          ) : payment.paypalClientId ? (
+                          ) : (payment.paypalEmail || payment.paypalClientId) ? (
                             <Badge variant="secondary">Configurat (dezactivat)</Badge>
                           ) : (
                             <Badge variant="outline">Neconfigurat</Badge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {payment.paypalClientId
-                            ? "Credentialele PayPal sunt configurate."
-                            : "Adauga credentialele PayPal API (Client ID si Secret) din PayPal Developer Dashboard."}
+                          {payment.paypalEmail
+                            ? `Email PayPal: ${payment.paypalEmail}`
+                            : "Adauga adresa de email PayPal a organizatiei pentru a primi donatii."}
                         </p>
                       </div>
                     </div>
@@ -1250,74 +1253,21 @@ export default function SettingsPage() {
                       </Label>
                     </div>
 
-                    {/* PayPal Credentials */}
-                    {!editingPaypal ? (
-                      <div className="space-y-3">
-                        <div className="grid gap-2">
-                          <Label>PayPal Client ID</Label>
-                          <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
-                            <Key className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-mono">
-                              {payment.paypalClientId ? maskKey(payment.paypalClientId) : "Neconfigurat"}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="grid gap-2">
-                          <Label>PayPal Client Secret</Label>
-                          <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
-                            <Key className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-mono">
-                              {payment.paypalClientSecret ? maskKey(payment.paypalClientSecret) : "Neconfigurat"}
-                            </span>
-                          </div>
-                        </div>
-                        <Button variant="outline" onClick={() => setEditingPaypal(true)}>
-                          {payment.paypalClientId ? "Actualizeaza credentialele" : "Adauga credentiale PayPal"}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3 p-4 border rounded-lg bg-muted/20">
-                        <div className="grid gap-2">
-                          <Label>PayPal Client ID</Label>
-                          <Input
-                            type="text"
-                            placeholder="Axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                            value={newPaypalClientId}
-                            onChange={(e) => setNewPaypalClientId(e.target.value)}
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label>PayPal Client Secret</Label>
-                          <Input
-                            type="password"
-                            placeholder="ELxxxxxxxxxxxxxxxxxxxxxxxx..."
-                            value={newPaypalClientSecret}
-                            onChange={(e) => setNewPaypalClientSecret(e.target.value)}
-                          />
-                        </div>
-                        <Button
-                          variant="ghost"
-                          onClick={() => {
-                            setEditingPaypal(false);
-                            setNewPaypalClientId("");
-                            setNewPaypalClientSecret("");
-                          }}
-                        >
-                          Anuleaza
-                        </Button>
-                      </div>
-                    )}
-
+                    {/* PayPal Email - Simple setup */}
                     <div className="grid gap-2">
-                      <Label htmlFor="paypalMerchantId">PayPal Merchant ID (optional)</Label>
-                      <Input
-                        id="paypalMerchantId"
-                        placeholder="Ex: ABCDE12345"
-                        value={payment.paypalMerchantId}
-                        onChange={(e) => setPayment({ ...payment, paypalMerchantId: e.target.value })}
-                      />
+                      <Label htmlFor="paypalEmail">Adresa email PayPal</Label>
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <Input
+                          id="paypalEmail"
+                          type="email"
+                          placeholder="paypal@organizatia-ta.ro"
+                          value={payment.paypalEmail}
+                          onChange={(e) => setPayment({ ...payment, paypalEmail: e.target.value })}
+                        />
+                      </div>
                       <p className="text-xs text-muted-foreground">
-                        Gasesti Merchant ID in PayPal Business settings.
+                        Adresa de email asociata contului PayPal al organizatiei. Donatorii vor fi redirectionati catre PayPal pentru a trimite bani la aceasta adresa.
                       </p>
                     </div>
                   </>

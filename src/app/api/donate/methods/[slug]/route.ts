@@ -17,6 +17,7 @@ export async function GET(
         stripeConnectStatus: true,
         stripeChargesEnabled: true,
         paypalEnabled: true,
+        paypalEmail: true,
         paypalClientId: true,
         bankName: true,
         ibanRon: true,
@@ -43,13 +44,14 @@ export async function GET(
       });
     }
 
-    // PayPal
-    if (ngo.paypalEnabled && ngo.paypalClientId) {
+    // PayPal - works with just email or full API credentials
+    if (ngo.paypalEnabled && (ngo.paypalEmail || ngo.paypalClientId)) {
       methods.push({
         id: "paypal",
         label: "PayPal",
         description: "Plateste rapid si securizat prin PayPal",
         available: true,
+        mode: ngo.paypalClientId ? "api" : "email",
       });
     }
 

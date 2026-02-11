@@ -104,6 +104,7 @@ model Ngo {
   stripeLastSyncAt        DateTime?
 
   // PayPal donation settings
+  paypalEmail         String?   // Simple PayPal - just email address to receive donations
   paypalClientId      String?
   paypalClientSecret  String?
   paypalMerchantId    String?
