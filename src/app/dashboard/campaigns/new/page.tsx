@@ -46,6 +46,8 @@ import {
   Settings,
   ChevronDown,
   ChevronUp,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react";
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -81,6 +83,14 @@ interface CampaignForm {
   scheduleType: "now" | "later";
   scheduledAt: string;
   goalAmount: string;
+  consentConfirmed: boolean;
+}
+
+interface ComplianceStatus {
+  isCompliant: boolean;
+  tosAcceptedAt: string | null;
+  gdprAcceptedAt: string | null;
+  antiSpamAcceptedAt: string | null;
 }
 
 // ─── Constants ──────────────────────────────────────────────────
@@ -146,6 +156,9 @@ export default function NewCampaignPage() {
   const [audienceCount, setAudienceCount] = useState<number | null>(null);
   const [audienceLoading, setAudienceLoading] = useState(false);
 
+  // Compliance
+  const [compliance, setCompliance] = useState<ComplianceStatus | null>(null);
+
   const [form, setForm] = useState<CampaignForm>({
     name: "",
     type: "",
@@ -160,12 +173,14 @@ export default function NewCampaignPage() {
     scheduleType: "now",
     scheduledAt: "",
     goalAmount: "",
+    consentConfirmed: false,
   });
 
-  // Load templates and credits
+  // Load templates, credits and compliance
   useEffect(() => {
     loadTemplates();
     loadCredits();
+    loadCompliance();
   }, []);
 
   const loadTemplates = async () => {
@@ -191,6 +206,18 @@ export default function NewCampaignPage() {
       }
     } catch {
       // Credits will stay at 0
+    }
+  };
+
+  const loadCompliance = async () => {
+    try {
+      const res = await fetch("/api/campaigns/compliance");
+      if (res.ok) {
+        const data = await res.json();
+        setCompliance(data);
+      }
+    } catch {
+      // Compliance unknown
     }
   };
 
@@ -231,7 +258,7 @@ export default function NewCampaignPage() {
       case "schedule":
         return form.scheduleType === "now" || form.scheduledAt !== "";
       case "review":
-        return true;
+        return form.consentConfirmed;
       default:
         return false;
     }
@@ -341,6 +368,7 @@ export default function NewCampaignPage() {
         scheduledAt: form.scheduleType === "later" ? form.scheduledAt : undefined,
         sendNow: form.scheduleType === "now",
         goalAmount: form.goalAmount ? parseFloat(form.goalAmount) : undefined,
+        consentConfirmed: form.consentConfirmed,
       };
 
       const res = await fetch("/api/campaigns", {
@@ -1156,6 +1184,32 @@ export default function NewCampaignPage() {
           {/* ═══ Step 6: Review ═══ */}
           {currentStep === "review" && (
             <div className="space-y-4">
+              {/* Compliance status */}
+              {compliance && !compliance.isCompliant && (
+                <Card className="border-red-300 bg-red-50">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <ShieldAlert className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h3 className="font-semibold text-red-900">Conformitate incompleta</h3>
+                        <p className="text-sm text-red-700 mt-1">
+                          Trebuie sa acceptati Termenii de Utilizare, GDPR si Politica Anti-Spam inainte de a trimite campanii.
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2 border-red-300 text-red-700 hover:bg-red-100"
+                          onClick={() => router.push("/dashboard/campaigns?tab=compliance")}
+                        >
+                          <ShieldCheck className="h-3.5 w-3.5 mr-1" />
+                          Mergi la Conformitate
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               <Card>
                 <CardHeader>
                   <CardTitle>Revizuire campanie</CardTitle>
@@ -1226,6 +1280,34 @@ export default function NewCampaignPage() {
                       </div>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Legal consent checkbox */}
+              <Card className="border-amber-200 bg-amber-50/50">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-3">
+                    <ShieldCheck className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-amber-900 mb-2">Confirmare consimtamant legal</h3>
+                      <label className="flex items-start gap-3 cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={form.consentConfirmed}
+                          onChange={(e) => updateForm({ consentConfirmed: e.target.checked })}
+                          className="mt-1 h-4 w-4 rounded border-amber-400 text-amber-600 focus:ring-amber-500"
+                        />
+                        <span className="text-sm text-amber-800 leading-relaxed">
+                          Confirm ca am obtinut consimtamantul explicit al tuturor destinatarilor pentru a primi comunicari prin canalul selectat ({form.channel === "BOTH" ? "Email si SMS" : form.channel}).
+                          Inteleg ca organizatia mea este singurul responsabil pentru respectarea legislatiei GDPR si anti-spam.
+                          Platforma NGO HUB actioneaza doar ca furnizor de servicii tehnice si nu este responsabila pentru continutul sau destinatarii mesajelor.
+                        </span>
+                      </label>
+                      <p className="text-xs text-amber-600 mt-2">
+                        Aceasta confirmare este inregistrata ca dovada legala (IP, data, utilizator).
+                      </p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </div>

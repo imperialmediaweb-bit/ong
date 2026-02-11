@@ -35,6 +35,10 @@ import {
   Zap,
   ArrowRight,
   History,
+  ShieldCheck,
+  ShieldAlert,
+  AlertTriangle,
+  FileText,
 } from "lucide-react";
 
 interface Campaign {
@@ -146,6 +150,15 @@ export default function CampaignsPage() {
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [creditsLoaded, setCreditsLoaded] = useState(false);
 
+  // Compliance
+  const [complianceLoaded, setComplianceLoaded] = useState(false);
+  const [complianceData, setComplianceData] = useState<any>(null);
+  const [savingCompliance, setSavingCompliance] = useState(false);
+  const [complianceForm, setComplianceForm] = useState({
+    legalRepresentative: "",
+    cui: "",
+  });
+
   const fetchCampaigns = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -190,7 +203,10 @@ export default function CampaignsPage() {
     if (activeTab === "credits" && !creditsLoaded) {
       fetchCredits();
     }
-  }, [activeTab, creditsLoaded]);
+    if (activeTab === "compliance" && !complianceLoaded) {
+      fetchCompliance();
+    }
+  }, [activeTab, creditsLoaded, complianceLoaded]);
 
   const handlePurchase = async (packageId: string) => {
     setPurchasing(packageId);
@@ -212,6 +228,45 @@ export default function CampaignsPage() {
       setError(err.message);
     } finally {
       setPurchasing(null);
+    }
+  };
+
+  const fetchCompliance = async () => {
+    try {
+      const res = await fetch("/api/campaigns/compliance");
+      if (res.ok) {
+        const data = await res.json();
+        setComplianceData(data);
+        setComplianceForm({
+          legalRepresentative: data.legalRepresentative || "",
+          cui: data.cui || "",
+        });
+        setComplianceLoaded(true);
+      }
+    } catch { /* ignore */ }
+  };
+
+  const handleAcceptCompliance = async (fields: { acceptTos?: boolean; acceptGdpr?: boolean; acceptAntiSpam?: boolean }) => {
+    setSavingCompliance(true);
+    try {
+      const res = await fetch("/api/campaigns/compliance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...fields,
+          legalRepresentative: complianceForm.legalRepresentative || undefined,
+          cui: complianceForm.cui || undefined,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Eroare");
+      }
+      await fetchCompliance();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSavingCompliance(false);
     }
   };
 
@@ -251,6 +306,10 @@ export default function CampaignsPage() {
           <TabsTrigger value="credits" className="flex items-center gap-2">
             <CreditCard className="h-4 w-4" />
             Credite &amp; Pachete
+          </TabsTrigger>
+          <TabsTrigger value="compliance" className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4" />
+            Conformitate
           </TabsTrigger>
         </TabsList>
 
@@ -525,6 +584,217 @@ export default function CampaignsPage() {
                 </CardContent>
               </Card>
             </div>
+          )}
+        </TabsContent>
+
+        {/* ═══ Compliance Tab ═══ */}
+        <TabsContent value="compliance" className="space-y-6 mt-4">
+          {/* Status Banner */}
+          {complianceData && (
+            <Card className={complianceData.isCompliant ? "border-green-200 bg-green-50/50" : "border-red-200 bg-red-50/50"}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  {complianceData.isCompliant ? (
+                    <ShieldCheck className="h-6 w-6 text-green-600" />
+                  ) : (
+                    <ShieldAlert className="h-6 w-6 text-red-600" />
+                  )}
+                  <div>
+                    <h3 className={`font-semibold ${complianceData.isCompliant ? "text-green-900" : "text-red-900"}`}>
+                      {complianceData.isCompliant ? "Organizatia este conforma" : "Conformitate incompleta"}
+                    </h3>
+                    <p className={`text-sm ${complianceData.isCompliant ? "text-green-700" : "text-red-700"}`}>
+                      {complianceData.isCompliant
+                        ? "Toate acordurile sunt acceptate. Puteti trimite campanii."
+                        : "Acceptati toate acordurile de mai jos pentru a putea trimite campanii."}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* KYC Fields */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-indigo-600" />
+                Date organizatie (KYC)
+              </CardTitle>
+              <CardDescription>Informatii legale necesare pentru conformitate.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">Reprezentant legal</label>
+                  <Input
+                    placeholder="Nume si prenume"
+                    value={complianceForm.legalRepresentative}
+                    onChange={(e) => setComplianceForm(p => ({ ...p, legalRepresentative: e.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <label className="text-sm font-medium">CUI / CIF</label>
+                  <Input
+                    placeholder="ex. RO12345678"
+                    value={complianceForm.cui}
+                    onChange={(e) => setComplianceForm(p => ({ ...p, cui: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* TOS */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {complianceData?.tosAcceptedAt ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-amber-600" />
+                )}
+                Termeni si Conditii de Utilizare
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="p-4 bg-slate-50 rounded-lg text-sm text-slate-700 space-y-2 mb-4 max-h-[200px] overflow-y-auto">
+                <p><strong>1.</strong> Platforma NGO HUB ofera servicii tehnice de trimitere email si SMS. Expeditorul mesajelor este exclusiv organizatia (ONG-ul) care utilizeaza platforma.</p>
+                <p><strong>2.</strong> ONG-ul este singurul responsabil pentru continutul mesajelor, obtinerea consimtamantului destinatarilor si respectarea legislatiei GDPR, ePrivacy si anti-spam aplicabile.</p>
+                <p><strong>3.</strong> NGO HUB nu raspunde pentru mesajele trimise de ONG, inclusiv reclamatii, spam reports sau sanctiuni legale rezultate din utilizarea platformei.</p>
+                <p><strong>4.</strong> ONG-ul garanteaza ca detine consimtamantul explicit al tuturor destinatarilor inaintea trimiterii fiecarei campanii.</p>
+                <p><strong>5.</strong> NGO HUB isi rezerva dreptul de a suspenda accesul ONG-urilor care incalca acesti termeni sau care genereaza rate ridicate de reclamatii/bounce.</p>
+              </div>
+              {complianceData?.tosAcceptedAt ? (
+                <p className="text-sm text-green-700 flex items-center gap-1">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Acceptat la {new Date(complianceData.tosAcceptedAt).toLocaleDateString("ro-RO")}
+                </p>
+              ) : (
+                <Button
+                  onClick={() => handleAcceptCompliance({ acceptTos: true })}
+                  disabled={savingCompliance}
+                >
+                  {savingCompliance ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
+                  Accept Termenii si Conditiile
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* GDPR */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {complianceData?.gdprAcceptedAt ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-amber-600" />
+                )}
+                Acord de Prelucrare Date (GDPR / DPA)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="p-4 bg-slate-50 rounded-lg text-sm text-slate-700 space-y-2 mb-4 max-h-[200px] overflow-y-auto">
+                <p><strong>1.</strong> NGO HUB prelucreaza datele personale (email, telefon) ale donatorilor exclusiv in calitate de operator imputernicit, la instructiunea ONG-ului.</p>
+                <p><strong>2.</strong> ONG-ul ramane operatorul de date si este responsabil pentru informarea persoanelor vizate si obtinerea consimtamantului.</p>
+                <p><strong>3.</strong> Datele sunt criptate (AES-256-GCM) in repaus si in tranzit. Accesul este restrictionat prin roluri si permisiuni.</p>
+                <p><strong>4.</strong> NGO HUB nu cedeaza, vinde sau partajeaza datele cu terti, cu exceptia furnizorilor de servicii necesare (SendGrid pentru email, Twilio pentru SMS).</p>
+                <p><strong>5.</strong> ONG-ul poate solicita stergerea tuturor datelor in conformitate cu dreptul la uitare (Art. 17 GDPR). Anonimizarea este disponibila in platforma.</p>
+              </div>
+              {complianceData?.gdprAcceptedAt ? (
+                <p className="text-sm text-green-700 flex items-center gap-1">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Acceptat la {new Date(complianceData.gdprAcceptedAt).toLocaleDateString("ro-RO")}
+                </p>
+              ) : (
+                <Button
+                  onClick={() => handleAcceptCompliance({ acceptGdpr: true })}
+                  disabled={savingCompliance}
+                >
+                  {savingCompliance ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
+                  Accept Acordul GDPR / DPA
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Anti-Spam */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                {complianceData?.antiSpamAcceptedAt ? (
+                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5 text-amber-600" />
+                )}
+                Politica Anti-Spam
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="p-4 bg-slate-50 rounded-lg text-sm text-slate-700 space-y-2 mb-4 max-h-[200px] overflow-y-auto">
+                <p><strong>1.</strong> ONG-ul se obliga sa trimita mesaje doar catre destinatari care au acordat consimtamantul explicit (opt-in).</p>
+                <p><strong>2.</strong> Fiecare mesaj trebuie sa contina un mecanism clar de dezabonare (unsubscribe). Platforma adauga automat link-ul de dezabonare.</p>
+                <p><strong>3.</strong> ONG-ul nu va trimite mesaje nesolicitate, continut inselator sau oferte comerciale deghizate in comunicari ale organizatiei.</p>
+                <p><strong>4.</strong> Exista limite zilnice de trimitere care cresc gradual pe masura ce organizatia demonstreaza bune practici.</p>
+                <p><strong>5.</strong> Incalcarea politicii anti-spam poate duce la suspendarea contului si pierderea creditelor ramase.</p>
+              </div>
+              {complianceData?.antiSpamAcceptedAt ? (
+                <p className="text-sm text-green-700 flex items-center gap-1">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Acceptat la {new Date(complianceData.antiSpamAcceptedAt).toLocaleDateString("ro-RO")}
+                </p>
+              ) : (
+                <Button
+                  onClick={() => handleAcceptCompliance({ acceptAntiSpam: true })}
+                  disabled={savingCompliance}
+                >
+                  {savingCompliance ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
+                  Accept Politica Anti-Spam
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Rate Limits Info */}
+          {complianceData && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5 text-slate-600" />
+                  Limite zilnice de trimitere
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="p-4 bg-blue-50 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Mail className="h-4 w-4 text-blue-600" />
+                      <span className="text-sm font-medium text-blue-900">Email</span>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-bold text-blue-700">{complianceData.emailsSentToday || 0}</span>
+                      <span className="text-sm text-blue-600">/ {complianceData.dailyEmailLimit || 500}</span>
+                    </div>
+                    <Progress value={((complianceData.emailsSentToday || 0) / (complianceData.dailyEmailLimit || 500)) * 100} className="mt-2 h-1.5" />
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-xl">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MessageSquare className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-900">SMS</span>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-bold text-green-700">{complianceData.smsSentToday || 0}</span>
+                      <span className="text-sm text-green-600">/ {complianceData.dailySmsLimit || 200}</span>
+                    </div>
+                    <Progress value={((complianceData.smsSentToday || 0) / (complianceData.dailySmsLimit || 200)) * 100} className="mt-2 h-1.5" />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  Limitele se reseteaza zilnic. Contactati suportul pentru cresterea limitelor.
+                </p>
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
       </Tabs>

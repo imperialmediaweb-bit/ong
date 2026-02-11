@@ -69,6 +69,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     return NextResponse.json({
+      campaigns,
       data: campaigns,
       pagination: {
         page,
@@ -136,6 +137,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const userId = (session.user as any).id;
+    const consentConfirmed = body.consentConfirmed === true;
+
     const campaign = await prisma.campaign.create({
       data: {
         ngoId,
@@ -150,6 +154,12 @@ export async function POST(request: NextRequest) {
         scheduledAt: data.scheduledAt ? new Date(data.scheduledAt) : null,
         goalAmount: data.goalAmount || null,
         isAbTest: data.isAbTest,
+        consentConfirmed,
+        consentConfirmedAt: consentConfirmed ? new Date() : null,
+        consentConfirmedBy: consentConfirmed ? userId : null,
+        consentIp: consentConfirmed
+          ? request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null
+          : null,
       },
     });
 
