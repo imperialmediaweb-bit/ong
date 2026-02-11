@@ -16,104 +16,39 @@ import { Badge } from "@/components/ui/badge";
 const navGroups = [
   {
     label: "Acasa",
-    description: "Vedere generala",
     items: [
-      {
-        name: "Panou principal",
-        desc: "Rezumat si indicatori cheie",
-        href: "/dashboard",
-        icon: Home,
-      },
-      {
-        name: "Analitica",
-        desc: "Rapoarte si grafice detaliate",
-        href: "/dashboard/analytics",
-        icon: BarChart3,
-      },
+      { name: "Panou principal", href: "/dashboard", icon: Home },
+      { name: "Analitica", href: "/dashboard/analytics", icon: BarChart3 },
     ],
   },
   {
     label: "Donatori & Donatii",
-    description: "Gestioneaza relatiile si finantele",
     items: [
-      {
-        name: "Donatori",
-        desc: "Baza de date cu donatorii tai",
-        href: "/dashboard/donors",
-        icon: Users,
-      },
-      {
-        name: "Donatii",
-        desc: "Evidenta si istoricul donatiilor",
-        href: "/dashboard/donations",
-        icon: CircleDollarSign,
-      },
-      {
-        name: "Formular 230",
-        desc: "Redirectionare 3.5% din impozit",
-        href: "/dashboard/formular-230",
-        icon: FileText,
-      },
+      { name: "Donatori", href: "/dashboard/donors", icon: Users },
+      { name: "Donatii", href: "/dashboard/donations", icon: CircleDollarSign },
+      { name: "Formular 230", href: "/dashboard/formular-230", icon: FileText },
     ],
   },
   {
     label: "Marketing",
-    description: "Comunica si automatizeaza",
     items: [
-      {
-        name: "Campanii",
-        desc: "Trimite email-uri si SMS-uri",
-        href: "/dashboard/campaigns",
-        icon: Mail,
-      },
-      {
-        name: "Automatizari",
-        desc: "Fluxuri automate de comunicare",
-        href: "/dashboard/automations",
-        icon: Zap,
-      },
-      {
-        name: "AI & Social Media",
-        desc: "Genereaza continut cu AI",
-        href: "/dashboard/social-ai",
-        icon: Sparkles,
-      },
+      { name: "Campanii", href: "/dashboard/campaigns", icon: Mail },
+      { name: "Automatizari", href: "/dashboard/automations", icon: Zap },
+      { name: "AI & Social Media", href: "/dashboard/social-ai", icon: Sparkles },
     ],
   },
   {
     label: "Legal & Conformitate",
-    description: "Contracte si protectia datelor",
     items: [
-      {
-        name: "Contracte",
-        desc: "Genereaza contracte de sponsorizare",
-        href: "/dashboard/contracte",
-        icon: Briefcase,
-      },
-      {
-        name: "GDPR & Consimtamant",
-        desc: "Gestioneaza consimtamintele",
-        href: "/dashboard/privacy",
-        icon: Shield,
-      },
+      { name: "Contracte", href: "/dashboard/contracte", icon: Briefcase },
+      { name: "GDPR & Consimtamant", href: "/dashboard/privacy", icon: Shield },
     ],
   },
   {
     label: "Prezenta Online",
-    description: "Site-ul si reteaua ta",
     items: [
-      {
-        name: "Mini-Site",
-        desc: "Construieste site-ul organizatiei",
-        href: "/dashboard/minisite",
-        icon: Globe,
-      },
-      {
-        name: "Retea & Sponsori",
-        desc: "Gaseste si contacteaza sponsori",
-        href: "/dashboard/retea",
-        icon: Share2,
-      },
+      { name: "Mini-Site", href: "/dashboard/minisite", icon: Globe },
+      { name: "Retea & Sponsori", href: "/dashboard/retea", icon: Share2 },
     ],
   },
 ];
@@ -146,19 +81,12 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-thin space-y-3">
+      <nav className="flex-1 px-3 py-3 overflow-y-auto scrollbar-thin space-y-4">
         {navGroups.map((group) => (
           <div key={group.label}>
-            <div className="px-3 mb-1">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-                {group.label}
-              </p>
-              {group.description && (
-                <p className="text-[9px] text-muted-foreground/50 -mt-0.5">
-                  {group.description}
-                </p>
-              )}
-            </div>
+            <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              {group.label}
+            </p>
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname?.startsWith(item.href + "/"));
@@ -169,7 +97,6 @@ export function Sidebar() {
                     key={item.name}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    title={item.desc}
                     className={cn(
                       "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
                       active
@@ -178,16 +105,9 @@ export function Sidebar() {
                     )}
                   >
                     <item.icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-white" : "")} />
-                    <div className="min-w-0 flex-1">
-                      <span className="truncate block text-sm">{item.name}</span>
-                      {!active && (
-                        <span className="truncate block text-[10px] text-muted-foreground/60 -mt-0.5 group-hover:text-muted-foreground/80">
-                          {item.desc}
-                        </span>
-                      )}
-                    </div>
+                    <span className="truncate">{item.name}</span>
                     {active && (
-                      <ChevronRight className="h-3 w-3 ml-auto opacity-70 flex-shrink-0" />
+                      <ChevronRight className="h-3 w-3 ml-auto opacity-70" />
                     )}
                   </Link>
                 );
