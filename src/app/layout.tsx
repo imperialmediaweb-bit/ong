@@ -4,7 +4,7 @@ import { Providers } from "@/components/providers";
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: "NGO HUB - Platforma CRM si Campanii pentru ONG-uri",
+  title: "Binevo - Platforma CRM si Campanii pentru ONG-uri",
   description: "Gestionare completa a donatorilor, campanii cu AI si automatizari pentru ONG-uri",
 };
 

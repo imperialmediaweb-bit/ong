@@ -26,17 +26,17 @@ export async function GET(req: NextRequest) {
 
     // ─── SUPER ADMIN ──────────────────────────────────────────────
     const superAdmin = await prisma.user.upsert({
-      where: { email: "superadmin@ngohub.ro" },
+      where: { email: "superadmin@binevo.ro" },
       update: { passwordHash },
       create: {
-        email: "superadmin@ngohub.ro",
+        email: "superadmin@binevo.ro",
         passwordHash,
         name: "Super Administrator",
         role: "SUPER_ADMIN",
         ngoId: null,
       },
     });
-    log.push("Super Admin: superadmin@ngohub.ro");
+    log.push("Super Admin: superadmin@binevo.ro");
 
     // ─── Platform Settings ────────────────────────────────────────
     await prisma.platformSettings.upsert({
@@ -44,15 +44,15 @@ export async function GET(req: NextRequest) {
       update: {},
       create: {
         id: "platform",
-        siteName: "NGO HUB",
+        siteName: "Binevo",
         siteDescription: "Platforma completa de CRM si campanii pentru ONG-uri din Romania",
         heroTitle: "Platforma completa pentru ONG-uri",
         heroSubtitle: "Gestioneaza donatorii, creeaza campanii inteligente si automatizeaza comunicarea cu ajutorul AI.",
         heroCtaText: "Incepe gratuit",
         primaryColor: "#6366f1",
         statsEnabled: true,
-        contactEmail: "contact@ngohub.ro",
-        footerText: "NGO HUB - Platforma de management pentru ONG-uri din Romania",
+        contactEmail: "contact@binevo.ro",
+        footerText: "Binevo - Platforma de management pentru ONG-uri din Romania",
         featuresJson: [
           { icon: "Users", title: "CRM Donatori", description: "Gestioneaza baza de date a donatorilor cu criptare si GDPR" },
           { icon: "Mail", title: "Campanii Email & SMS", description: "Creeaza si trimite campanii personalizate cu AI" },
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
           { name: "Pro", price: "149", currency: "RON", interval: "luna", description: "Pentru ONG-uri in crestere", features: ["1.000 donatori", "Campanii email", "Generator AI", "Automatizari de baza", "Analitica", "Export CSV", "Suport prioritar"], highlighted: true },
           { name: "Elite", price: "349", currency: "RON", interval: "luna", description: "Pentru ONG-uri profesionale", features: ["Donatori nelimitati", "Email + SMS", "Automatizari avansate", "A/B Testing", "Super Agent AI", "Optimizare AI", "Suport dedicat"], highlighted: false },
         ] as any,
-        socialLinks: { facebook: "https://facebook.com/ngohub", linkedin: "https://linkedin.com/company/ngohub", twitter: "https://twitter.com/ngohub" } as any,
+        socialLinks: { facebook: "https://facebook.com/binevo", linkedin: "https://linkedin.com/company/binevo", twitter: "https://twitter.com/binevo" } as any,
       },
     });
     log.push("Platform settings OK");
@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
       create: {
         name: "Asociatia Demo ONG",
         slug: "demo-ngo",
-        description: "O asociatie demonstrativa pentru testarea platformei NGO HUB.",
+        description: "O asociatie demonstrativa pentru testarea platformei Binevo.",
         shortDescription: "Sprijinim comunitatile defavorizate si promovam educatia",
         subscriptionPlan: "ELITE",
         senderEmail: "noreply@demo-ngo.org",
@@ -296,13 +296,13 @@ export async function GET(req: NextRequest) {
 
     // ─── Blog posts ───────────────────────────────────────────────
     await prisma.blogPost.upsert({
-      where: { slug: "bine-ati-venit-pe-ngo-hub" },
+      where: { slug: "bine-ati-venit-pe-binevo" },
       update: {},
       create: {
-        slug: "bine-ati-venit-pe-ngo-hub",
-        title: "Bine ati venit pe NGO HUB!",
+        slug: "bine-ati-venit-pe-binevo",
+        title: "Bine ati venit pe Binevo!",
         excerpt: "Descopera platforma completa de management pentru ONG-uri din Romania.",
-        content: "<h2>Ce este NGO HUB?</h2><p>Platforma completa de CRM pentru ONG-uri.</p>",
+        content: "<h2>Ce este Binevo?</h2><p>Platforma completa de CRM pentru ONG-uri.</p>",
         authorId: superAdmin.id,
         status: "PUBLISHED",
         category: "Noutati",
@@ -325,7 +325,7 @@ export async function GET(req: NextRequest) {
       log,
       counts: { users: userCount, ngos: ngoCount },
       credentials: {
-        superAdmin: { email: "superadmin@ngohub.ro", password: "password123", panel: "/admin" },
+        superAdmin: { email: "superadmin@binevo.ro", password: "password123", panel: "/admin" },
         demoNgo: { email: "admin@demo-ngo.org", password: "password123", panel: "/dashboard", plan: "ELITE" },
         staff: { email: "staff@demo-ngo.org", password: "password123" },
       },

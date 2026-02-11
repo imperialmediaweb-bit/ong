@@ -110,7 +110,7 @@ export default async function HomePage() {
           <Link href="/" className="flex items-center gap-2">
             <Heart className="h-7 w-7 text-indigo-600" />
             <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              NGO HUB
+              Binevo
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
@@ -501,7 +501,7 @@ export default async function HomePage() {
                   Nou
                 </Badge>
                 <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-                  Nou pe NGO HUB
+                  Nou pe Binevo
                 </h2>
                 <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
                   Cele mai noi organizatii inregistrate pe platforma noastra
@@ -552,7 +552,7 @@ export default async function HomePage() {
                 Simplu si rapid
               </Badge>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-                Cum functioneaza NGO HUB?
+                Cum functioneaza Binevo?
               </h2>
               <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
                 In doar 4 pasi simpli, ONG-ul tau poate incepe sa creasca
@@ -892,13 +892,13 @@ export default async function HomePage() {
                 Ce spun ONG-urile despre noi
               </h2>
               <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
-                Povestile organizatiilor care au ales NGO HUB
+                Povestile organizatiilor care au ales Binevo
               </p>
             </div>
             <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
               {[
                 {
-                  quote: "NGO HUB ne-a ajutat sa crestem donatiile cu 300% in primele 3 luni.",
+                  quote: "Binevo ne-a ajutat sa crestem donatiile cu 300% in primele 3 luni.",
                   author: "Maria P.",
                   org: "Fundatia Sperantei",
                   avatar: "M",
@@ -957,7 +957,7 @@ export default async function HomePage() {
                 Gata sa transformi ONG-ul tau?
               </h2>
               <p className="text-lg text-indigo-200 mb-10 leading-relaxed">
-                Alatura-te celor {totalNgos.toLocaleString("ro-RO")} ONG-uri care folosesc deja NGO HUB
+                Alatura-te celor {totalNgos.toLocaleString("ro-RO")} ONG-uri care folosesc deja Binevo
               </p>
               <div className="flex gap-4 justify-center flex-wrap">
                 <Link href="/register">
@@ -966,7 +966,7 @@ export default async function HomePage() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
-                <a href="mailto:contact@ngohub.ro">
+                <a href="mailto:contact@binevo.ro">
                   <Button size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10 font-semibold text-base px-8 py-6 h-auto">
                     <Mail className="mr-2 h-5 w-5" />
                     Contacteaza-ne
@@ -986,7 +986,7 @@ export default async function HomePage() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <Heart className="h-6 w-6 text-indigo-400" />
-                <span className="text-lg font-bold text-white">NGO HUB</span>
+                <span className="text-lg font-bold text-white">Binevo</span>
               </div>
               <p className="text-sm text-gray-400 mb-6 leading-relaxed">
                 Platforma completa pentru gestionarea ONG-urilor din Romania.
@@ -1063,8 +1063,8 @@ export default async function HomePage() {
               <ul className="space-y-2.5 text-sm">
                 <li className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-gray-500" />
-                  <a href="mailto:contact@ngohub.ro" className="text-gray-400 hover:text-white transition-colors">
-                    contact@ngohub.ro
+                  <a href="mailto:contact@binevo.ro" className="text-gray-400 hover:text-white transition-colors">
+                    contact@binevo.ro
                   </a>
                 </li>
                 <li className="flex items-center gap-2">
@@ -1079,7 +1079,7 @@ export default async function HomePage() {
         </div>
         <div className="border-t border-gray-800">
           <div className="container mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
-            <p>&copy; 2024 NGO HUB. Toate drepturile rezervate.</p>
+            <p>&copy; 2024 Binevo. Toate drepturile rezervate.</p>
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5">
                 <Shield className="h-3.5 w-3.5" />

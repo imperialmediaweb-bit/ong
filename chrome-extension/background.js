@@ -1,8 +1,8 @@
-// ─── NGO Hub Background Service Worker ──────
+// ─── Binevo Background Service Worker ──────
 // Handles communication between popup and content scripts
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("NGO Hub LinkedIn Importer installed.");
+  console.log("Binevo LinkedIn Importer installed.");
 });
 
 // Reset daily stats at midnight

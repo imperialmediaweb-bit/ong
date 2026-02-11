@@ -14,7 +14,7 @@ import {
   paymentFailedEmail,
 } from "@/lib/subscription-emails";
 
-const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://ngohub.ro";
+const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://binevo.ro";
 
 // ─── Assign Subscription ─────────────────────────────────────────
 
@@ -119,8 +119,8 @@ export async function assignSubscription(params: {
         to: admin.email,
         subject: emailData.subject,
         html: emailData.html,
-        from: "noreply@ngohub.ro",
-        fromName: "NGO HUB",
+        from: "noreply@binevo.ro",
+        fromName: "Binevo",
       }).catch((err) => {
         console.error(`Email notification failed for ${admin.email}:`, err);
       });
@@ -214,8 +214,8 @@ export async function checkExpiringSubscriptions(): Promise<{
           to: admin.email,
           subject: emailData.subject,
           html: emailData.html,
-          from: "noreply@ngohub.ro",
-          fromName: "NGO HUB",
+          from: "noreply@binevo.ro",
+          fromName: "Binevo",
         }).catch((err) => {
           results.errors.push(`Email failed for ${admin.email}: ${err}`);
         });
@@ -302,8 +302,8 @@ export async function checkExpiringSubscriptions(): Promise<{
           to: admin.email,
           subject: emailData.subject,
           html: emailData.html,
-          from: "noreply@ngohub.ro",
-          fromName: "NGO HUB",
+          from: "noreply@binevo.ro",
+          fromName: "Binevo",
         }).catch((err) => {
           results.errors.push(`Email failed for ${admin.email}: ${err}`);
         });
@@ -394,8 +394,8 @@ export async function renewSubscription(params: {
       to: admin.email,
       subject: emailData.subject,
       html: emailData.html,
-      from: "noreply@ngohub.ro",
-      fromName: "NGO HUB",
+      from: "noreply@binevo.ro",
+      fromName: "Binevo",
     }).catch(console.error);
   }
 

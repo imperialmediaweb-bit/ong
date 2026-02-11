@@ -96,7 +96,7 @@ export default async function OngDirectoryPage() {
           </Link>
           <div className="flex items-center gap-2">
             <Heart className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg">NGO HUB</span>
+            <span className="font-bold text-lg">Binevo</span>
           </div>
         </div>
 
@@ -298,7 +298,7 @@ export default async function OngDirectoryPage() {
             className="flex items-center gap-2 hover:text-foreground transition-colors"
           >
             <Heart className="h-4 w-4 text-primary" />
-            <span>NGO HUB - Platforma CRM pentru ONG-uri</span>
+            <span>Binevo - Platforma CRM pentru ONG-uri</span>
           </Link>
           <div className="flex items-center gap-4">
             <span>Vrei sa-ti inregistrezi ONG-ul?</span>

@@ -881,7 +881,7 @@ model SitePage {
 
 model PlatformSettings {
   id              String   @id @default("platform")
-  siteName        String   @default("NGO HUB")
+  siteName        String   @default("Binevo")
   siteDescription String?
   logoUrl         String?
   primaryColor    String   @default("#6366f1")

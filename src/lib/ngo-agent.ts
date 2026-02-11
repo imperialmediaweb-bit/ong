@@ -40,7 +40,7 @@ export interface AgentResponse {
 // ─── System Prompts ──────────────────────────────────────────────
 
 const AGENT_SYSTEM_PROMPT = `Esti un Super Agent AI specializat in ajutarea ONG-urilor din Romania.
-Numele tau este "NGO HUB AI Assistant".
+Numele tau este "Binevo AI Assistant".
 Raspunzi INTOTDEAUNA in limba romana.
 Esti expert in:
 - Marketing si comunicare pentru ONG-uri
@@ -700,7 +700,7 @@ async function handleChatbot(
 Context ONG: ${JSON.stringify(ngoContext || {})}
 
 Raspunzi la intrebari despre:
-- Cum sa foloseasca platforma NGO HUB
+- Cum sa foloseasca platforma Binevo
 - Strategii de fundraising
 - GDPR si protectia datelor
 - Campanii email/SMS

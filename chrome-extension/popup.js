@@ -76,7 +76,7 @@ async function testConnection(apiUrl, token) {
         sessionStats.remaining = data.dailyRemaining;
         updateStats();
       }
-      addLog(`Conectat la ${data.ngoName || "NGO Hub"}!`, "success");
+      addLog(`Conectat la ${data.ngoName || "Binevo"}!`, "success");
     } else {
       setConnected(false);
       addLog(`Eroare: ${data.error || "Unknown"}`, "error");
@@ -95,7 +95,7 @@ function setConnected(connected, ngoName) {
   $("stats-section").classList.toggle("hidden", !connected);
 
   if (connected) {
-    $("ngo-name").textContent = ngoName || "NGO Hub";
+    $("ngo-name").textContent = ngoName || "Binevo";
     $("settings-section").classList.add("hidden");
     chrome.storage.local.set({ ngoName });
   } else {

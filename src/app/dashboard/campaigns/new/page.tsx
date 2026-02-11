@@ -1300,7 +1300,7 @@ export default function NewCampaignPage() {
                         <span className="text-sm text-amber-800 leading-relaxed">
                           Confirm ca am obtinut consimtamantul explicit al tuturor destinatarilor pentru a primi comunicari prin canalul selectat ({form.channel === "BOTH" ? "Email si SMS" : form.channel}).
                           Inteleg ca organizatia mea este singurul responsabil pentru respectarea legislatiei GDPR si anti-spam.
-                          Platforma NGO HUB actioneaza doar ca furnizor de servicii tehnice si nu este responsabila pentru continutul sau destinatarii mesajelor.
+                          Platforma Binevo actioneaza doar ca furnizor de servicii tehnice si nu este responsabila pentru continutul sau destinatarii mesajelor.
                         </span>
                       </label>
                       <p className="text-xs text-amber-600 mt-2">

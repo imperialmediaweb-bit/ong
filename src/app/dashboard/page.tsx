@@ -95,7 +95,7 @@ export default async function DashboardPage() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <Card className="max-w-md w-full">
           <CardHeader className="text-center">
-            <CardTitle>Bine ati venit la NGO HUB</CardTitle>
+            <CardTitle>Bine ati venit la Binevo</CardTitle>
             <CardDescription>Va rugam sa va autentificati pentru a accesa panoul principal.</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">

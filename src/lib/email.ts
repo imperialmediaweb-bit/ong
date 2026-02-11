@@ -28,8 +28,8 @@ export async function sendEmail(params: SendEmailParams, apiKey?: string): Promi
     const [response] = await sgMail.send({
       to: params.to,
       from: {
-        email: params.from || process.env.SENDGRID_FROM_EMAIL || "noreply@ngohub.ro",
-        name: params.fromName || "NGO HUB",
+        email: params.from || process.env.SENDGRID_FROM_EMAIL || "noreply@binevo.ro",
+        name: params.fromName || "Binevo",
       },
       subject: params.subject,
       html: params.html + footerHtml,
