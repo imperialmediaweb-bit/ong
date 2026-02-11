@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      width: 380px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f23;
+      color: #e0e0ff;
+    }
+    .header {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed, #2563eb);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .header-icon {
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .header h1 { font-size: 16px; font-weight: 700; color: white; }
+    .header p { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 2px; }
+
+    .content { padding: 16px; }
+
+    .section {
+      background: #1a1a3e;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+      border: 1px solid #2a2a5e;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #8b8bc7;
+      margin-bottom: 10px;
+    }
+
+    .input-group { margin-bottom: 10px; }
+    .input-group label {
+      display: block;
+      font-size: 12px;
+      color: #a0a0d0;
+      margin-bottom: 4px;
+    }
+    input[type="text"], input[type="url"] {
+      width: 100%;
+      padding: 8px 12px;
+      background: #12122e;
+      border: 1px solid #3a3a6e;
+      border-radius: 8px;
+      color: #e0e0ff;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: #6366f1; }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: white;
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #4338ca, #4f46e5);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+    .btn-secondary {
+      background: #2a2a5e;
+      color: #c0c0ff;
+      border: 1px solid #3a3a7e;
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: #3a3a6e;
+    }
+    .btn-danger {
+      background: linear-gradient(135deg, #dc2626, #ef4444);
+      color: white;
+    }
+    .btn-auto {
+      background: linear-gradient(135deg, #059669, #10b981);
+      color: white;
+    }
+    .btn-auto:hover:not(:disabled) {
+      background: linear-gradient(135deg, #047857, #059669);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .stat {
+      background: #12122e;
+      padding: 10px;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #a5b4fc;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: #8b8bc7;
+      margin-top: 2px;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    .status-connected {
+      background: rgba(16, 185, 129, 0.15);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .status-disconnected {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .dot-green { background: #10b981; }
+    .dot-red { background: #ef4444; }
+
+    .log {
+      max-height: 120px;
+      overflow-y: auto;
+      background: #12122e;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 11px;
+      font-family: monospace;
+      color: #8b8bc7;
+      line-height: 1.6;
+    }
+    .log-success { color: #6ee7b7; }
+    .log-error { color: #fca5a5; }
+    .log-info { color: #93c5fd; }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .btn-group .btn { flex: 1; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .badge-success { background: rgba(16,185,129,0.2); color: #6ee7b7; }
+    .badge-warning { background: rgba(245,158,11,0.2); color: #fcd34d; }
+
+    .hidden { display: none; }
+
+    .footer {
+      padding: 12px 16px;
+      text-align: center;
+      font-size: 10px;
+      color: #6b6ba0;
+      border-top: 1px solid #2a2a5e;
+    }
+    .footer a { color: #818cf8; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-icon">🎯</div>
+    <div>
+      <h1>NGO Hub Importer</h1>
+      <p>LinkedIn Prospect Capture</p>
+    </div>
+  </div>
+
+  <div class="content">
+    <!-- Connection Status -->
+    <div id="status-connected" class="status-bar status-connected hidden">
+      <div class="status-dot dot-green"></div>
+      <span>Conectat la <strong id="ngo-name"></strong></span>
+    </div>
+    <div id="status-disconnected" class="status-bar status-disconnected">
+      <div class="status-dot dot-red"></div>
+      <span>Neconectat — introdu tokenul API</span>
+    </div>
+
+    <!-- Settings Section -->
+    <div class="section" id="settings-section">
+      <div class="section-title">Configurare</div>
+      <div class="input-group">
+        <label>URL Platforma</label>
+        <input type="url" id="apiUrl" placeholder="https://ong-production.up.railway.app" />
+      </div>
+      <div class="input-group">
+        <label>Token API</label>
+        <input type="text" id="apiToken" placeholder="ngo_xxxxxxxxxxxx..." />
+      </div>
+      <button class="btn btn-primary" id="btn-save-settings">
+        💾 Salveaza &amp; Conecteaza
+      </button>
+    </div>
+
+    <!-- Stats -->
+    <div class="section hidden" id="stats-section">
+      <div class="section-title">Sesiunea de azi</div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="stat-found">0</div>
+          <div class="stat-label">Gasite</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-imported">0</div>
+          <div class="stat-label">Importate</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value" id="stat-remaining">150</div>
+          <div class="stat-label">Ramase</div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="btn-group">
+        <button class="btn btn-primary" id="btn-import">
+          📥 Import Visible
+        </button>
+        <button class="btn btn-auto" id="btn-auto">
+          🔄 Auto-Import
+        </button>
+      </div>
+      <button class="btn btn-danger hidden" id="btn-stop">
+        ⏹ Stop Auto-Import
+      </button>
+      <button class="btn btn-secondary" id="btn-settings-toggle" style="margin-top: 8px;">
+        ⚙️ Setari
+      </button>
+    </div>
+
+    <!-- Activity Log -->
+    <div class="section">
+      <div class="section-title">Activitate</div>
+      <div class="log" id="log">
+        <div class="log-info">Extensia este gata. Navigheaza pe LinkedIn si importa prospecte.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    NGO Hub Chrome Extension v1.0 · <a href="#" id="open-dashboard">Deschide Dashboard</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

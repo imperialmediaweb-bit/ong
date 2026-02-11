@@ -12,6 +12,8 @@ import {
   Loader2, Send, Building, Heart, Globe, ChevronRight, Briefcase,
   Sparkles, Linkedin, Copy, Mail, ExternalLink, Save, MapPin, Target,
   UserSearch, ArrowRight, Phone, AlertTriangle, Settings, Zap,
+  Download, Trash2, Eye, Key, RefreshCw, Star, TrendingUp, Brain,
+  Clock, Filter, MoreHorizontal, ChevronDown, ChevronUp,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { SponsorCRM } from "@/components/dashboard/sponsor-crm";
@@ -174,6 +176,22 @@ export default function ReteaPage() {
   const [prospectSaved, setProspectSaved] = useState<Set<string>>(new Set());
   const [prospectMsg, setProspectMsg] = useState<{ company: string; loading: boolean; message?: string; subject?: string; tips?: string[]; channel?: string; psychologicalApproach?: string; followUpSuggestion?: string } | null>(null);
   const [prospectAnalysis, setProspectAnalysis] = useState<{ company: string; loading: boolean; analysis?: any } | null>(null);
+
+  // LinkedIn Prospects state
+  const [linkedinProspects, setLinkedinProspects] = useState<any[]>([]);
+  const [linkedinStats, setLinkedinStats] = useState<any>({});
+  const [linkedinTotal, setLinkedinTotal] = useState(0);
+  const [linkedinLoading, setLinkedinLoading] = useState(false);
+  const [linkedinSearch, setLinkedinSearch] = useState("");
+  const [linkedinStatusFilter, setLinkedinStatusFilter] = useState("");
+  const [linkedinPage, setLinkedinPage] = useState(1);
+  const [linkedinAnalyzing, setLinkedinAnalyzing] = useState<string | null>(null);
+  const [linkedinMsgGen, setLinkedinMsgGen] = useState<{ id: string; loading: boolean; data?: any; channel?: string } | null>(null);
+  const [linkedinExpanded, setLinkedinExpanded] = useState<string | null>(null);
+  const [linkedinTokens, setLinkedinTokens] = useState<any[]>([]);
+  const [linkedinShowToken, setLinkedinShowToken] = useState(false);
+  const [linkedinNewToken, setLinkedinNewToken] = useState<string | null>(null);
+  const [linkedinTokenLoading, setLinkedinTokenLoading] = useState(false);
 
   // Discover state
   const [discoverResults, setDiscoverResults] = useState<DiscoverItem[]>([]);
@@ -549,12 +567,154 @@ export default function ReteaPage() {
     }
   };
 
+  // ─── LinkedIn: Fetch prospects ─────────
+  const fetchLinkedinProspects = async (page = 1, search = "", status = "") => {
+    setLinkedinLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: "30" });
+      if (search) params.set("search", search);
+      if (status) params.set("status", status);
+      params.set("sortBy", "createdAt");
+      params.set("sortDir", "desc");
+
+      const res = await fetch(`/api/prospects?${params.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setLinkedinProspects(data.prospects || []);
+      setLinkedinStats(data.stats || {});
+      setLinkedinTotal(data.total || 0);
+    } catch (err) {
+      console.error("Error fetching linkedin prospects:", err);
+    } finally {
+      setLinkedinLoading(false);
+    }
+  };
+
+  // ─── LinkedIn: Fetch API tokens ────────
+  const fetchLinkedinTokens = async () => {
+    try {
+      const res = await fetch("/api/prospects/token");
+      if (!res.ok) throw new Error("Failed to fetch tokens");
+      const data = await res.json();
+      setLinkedinTokens(data.tokens || []);
+    } catch (err) {
+      console.error("Error fetching tokens:", err);
+    }
+  };
+
+  // ─── LinkedIn: Generate API token ──────
+  const handleGenerateToken = async () => {
+    setLinkedinTokenLoading(true);
+    try {
+      const res = await fetch("/api/prospects/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "Chrome Extension" }),
+      });
+      if (!res.ok) throw new Error("Failed to create token");
+      const data = await res.json();
+      setLinkedinNewToken(data.token);
+      await fetchLinkedinTokens();
+    } catch (err) {
+      console.error("Error creating token:", err);
+      alert("Eroare la generarea tokenului");
+    } finally {
+      setLinkedinTokenLoading(false);
+    }
+  };
+
+  // ─── LinkedIn: Delete token ────────────
+  const handleDeleteToken = async (tokenId: string) => {
+    try {
+      await fetch(`/api/prospects/token?id=${tokenId}`, { method: "DELETE" });
+      await fetchLinkedinTokens();
+    } catch (err) {
+      console.error("Error deleting token:", err);
+    }
+  };
+
+  // ─── LinkedIn: Analyze prospect ────────
+  const handleLinkedinAnalyze = async (prospectId: string) => {
+    setLinkedinAnalyzing(prospectId);
+    try {
+      const res = await fetch("/api/prospects/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prospectId }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        if (data?.noProvider) {
+          alert("Niciun provider AI configurat.");
+        } else {
+          alert(data?.error || "Eroare la analiza");
+        }
+        return;
+      }
+      // Refresh to show updated analysis
+      await fetchLinkedinProspects(linkedinPage, linkedinSearch, linkedinStatusFilter);
+    } catch (err) {
+      console.error("Error analyzing prospect:", err);
+    } finally {
+      setLinkedinAnalyzing(null);
+    }
+  };
+
+  // ─── LinkedIn: Generate message ────────
+  const handleLinkedinMessage = async (prospectId: string, channel: "linkedin" | "email") => {
+    setLinkedinMsgGen({ id: prospectId, loading: true, channel });
+    try {
+      const res = await fetch("/api/prospects/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prospectId, channel }),
+      });
+      if (!res.ok) {
+        setLinkedinMsgGen(null);
+        alert("Eroare la generarea mesajului");
+        return;
+      }
+      const data = await res.json();
+      setLinkedinMsgGen({ id: prospectId, loading: false, data, channel });
+    } catch (err) {
+      console.error("Error generating message:", err);
+      setLinkedinMsgGen(null);
+    }
+  };
+
+  // ─── LinkedIn: Update prospect status ──
+  const handleLinkedinStatusChange = async (id: string, status: string) => {
+    try {
+      await fetch("/api/prospects", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      await fetchLinkedinProspects(linkedinPage, linkedinSearch, linkedinStatusFilter);
+    } catch (err) {
+      console.error("Error updating prospect:", err);
+    }
+  };
+
+  // ─── LinkedIn: Delete prospect ─────────
+  const handleLinkedinDelete = async (id: string) => {
+    if (!confirm("Stergi acest prospect?")) return;
+    try {
+      await fetch(`/api/prospects?id=${id}`, { method: "DELETE" });
+      await fetchLinkedinProspects(linkedinPage, linkedinSearch, linkedinStatusFilter);
+    } catch (err) {
+      console.error("Error deleting prospect:", err);
+    }
+  };
+
   // ─── Effects ──────────────────────────
 
   useEffect(() => {
     fetchConnections();
     fetchConversations();
     fetchDiscover();
+    fetchLinkedinProspects();
+    fetchLinkedinTokens();
   }, []);
 
   // Poll for new messages when a conversation is open
@@ -588,6 +748,15 @@ export default function ReteaPage() {
     return () => clearTimeout(timer);
   }, [searchQuery, selectedCategory]);
 
+  // LinkedIn search debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchLinkedinProspects(1, linkedinSearch, linkedinStatusFilter);
+      setLinkedinPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [linkedinSearch, linkedinStatusFilter]);
+
   // ────────────────────────────────────────
   // Render
   // ────────────────────────────────────────
@@ -605,7 +774,21 @@ export default function ReteaPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-5">
+        <Card className="border-0 shadow-sm bg-gradient-to-br from-[#0A66C2]/5 to-transparent">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">LinkedIn</CardTitle>
+            <Linkedin className="h-4 w-4 text-[#0A66C2]" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{linkedinTotal}</div>
+            <p className="text-xs text-muted-foreground">
+              {linkedinStats.avgMatchScore > 0
+                ? `Scor mediu: ${linkedinStats.avgMatchScore}%`
+                : "Prospecte importate"}
+            </p>
+          </CardContent>
+        </Card>
         <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Prospecte AI</CardTitle>
@@ -662,7 +845,17 @@ export default function ReteaPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="linkedin" className="flex items-center gap-1.5 text-xs sm:text-sm">
+            <Linkedin className="h-4 w-4" />
+            <span className="hidden sm:inline">LinkedIn</span>
+            <span className="sm:hidden">LI</span>
+            {linkedinTotal > 0 && (
+              <Badge className="ml-1 h-5 min-w-[20px] rounded-full p-0 text-xs flex items-center justify-center bg-[#0A66C2]">
+                {linkedinTotal}
+              </Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="prospectare" className="flex items-center gap-1.5 text-xs sm:text-sm">
             <Target className="h-4 w-4" />
             <span className="hidden sm:inline">Prospectare</span>
@@ -699,6 +892,667 @@ export default function ReteaPage() {
             )}
           </TabsTrigger>
         </TabsList>
+
+        {/* ═══════════════════════════════════════ */}
+        {/* LINKEDIN GALAXY TAB                    */}
+        {/* ═══════════════════════════════════════ */}
+        <TabsContent value="linkedin" className="space-y-6">
+          {/* Header + Extension Setup */}
+          <Card className="border-0 shadow-md overflow-hidden">
+            <div className="h-1.5 bg-gradient-to-r from-[#0A66C2] via-[#0077B5] to-[#00A0DC]" />
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between">
+                <CardTitle className="flex items-center gap-3 text-lg">
+                  <div className="p-2.5 rounded-xl bg-gradient-to-br from-[#0A66C2] to-[#004182] text-white shadow-lg">
+                    <Linkedin className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <span>LinkedIn Galaxy</span>
+                    <p className="text-sm font-normal text-muted-foreground mt-0.5">
+                      Importa prospecte din LinkedIn cu extensia Chrome, analizeaza cu AI si contacteaza direct
+                    </p>
+                  </div>
+                </CardTitle>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => { setLinkedinShowToken(!linkedinShowToken); }}
+                    className="text-xs"
+                  >
+                    <Key className="h-3.5 w-3.5 mr-1.5" />
+                    {linkedinShowToken ? "Ascunde Token" : "Extensie Chrome"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => fetchLinkedinProspects(linkedinPage, linkedinSearch, linkedinStatusFilter)}
+                    disabled={linkedinLoading}
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${linkedinLoading ? "animate-spin" : ""}`} />
+                    Actualizeaza
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+
+            {/* Chrome Extension Token Section */}
+            {linkedinShowToken && (
+              <CardContent className="pt-0 pb-4">
+                <div className="bg-slate-50 rounded-xl p-4 border space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-semibold flex items-center gap-2">
+                      <Download className="h-4 w-4 text-[#0A66C2]" />
+                      Configurare Extensie Chrome
+                    </h4>
+                  </div>
+
+                  {/* How to install */}
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="bg-white rounded-lg p-3 border text-center space-y-1">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mx-auto text-blue-600 font-bold text-sm">1</div>
+                      <p className="text-xs font-semibold">Descarca extensia</p>
+                      <p className="text-[10px] text-muted-foreground">Folderul chrome-extension/ din proiect</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border text-center space-y-1">
+                      <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mx-auto text-indigo-600 font-bold text-sm">2</div>
+                      <p className="text-xs font-semibold">Incarca in Chrome</p>
+                      <p className="text-[10px] text-muted-foreground">chrome://extensions &gt; Developer mode &gt; Load unpacked</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-3 border text-center space-y-1">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-600 font-bold text-sm">3</div>
+                      <p className="text-xs font-semibold">Introdu tokenul</p>
+                      <p className="text-[10px] text-muted-foreground">Copiaza tokenul de mai jos in extensie</p>
+                    </div>
+                  </div>
+
+                  {/* Generate / show tokens */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-slate-600">Tokeni API activi</p>
+                      <Button
+                        size="sm"
+                        onClick={handleGenerateToken}
+                        disabled={linkedinTokenLoading}
+                        className="bg-[#0A66C2] hover:bg-[#004182] text-xs h-7"
+                      >
+                        {linkedinTokenLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Key className="h-3 w-3 mr-1" />}
+                        Genereaza Token
+                      </Button>
+                    </div>
+
+                    {/* Newly generated token */}
+                    {linkedinNewToken && (
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                        <p className="text-xs font-semibold text-emerald-800 mb-1">Token nou generat (copiaza-l acum, nu va mai fi afisat):</p>
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs bg-white px-2 py-1 rounded border flex-1 break-all font-mono">{linkedinNewToken}</code>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 px-2"
+                            onClick={() => { navigator.clipboard.writeText(linkedinNewToken); }}
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Token list */}
+                    {linkedinTokens.length > 0 ? (
+                      <div className="space-y-1.5">
+                        {linkedinTokens.map((t: any) => (
+                          <div key={t.id} className="flex items-center gap-3 bg-white rounded-lg p-2.5 border text-xs">
+                            <Key className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
+                            <code className="font-mono text-slate-600">{t.tokenPreview}</code>
+                            <span className="text-muted-foreground">{t.name}</span>
+                            {t.lastUsedAt && (
+                              <span className="text-[10px] text-muted-foreground ml-auto">
+                                Folosit: {new Date(t.lastUsedAt).toLocaleDateString("ro-RO")}
+                              </span>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 w-6 p-0 text-red-400 hover:text-red-600"
+                              onClick={() => handleDeleteToken(t.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">Niciun token. Genereaza unul pentru a conecta extensia Chrome.</p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+
+          {/* Import Stats Bar */}
+          <div className="grid gap-3 sm:grid-cols-4">
+            <div className="bg-gradient-to-br from-[#0A66C2]/10 to-[#0A66C2]/5 rounded-xl p-3 border border-[#0A66C2]/20">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-[#0A66C2]" />
+                <span className="text-xs font-semibold text-[#0A66C2]">Total Prospecte</span>
+              </div>
+              <p className="text-2xl font-bold mt-1">{linkedinStats.total || 0}</p>
+            </div>
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-50/50 rounded-xl p-3 border border-emerald-200">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-emerald-600" />
+                <span className="text-xs font-semibold text-emerald-600">Scor Mediu AI</span>
+              </div>
+              <p className="text-2xl font-bold mt-1">{linkedinStats.avgMatchScore || 0}%</p>
+            </div>
+            <div className="bg-gradient-to-br from-amber-50 to-amber-50/50 rounded-xl p-3 border border-amber-200">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-amber-600" />
+                <span className="text-xs font-semibold text-amber-600">Importate Azi</span>
+              </div>
+              <p className="text-2xl font-bold mt-1">{linkedinStats.importedToday || 0}</p>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-purple-50/50 rounded-xl p-3 border border-purple-200">
+              <div className="flex items-center gap-2">
+                <Star className="h-4 w-4 text-purple-600" />
+                <span className="text-xs font-semibold text-purple-600">Ramase Azi</span>
+              </div>
+              <p className="text-2xl font-bold mt-1">{linkedinStats.dailyRemaining ?? 150}</p>
+            </div>
+          </div>
+
+          {/* Search & Filter Bar */}
+          <div className="flex flex-wrap gap-3 items-center">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cauta dupa nume, companie, titlu..."
+                value={linkedinSearch}
+                onChange={(e) => setLinkedinSearch(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              {["", "NEW", "ANALYZED", "CONTACTED", "REPLIED", "MEETING", "CONVERTED", "NOT_INTERESTED"].map((s) => {
+                const labels: Record<string, string> = {
+                  "": "Toate", NEW: "Noi", ANALYZED: "Analizate", CONTACTED: "Contactate",
+                  REPLIED: "Raspuns", MEETING: "Intalnire", CONVERTED: "Convertite", NOT_INTERESTED: "Refuzate",
+                };
+                const colors: Record<string, string> = {
+                  "": "", NEW: "bg-blue-100 text-blue-700", ANALYZED: "bg-purple-100 text-purple-700",
+                  CONTACTED: "bg-amber-100 text-amber-700", REPLIED: "bg-emerald-100 text-emerald-700",
+                  MEETING: "bg-indigo-100 text-indigo-700", CONVERTED: "bg-green-100 text-green-700",
+                  NOT_INTERESTED: "bg-red-100 text-red-700",
+                };
+                const count = s ? (linkedinStats.byStatus?.[s] || 0) : linkedinTotal;
+                return (
+                  <Button
+                    key={s}
+                    size="sm"
+                    variant={linkedinStatusFilter === s ? "default" : "outline"}
+                    className={`text-xs h-7 ${linkedinStatusFilter === s ? "" : colors[s] || ""}`}
+                    onClick={() => setLinkedinStatusFilter(s)}
+                  >
+                    {labels[s]} {count > 0 && <span className="ml-1 opacity-70">({count})</span>}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Prospects List */}
+          {linkedinLoading ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <Loader2 className="h-10 w-10 animate-spin text-[#0A66C2]" />
+              <p className="text-sm text-muted-foreground mt-3">Se incarca prospectele...</p>
+            </div>
+          ) : linkedinProspects.length === 0 ? (
+            <Card className="border-0 shadow-sm">
+              <CardContent className="py-16 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0A66C2]/10 to-[#0A66C2]/5 flex items-center justify-center mx-auto mb-4">
+                  <Linkedin className="h-8 w-8 text-[#0A66C2]" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">Niciun prospect LinkedIn</h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto mb-4">
+                  Instaleaza extensia Chrome, navigheaza pe LinkedIn si importa prospecte direct in platforma.
+                  AI-ul va analiza fiecare prospect si va calcula scorul de potrivire.
+                </p>
+                <Button
+                  onClick={() => setLinkedinShowToken(true)}
+                  className="bg-[#0A66C2] hover:bg-[#004182]"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Configureaza Extensia Chrome
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {linkedinProspects.map((prospect: any) => {
+                const isExpanded = linkedinExpanded === prospect.id;
+                const hasAnalysis = prospect.aiAnalysis;
+                const score = prospect.aiMatchScore;
+                const scoreColor = score >= 70 ? "text-emerald-600 bg-emerald-50 border-emerald-200" :
+                  score >= 40 ? "text-amber-600 bg-amber-50 border-amber-200" :
+                  score ? "text-red-600 bg-red-50 border-red-200" : "text-slate-400 bg-slate-50 border-slate-200";
+                const statusColors: Record<string, string> = {
+                  NEW: "bg-blue-100 text-blue-700",
+                  ANALYZED: "bg-purple-100 text-purple-700",
+                  CONTACTED: "bg-amber-100 text-amber-700",
+                  REPLIED: "bg-emerald-100 text-emerald-700",
+                  MEETING: "bg-indigo-100 text-indigo-700",
+                  CONVERTED: "bg-green-100 text-green-700",
+                  NOT_INTERESTED: "bg-red-100 text-red-700",
+                };
+                const statusLabels: Record<string, string> = {
+                  NEW: "Nou", ANALYZED: "Analizat", CONTACTED: "Contactat",
+                  REPLIED: "Raspuns", MEETING: "Intalnire", CONVERTED: "Convertit", NOT_INTERESTED: "Refuzat",
+                };
+
+                return (
+                  <Card key={prospect.id} className="border-0 shadow-sm hover:shadow-md transition-all overflow-hidden group">
+                    <div className={`h-0.5 ${score >= 70 ? "bg-gradient-to-r from-emerald-400 to-green-500" : score >= 40 ? "bg-gradient-to-r from-amber-400 to-orange-500" : "bg-gradient-to-r from-slate-300 to-slate-400"}`} />
+                    <CardContent className="p-4">
+                      {/* Main Row */}
+                      <div className="flex items-center gap-4">
+                        {/* Avatar / Score */}
+                        <div className={`relative flex-shrink-0 w-14 h-14 rounded-xl border-2 flex items-center justify-center font-bold text-lg ${scoreColor}`}>
+                          {score ? `${score}` : "?"}
+                          {score && <span className="absolute -bottom-1 -right-1 text-[8px] bg-white rounded-full px-1 shadow border">%</span>}
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h3 className="font-bold text-sm">{prospect.fullName}</h3>
+                            <Badge className={`text-[10px] ${statusColors[prospect.status] || "bg-slate-100 text-slate-600"}`}>
+                              {statusLabels[prospect.status] || prospect.status}
+                            </Badge>
+                          </div>
+                          {prospect.headline && (
+                            <p className="text-xs text-muted-foreground mt-0.5 truncate">{prospect.headline}</p>
+                          )}
+                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                            {prospect.company && (
+                              <span className="flex items-center gap-1">
+                                <Building className="h-3 w-3" /> {prospect.company}
+                              </span>
+                            )}
+                            {prospect.location && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" /> {prospect.location}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          {!hasAnalysis && (
+                            <Button
+                              size="sm"
+                              onClick={() => handleLinkedinAnalyze(prospect.id)}
+                              disabled={linkedinAnalyzing === prospect.id}
+                              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-xs h-8"
+                            >
+                              {linkedinAnalyzing === prospect.id ? (
+                                <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                              ) : (
+                                <Brain className="h-3.5 w-3.5 mr-1" />
+                              )}
+                              Analizeaza
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-[#0A66C2]/30 text-[#0A66C2] hover:bg-[#0A66C2]/10 text-xs h-8"
+                            onClick={() => handleLinkedinMessage(prospect.id, "linkedin")}
+                            disabled={linkedinMsgGen?.loading && linkedinMsgGen.id === prospect.id}
+                          >
+                            {linkedinMsgGen?.loading && linkedinMsgGen.id === prospect.id && linkedinMsgGen.channel === "linkedin" ? (
+                              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                            ) : (
+                              <Linkedin className="h-3.5 w-3.5 mr-1" />
+                            )}
+                            Mesaj
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs h-8"
+                            onClick={() => handleLinkedinMessage(prospect.id, "email")}
+                            disabled={linkedinMsgGen?.loading && linkedinMsgGen.id === prospect.id}
+                          >
+                            {linkedinMsgGen?.loading && linkedinMsgGen.id === prospect.id && linkedinMsgGen.channel === "email" ? (
+                              <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                            ) : (
+                              <Mail className="h-3.5 w-3.5 mr-1" />
+                            )}
+                            Email
+                          </Button>
+                          <a href={prospect.profileUrl} target="_blank" rel="noopener noreferrer">
+                            <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </Button>
+                          </a>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                            onClick={() => setLinkedinExpanded(isExpanded ? null : prospect.id)}
+                          >
+                            {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Match Reasons (quick preview) */}
+                      {prospect.aiMatchReasons && !isExpanded && (
+                        <div className="flex flex-wrap gap-1.5 mt-3 pl-[72px]">
+                          {(prospect.aiMatchReasons as string[]).slice(0, 2).map((r: string, i: number) => (
+                            <span key={i} className="text-[10px] bg-slate-100 text-slate-600 rounded-full px-2.5 py-0.5">{r}</span>
+                          ))}
+                          {(prospect.aiMatchReasons as string[]).length > 2 && (
+                            <span className="text-[10px] text-muted-foreground">+{(prospect.aiMatchReasons as string[]).length - 2}</span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Expanded Details */}
+                      {isExpanded && (
+                        <div className="mt-4 pt-4 border-t space-y-4">
+                          {/* Status changer */}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-xs font-semibold text-slate-500">Status:</span>
+                            {["NEW", "CONTACTED", "REPLIED", "MEETING", "CONVERTED", "NOT_INTERESTED"].map((s) => (
+                              <Button
+                                key={s}
+                                size="sm"
+                                variant={prospect.status === s ? "default" : "outline"}
+                                className={`text-[10px] h-6 ${prospect.status !== s ? (statusColors[s] || "") : ""}`}
+                                onClick={() => handleLinkedinStatusChange(prospect.id, s)}
+                              >
+                                {statusLabels[s]}
+                              </Button>
+                            ))}
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-6 text-red-400 hover:text-red-600 ml-auto text-[10px]"
+                              onClick={() => handleLinkedinDelete(prospect.id)}
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" /> Sterge
+                            </Button>
+                          </div>
+
+                          {/* AI Analysis */}
+                          {hasAnalysis && (
+                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                              {/* Psychological Profile */}
+                              <div className="bg-purple-50 border border-purple-200 rounded-xl p-3">
+                                <p className="text-xs font-semibold text-purple-800 mb-2 flex items-center gap-1.5">
+                                  <Brain className="h-3.5 w-3.5" /> Profil Psihologic
+                                </p>
+                                {prospect.aiAnalysis.psychologicalProfile?.personalityType && (
+                                  <p className="text-xs text-purple-700 mb-2">
+                                    <strong>Tip:</strong> {prospect.aiAnalysis.psychologicalProfile.personalityType}
+                                  </p>
+                                )}
+                                {prospect.aiAnalysis.psychologicalProfile?.motivations && (
+                                  <div className="mb-2">
+                                    <p className="text-[10px] uppercase tracking-wider text-purple-600 font-semibold mb-1">Motivatii</p>
+                                    <ul className="space-y-0.5">
+                                      {prospect.aiAnalysis.psychologicalProfile.motivations.map((m: string, i: number) => (
+                                        <li key={i} className="text-xs text-purple-700 flex items-start gap-1">
+                                          <span className="text-purple-400 mt-0.5">&#9679;</span> {m}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                                {prospect.aiAnalysis.psychologicalProfile?.values && (
+                                  <div className="flex flex-wrap gap-1">
+                                    {prospect.aiAnalysis.psychologicalProfile.values.map((v: string, i: number) => (
+                                      <span key={i} className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">{v}</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Approach Strategy */}
+                              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                                <p className="text-xs font-semibold text-blue-800 mb-2 flex items-center gap-1.5">
+                                  <Target className="h-3.5 w-3.5" /> Strategie Abordare
+                                </p>
+                                {prospect.aiAnalysis.approachStrategy?.bestChannel && (
+                                  <p className="text-xs text-blue-700 mb-1">
+                                    <strong>Canal:</strong> {prospect.aiAnalysis.approachStrategy.bestChannel}
+                                  </p>
+                                )}
+                                {prospect.aiAnalysis.approachStrategy?.toneOfVoice && (
+                                  <p className="text-xs text-blue-700 mb-1">
+                                    <strong>Ton:</strong> {prospect.aiAnalysis.approachStrategy.toneOfVoice}
+                                  </p>
+                                )}
+                                {prospect.aiAnalysis.approachStrategy?.openingHook && (
+                                  <div className="bg-blue-100 rounded-lg p-2 mt-2">
+                                    <p className="text-[10px] uppercase tracking-wider text-blue-600 font-semibold mb-1">Deschidere</p>
+                                    <p className="text-xs text-blue-800 italic">&quot;{prospect.aiAnalysis.approachStrategy.openingHook}&quot;</p>
+                                  </div>
+                                )}
+                                {prospect.aiAnalysis.approachStrategy?.keyArguments && (
+                                  <div className="mt-2">
+                                    <p className="text-[10px] uppercase tracking-wider text-blue-600 font-semibold mb-1">Argumente</p>
+                                    <ul className="space-y-0.5">
+                                      {prospect.aiAnalysis.approachStrategy.keyArguments.map((a: string, i: number) => (
+                                        <li key={i} className="text-xs text-blue-700 flex items-start gap-1">
+                                          <span className="text-blue-400 mt-0.5">&#9679;</span> {a}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Company Insights + Risk */}
+                              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+                                <p className="text-xs font-semibold text-emerald-800 mb-2 flex items-center gap-1.5">
+                                  <Building className="h-3.5 w-3.5" /> Insights Companie
+                                </p>
+                                {prospect.aiAnalysis.companyInsights && (
+                                  <div className="space-y-1 mb-2">
+                                    {prospect.aiAnalysis.companyInsights.industry && (
+                                      <p className="text-xs text-emerald-700"><strong>Industrie:</strong> {prospect.aiAnalysis.companyInsights.industry}</p>
+                                    )}
+                                    {prospect.aiAnalysis.companyInsights.estimatedSize && (
+                                      <p className="text-xs text-emerald-700"><strong>Marime:</strong> {prospect.aiAnalysis.companyInsights.estimatedSize}</p>
+                                    )}
+                                    {prospect.aiAnalysis.companyInsights.csrPotential && (
+                                      <p className="text-xs text-emerald-700"><strong>Potential CSR:</strong> {prospect.aiAnalysis.companyInsights.csrPotential}</p>
+                                    )}
+                                    {prospect.aiAnalysis.companyInsights.budgetEstimate && (
+                                      <p className="text-xs text-emerald-700"><strong>Buget estimat:</strong> {prospect.aiAnalysis.companyInsights.budgetEstimate}</p>
+                                    )}
+                                  </div>
+                                )}
+                                {prospect.aiAnalysis.riskLevel && (
+                                  <div className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${
+                                    prospect.aiAnalysis.riskLevel === "low" ? "bg-green-100 text-green-700" :
+                                    prospect.aiAnalysis.riskLevel === "medium" ? "bg-amber-100 text-amber-700" :
+                                    "bg-red-100 text-red-700"
+                                  }`}>
+                                    Risc: {prospect.aiAnalysis.riskLevel}
+                                  </div>
+                                )}
+                                {prospect.aiAnalysis.conversionEstimate && (
+                                  <p className="text-xs text-emerald-600 mt-1">
+                                    <Clock className="h-3 w-3 inline mr-1" />
+                                    Conversie: {prospect.aiAnalysis.conversionEstimate}
+                                  </p>
+                                )}
+                                {prospect.aiAnalysis.followUpPlan && (
+                                  <div className="mt-2">
+                                    <p className="text-[10px] uppercase tracking-wider text-emerald-600 font-semibold mb-1">Follow-up</p>
+                                    <ol className="space-y-0.5 list-decimal list-inside">
+                                      {prospect.aiAnalysis.followUpPlan.map((step: string, i: number) => (
+                                        <li key={i} className="text-xs text-emerald-700">{step}</li>
+                                      ))}
+                                    </ol>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Match Reasons - full */}
+                              {prospect.aiMatchReasons && (
+                                <div className="sm:col-span-2 lg:col-span-3 bg-slate-50 border rounded-xl p-3">
+                                  <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-1.5">
+                                    <Star className="h-3.5 w-3.5 text-amber-500" /> De ce este un match ({score}%)
+                                  </p>
+                                  <div className="flex flex-wrap gap-1.5">
+                                    {(prospect.aiMatchReasons as string[]).map((r: string, i: number) => (
+                                      <span key={i} className="text-xs bg-white border rounded-full px-3 py-1 text-slate-600">{r}</span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Generated Message Display */}
+                          {linkedinMsgGen && linkedinMsgGen.id === prospect.id && !linkedinMsgGen.loading && linkedinMsgGen.data && (
+                            <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 border rounded-xl p-4 space-y-3">
+                              <div className="flex items-center justify-between">
+                                <h4 className="text-sm font-bold flex items-center gap-2">
+                                  {linkedinMsgGen.channel === "linkedin" ? (
+                                    <><Linkedin className="h-4 w-4 text-[#0A66C2]" /> Mesaj LinkedIn</>
+                                  ) : (
+                                    <><Mail className="h-4 w-4 text-indigo-600" /> Email</>
+                                  )}
+                                </h4>
+                                <Button size="sm" variant="ghost" onClick={() => setLinkedinMsgGen(null)}>
+                                  <X className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+
+                              {/* LinkedIn messages */}
+                              {linkedinMsgGen.channel === "linkedin" && linkedinMsgGen.data.connectionMessage && (
+                                <div className="space-y-3">
+                                  <div className="bg-white rounded-lg p-3 border">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Connection Request</p>
+                                      <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => navigator.clipboard.writeText(linkedinMsgGen!.data.connectionMessage)}>
+                                        <Copy className="h-3 w-3 mr-1" /> Copiaza
+                                      </Button>
+                                    </div>
+                                    <p className="text-sm text-slate-700">{linkedinMsgGen.data.connectionMessage}</p>
+                                  </div>
+                                  {linkedinMsgGen.data.inMailMessage && (
+                                    <div className="bg-white rounded-lg p-3 border">
+                                      <div className="flex items-center justify-between mb-1">
+                                        <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">InMail (detaliat)</p>
+                                        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => navigator.clipboard.writeText(linkedinMsgGen!.data.inMailMessage)}>
+                                          <Copy className="h-3 w-3 mr-1" /> Copiaza
+                                        </Button>
+                                      </div>
+                                      <p className="text-sm text-slate-700 whitespace-pre-wrap">{linkedinMsgGen.data.inMailMessage}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Email */}
+                              {linkedinMsgGen.channel === "email" && linkedinMsgGen.data.subject && (
+                                <div className="bg-white rounded-lg p-3 border space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <div className="text-xs text-muted-foreground">
+                                      <strong>De la:</strong> {linkedinMsgGen.data.senderName} &lt;{linkedinMsgGen.data.senderEmail || "contact@asociatie.ro"}&gt;
+                                    </div>
+                                    <Button size="sm" variant="ghost" className="h-6 px-2 text-xs" onClick={() => {
+                                      const txt = `Subject: ${linkedinMsgGen!.data.subject}\n\n${linkedinMsgGen!.data.emailBody?.replace(/<[^>]*>/g, "") || ""}`;
+                                      navigator.clipboard.writeText(txt);
+                                    }}>
+                                      <Copy className="h-3 w-3 mr-1" /> Copiaza
+                                    </Button>
+                                  </div>
+                                  <p className="text-xs"><strong>Subiect:</strong> {linkedinMsgGen.data.subject}</p>
+                                  <div className="text-sm text-slate-700 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: linkedinMsgGen.data.emailBody || "" }} />
+                                </div>
+                              )}
+
+                              {/* Tips & approach */}
+                              <div className="grid gap-3 sm:grid-cols-2">
+                                {linkedinMsgGen.data.psychologicalApproach && (
+                                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-2.5">
+                                    <p className="text-[10px] uppercase tracking-wider text-purple-600 font-semibold mb-1">Abordare psihologica</p>
+                                    <p className="text-xs text-purple-700">{linkedinMsgGen.data.psychologicalApproach}</p>
+                                  </div>
+                                )}
+                                {linkedinMsgGen.data.tips && (
+                                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5">
+                                    <p className="text-[10px] uppercase tracking-wider text-amber-600 font-semibold mb-1">Sfaturi</p>
+                                    <ul className="space-y-0.5">
+                                      {linkedinMsgGen.data.tips.map((tip: string, i: number) => (
+                                        <li key={i} className="text-xs text-amber-700 flex items-start gap-1">
+                                          <span className="text-amber-400 mt-0.5">&#9679;</span> {tip}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                              {linkedinMsgGen.data.followUpSuggestion && (
+                                <p className="text-xs text-muted-foreground">
+                                  <Clock className="h-3 w-3 inline mr-1" />
+                                  <strong>Follow-up:</strong> {linkedinMsgGen.data.followUpSuggestion}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+
+              {/* Pagination */}
+              {linkedinTotal > 30 && (
+                <div className="flex items-center justify-center gap-2 pt-4">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={linkedinPage <= 1}
+                    onClick={() => {
+                      const p = linkedinPage - 1;
+                      setLinkedinPage(p);
+                      fetchLinkedinProspects(p, linkedinSearch, linkedinStatusFilter);
+                    }}
+                  >
+                    Anterior
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Pagina {linkedinPage} din {Math.ceil(linkedinTotal / 30)}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={linkedinPage >= Math.ceil(linkedinTotal / 30)}
+                    onClick={() => {
+                      const p = linkedinPage + 1;
+                      setLinkedinPage(p);
+                      fetchLinkedinProspects(p, linkedinSearch, linkedinStatusFilter);
+                    }}
+                  >
+                    Urmator
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </TabsContent>
 
         {/* ═══════════════════════════════════════ */}
         {/* PROSPECTARE COMPANII TAB               */}
