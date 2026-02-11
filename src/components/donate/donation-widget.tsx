@@ -95,7 +95,7 @@ export function DonationWidget({
     e.preventDefault();
     setError(null);
 
-    if (selectedMethod === "card") {
+    if (selectedMethod === "card" || selectedMethod === "paypal") {
       if (finalAmount < 1) {
         setError("Suma minima pentru donatie este 1 RON.");
         return;
@@ -107,6 +107,34 @@ export function DonationWidget({
 
       setIsLoading(true);
       try {
+        // PayPal flow
+        if (selectedMethod === "paypal") {
+          const response = await fetch("/api/donate/paypal", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              ngoSlug,
+              amount: finalAmount,
+              donorEmail: donorEmail || undefined,
+              donorName: donorName || undefined,
+              message: message || undefined,
+            }),
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            setError(data.error || "A aparut o eroare. Te rugam sa incerci din nou.");
+            return;
+          }
+          if (data.approveUrl) {
+            window.location.href = data.approveUrl;
+            return;
+          }
+          setSuccess(true);
+          return;
+        }
+
+        // Stripe card flow
         const response = await fetch("/api/donate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -317,6 +345,7 @@ export function DonationWidget({
 
   const methodIcons: Record<string, React.ReactNode> = {
     card: <CreditCard className="h-4 w-4" />,
+    paypal: <span className="text-sm font-bold">P</span>,
     bank_transfer: <Banknote className="h-4 w-4" />,
     revolut: <Wallet className="h-4 w-4" />,
   };
@@ -343,7 +372,7 @@ export function DonationWidget({
           {!methodsLoading && methods.length > 1 && (
             <div>
               <Label className="text-sm font-medium mb-3 block">Metoda de plata</Label>
-              <div className={`grid gap-2 ${methods.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+              <div className={`grid gap-2 ${methods.length >= 4 ? "grid-cols-2 sm:grid-cols-4" : methods.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
                 {methods.map((method) => (
                   <button
                     key={method.id}
@@ -366,7 +395,7 @@ export function DonationWidget({
           {/* Amount Selection */}
           <div>
             <Label className="text-sm font-medium mb-3 block">
-              {selectedMethod === "card" ? "Alege suma donatie (RON)" : "Suma (optional, RON)"}
+              {selectedMethod === "card" || selectedMethod === "paypal" ? "Alege suma donatie (RON)" : "Suma (optional, RON)"}
             </Label>
             <div className="grid grid-cols-3 gap-2 mb-3">
               {PRESET_AMOUNTS.map((amount) => (
@@ -445,7 +474,7 @@ export function DonationWidget({
               />
             </div>
 
-            {selectedMethod === "card" && (
+            {(selectedMethod === "card" || selectedMethod === "paypal") && (
               <div>
                 <Label htmlFor="message" className="text-sm mb-1.5 block">
                   Mesaj (optional)
@@ -473,7 +502,7 @@ export function DonationWidget({
             type="submit"
             size="lg"
             className="w-full text-base h-12"
-            disabled={isLoading || (selectedMethod === "card" && finalAmount < 1)}
+            disabled={isLoading || ((selectedMethod === "card" || selectedMethod === "paypal") && finalAmount < 1)}
           >
             {isLoading ? (
               <>
@@ -484,6 +513,11 @@ export function DonationWidget({
               <>
                 <CreditCard className="h-5 w-5 mr-2" />
                 Plateste {finalAmount > 0 ? `${finalAmount} RON` : ""} cu cardul
+              </>
+            ) : selectedMethod === "paypal" ? (
+              <>
+                <span className="text-lg font-bold mr-2">P</span>
+                Plateste {finalAmount > 0 ? `${finalAmount} RON` : ""} cu PayPal
               </>
             ) : selectedMethod === "bank_transfer" ? (
               <>
@@ -504,6 +538,8 @@ export function DonationWidget({
             <p>
               {selectedMethod === "card"
                 ? "Plata este procesata securizat prin Stripe. Banii ajung direct in contul ONG-ului."
+                : selectedMethod === "paypal"
+                ? "Plata este procesata securizat prin PayPal. Banii ajung direct in contul ONG-ului."
                 : "Donatia va fi confirmata de catre echipa ONG-ului dupa primirea transferului."
               }
             </p>

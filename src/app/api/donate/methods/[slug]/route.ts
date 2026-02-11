@@ -16,6 +16,9 @@ export async function GET(
         stripeConnectOnboarded: true,
         stripeConnectStatus: true,
         stripeChargesEnabled: true,
+        paypalEnabled: true,
+        paypalEmail: true,
+        paypalClientId: true,
         bankName: true,
         ibanRon: true,
         ibanEur: true,
@@ -38,6 +41,17 @@ export async function GET(
         label: "Card bancar",
         description: "Plateste securizat cu cardul prin Stripe",
         available: true,
+      });
+    }
+
+    // PayPal - works with just email or full API credentials
+    if (ngo.paypalEnabled && (ngo.paypalEmail || ngo.paypalClientId)) {
+      methods.push({
+        id: "paypal",
+        label: "PayPal",
+        description: "Plateste rapid si securizat prin PayPal",
+        available: true,
+        mode: ngo.paypalClientId ? "api" : "email",
       });
     }
 

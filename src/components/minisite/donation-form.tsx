@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Heart, Check } from "lucide-react";
+import { Heart, Check, CreditCard, Loader2 } from "lucide-react";
 
 interface Props {
   ngoSlug: string;
@@ -15,6 +15,12 @@ interface Props {
 }
 
 const AMOUNTS = [25, 50, 100, 250, 500];
+
+interface PaymentMethodInfo {
+  id: string;
+  label: string;
+  available: boolean;
+}
 
 export function MiniSiteDonation({ ngoSlug, ngoName, consentTexts }: Props) {
   const [amount, setAmount] = useState<number>(50);
@@ -30,6 +36,28 @@ export function MiniSiteDonation({ ngoSlug, ngoName, consentTexts }: Props) {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
+  // Payment methods
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodInfo[]>([]);
+  const [selectedMethod, setSelectedMethod] = useState<string>("direct");
+
+  useEffect(() => {
+    const fetchMethods = async () => {
+      try {
+        const res = await fetch(`/api/donate/methods/${ngoSlug}`);
+        if (res.ok) {
+          const data = await res.json();
+          const methods: PaymentMethodInfo[] = (data.methods || []).filter(
+            (m: any) => m.id === "card" || m.id === "paypal"
+          );
+          setPaymentMethods(methods);
+        }
+      } catch {
+        // ignore - fallback to direct donation
+      }
+    };
+    fetchMethods();
+  }, [ngoSlug]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!privacyConsent) {
@@ -41,6 +69,60 @@ export function MiniSiteDonation({ ngoSlug, ngoName, consentTexts }: Props) {
 
     try {
       const finalAmount = customAmount ? parseFloat(customAmount) : amount;
+
+      // PayPal flow - redirect to PayPal
+      if (selectedMethod === "paypal") {
+        const res = await fetch("/api/donate/paypal", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ngoSlug,
+            amount: finalAmount,
+            donorEmail: email || undefined,
+            donorName: name || undefined,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || "Eroare la crearea platii PayPal");
+          return;
+        }
+        if (data.approveUrl) {
+          window.location.href = data.approveUrl;
+          return;
+        }
+        setSuccess(true);
+        return;
+      }
+
+      // Stripe card flow - redirect to Stripe Checkout
+      if (selectedMethod === "card") {
+        const res = await fetch("/api/donate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ngoSlug,
+            amount: finalAmount,
+            donorEmail: email || undefined,
+            donorName: name || undefined,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || "Eroare la crearea platii cu cardul");
+          return;
+        }
+        if (data.checkoutUrl) {
+          window.location.href = data.checkoutUrl;
+          return;
+        }
+        setSuccess(true);
+        return;
+      }
+
+      // Direct minisite donation (default)
       const res = await fetch(`/api/minisite/${ngoSlug}/donate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,6 +163,8 @@ export function MiniSiteDonation({ ngoSlug, ngoName, consentTexts }: Props) {
     );
   }
 
+  const hasOnlineMethods = paymentMethods.length > 0;
+
   return (
     <Card>
       <CardHeader>
@@ -94,6 +178,43 @@ export function MiniSiteDonation({ ngoSlug, ngoName, consentTexts }: Props) {
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
             <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-md">{error}</div>
+          )}
+
+          {/* Payment method selection */}
+          {hasOnlineMethods && (
+            <div>
+              <Label className="mb-3 block text-sm font-medium">Metoda de plata</Label>
+              <div className={`grid gap-2 ${paymentMethods.length >= 2 ? "grid-cols-3" : "grid-cols-2"}`}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedMethod("direct")}
+                  className={`flex items-center justify-center gap-2 p-3 rounded-lg border text-sm font-medium transition-colors ${
+                    selectedMethod === "direct"
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-background hover:bg-accent border-border"
+                  }`}
+                >
+                  <Heart className="h-4 w-4" />
+                  Donatie
+                </button>
+                {paymentMethods.map((method) => (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => setSelectedMethod(method.id)}
+                    className={`flex items-center justify-center gap-2 p-3 rounded-lg border text-sm font-medium transition-colors ${
+                      selectedMethod === method.id
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-background hover:bg-accent border-border"
+                    }`}
+                  >
+                    {method.id === "card" && <CreditCard className="h-4 w-4" />}
+                    {method.id === "paypal" && <span className="font-bold">P</span>}
+                    {method.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
 
           <div>
@@ -123,14 +244,16 @@ export function MiniSiteDonation({ ngoSlug, ngoName, consentTexts }: Props) {
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="recurring"
-              checked={isRecurring}
-              onCheckedChange={(v) => setIsRecurring(v === true)}
-            />
-            <Label htmlFor="recurring" className="text-sm">Vreau sa donez lunar</Label>
-          </div>
+          {selectedMethod === "direct" && (
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="recurring"
+                checked={isRecurring}
+                onCheckedChange={(v) => setIsRecurring(v === true)}
+              />
+              <Label htmlFor="recurring" className="text-sm">Vreau sa donez lunar</Label>
+            </div>
+          )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -144,32 +267,38 @@ export function MiniSiteDonation({ ngoSlug, ngoName, consentTexts }: Props) {
             </div>
           </div>
 
-          <div>
-            <Label htmlFor="donor-phone">Telefon (optional)</Label>
-            <Input id="donor-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+40 7xx xxx xxx" />
-          </div>
+          {selectedMethod === "direct" && (
+            <div>
+              <Label htmlFor="donor-phone">Telefon (optional)</Label>
+              <Input id="donor-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+40 7xx xxx xxx" />
+            </div>
+          )}
 
           <div className="space-y-3 border-t pt-4">
-            <div className="flex items-start gap-2">
-              <Checkbox
-                id="email-consent"
-                checked={emailConsent}
-                onCheckedChange={(v) => setEmailConsent(v === true)}
-              />
-              <Label htmlFor="email-consent" className="text-sm leading-snug">
-                {consentTexts.EMAIL_MARKETING || "Sunt de acord sa primesc actualizari prin email despre impactul donatiei mele"}
-              </Label>
-            </div>
-            <div className="flex items-start gap-2">
-              <Checkbox
-                id="sms-consent"
-                checked={smsConsent}
-                onCheckedChange={(v) => setSmsConsent(v === true)}
-              />
-              <Label htmlFor="sms-consent" className="text-sm leading-snug">
-                {consentTexts.SMS_MARKETING || "Sunt de acord sa primesc notificari SMS (optional)"}
-              </Label>
-            </div>
+            {selectedMethod === "direct" && (
+              <>
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="email-consent"
+                    checked={emailConsent}
+                    onCheckedChange={(v) => setEmailConsent(v === true)}
+                  />
+                  <Label htmlFor="email-consent" className="text-sm leading-snug">
+                    {consentTexts.EMAIL_MARKETING || "Sunt de acord sa primesc actualizari prin email despre impactul donatiei mele"}
+                  </Label>
+                </div>
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    id="sms-consent"
+                    checked={smsConsent}
+                    onCheckedChange={(v) => setSmsConsent(v === true)}
+                  />
+                  <Label htmlFor="sms-consent" className="text-sm leading-snug">
+                    {consentTexts.SMS_MARKETING || "Sunt de acord sa primesc notificari SMS (optional)"}
+                  </Label>
+                </div>
+              </>
+            )}
             <div className="flex items-start gap-2">
               <Checkbox
                 id="privacy-consent"
@@ -183,7 +312,18 @@ export function MiniSiteDonation({ ngoSlug, ngoName, consentTexts }: Props) {
           </div>
 
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
-            {loading ? "Se proceseaza..." : `Doneaza ${customAmount || amount} RON`}
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Se proceseaza...
+              </>
+            ) : selectedMethod === "paypal" ? (
+              `Plateste ${customAmount || amount} RON cu PayPal`
+            ) : selectedMethod === "card" ? (
+              `Plateste ${customAmount || amount} RON cu cardul`
+            ) : (
+              `Doneaza ${customAmount || amount} RON`
+            )}
           </Button>
         </form>
       </CardContent>
