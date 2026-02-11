@@ -948,11 +948,19 @@ export default function ReteaPage() {
 
                   {/* How to install */}
                   <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="bg-white rounded-lg p-3 border text-center space-y-1">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mx-auto text-blue-600 font-bold text-sm">1</div>
+                    <a
+                      href="/api/prospects/extension-download"
+                      download
+                      className="bg-white rounded-lg p-3 border text-center space-y-1 hover:border-blue-300 hover:bg-blue-50/50 transition-colors cursor-pointer group block"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mx-auto text-blue-600 font-bold text-sm group-hover:bg-blue-200 transition-colors">1</div>
                       <p className="text-xs font-semibold">Descarca extensia</p>
-                      <p className="text-[10px] text-muted-foreground">Folderul chrome-extension/ din proiect</p>
-                    </div>
+                      <p className="text-[10px] text-muted-foreground">Click pentru a descarca .zip</p>
+                      <div className="flex items-center justify-center gap-1 mt-1">
+                        <Download className="h-3 w-3 text-blue-500" />
+                        <span className="text-[10px] font-medium text-blue-600">binevo-chrome-extension.zip</span>
+                      </div>
+                    </a>
                     <div className="bg-white rounded-lg p-3 border text-center space-y-1">
                       <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center mx-auto text-indigo-600 font-bold text-sm">2</div>
                       <p className="text-xs font-semibold">Incarca in Chrome</p>
