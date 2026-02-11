@@ -659,11 +659,11 @@ export default function CampaignsPage() {
             </CardHeader>
             <CardContent>
               <div className="p-4 bg-slate-50 rounded-lg text-sm text-slate-700 space-y-2 mb-4 max-h-[200px] overflow-y-auto">
-                <p><strong>1.</strong> Platforma NGO HUB ofera servicii tehnice de trimitere email si SMS. Expeditorul mesajelor este exclusiv organizatia (ONG-ul) care utilizeaza platforma.</p>
+                <p><strong>1.</strong> Platforma Binevo ofera servicii tehnice de trimitere email si SMS. Expeditorul mesajelor este exclusiv organizatia (ONG-ul) care utilizeaza platforma.</p>
                 <p><strong>2.</strong> ONG-ul este singurul responsabil pentru continutul mesajelor, obtinerea consimtamantului destinatarilor si respectarea legislatiei GDPR, ePrivacy si anti-spam aplicabile.</p>
-                <p><strong>3.</strong> NGO HUB nu raspunde pentru mesajele trimise de ONG, inclusiv reclamatii, spam reports sau sanctiuni legale rezultate din utilizarea platformei.</p>
+                <p><strong>3.</strong> Binevo nu raspunde pentru mesajele trimise de ONG, inclusiv reclamatii, spam reports sau sanctiuni legale rezultate din utilizarea platformei.</p>
                 <p><strong>4.</strong> ONG-ul garanteaza ca detine consimtamantul explicit al tuturor destinatarilor inaintea trimiterii fiecarei campanii.</p>
-                <p><strong>5.</strong> NGO HUB isi rezerva dreptul de a suspenda accesul ONG-urilor care incalca acesti termeni sau care genereaza rate ridicate de reclamatii/bounce.</p>
+                <p><strong>5.</strong> Binevo isi rezerva dreptul de a suspenda accesul ONG-urilor care incalca acesti termeni sau care genereaza rate ridicate de reclamatii/bounce.</p>
               </div>
               {complianceData?.tosAcceptedAt ? (
                 <p className="text-sm text-green-700 flex items-center gap-1">
@@ -696,10 +696,10 @@ export default function CampaignsPage() {
             </CardHeader>
             <CardContent>
               <div className="p-4 bg-slate-50 rounded-lg text-sm text-slate-700 space-y-2 mb-4 max-h-[200px] overflow-y-auto">
-                <p><strong>1.</strong> NGO HUB prelucreaza datele personale (email, telefon) ale donatorilor exclusiv in calitate de operator imputernicit, la instructiunea ONG-ului.</p>
+                <p><strong>1.</strong> Binevo prelucreaza datele personale (email, telefon) ale donatorilor exclusiv in calitate de operator imputernicit, la instructiunea ONG-ului.</p>
                 <p><strong>2.</strong> ONG-ul ramane operatorul de date si este responsabil pentru informarea persoanelor vizate si obtinerea consimtamantului.</p>
                 <p><strong>3.</strong> Datele sunt criptate (AES-256-GCM) in repaus si in tranzit. Accesul este restrictionat prin roluri si permisiuni.</p>
-                <p><strong>4.</strong> NGO HUB nu cedeaza, vinde sau partajeaza datele cu terti, cu exceptia furnizorilor de servicii necesare (SendGrid pentru email, Twilio pentru SMS).</p>
+                <p><strong>4.</strong> Binevo nu cedeaza, vinde sau partajeaza datele cu terti, cu exceptia furnizorilor de servicii necesare (SendGrid pentru email, Twilio pentru SMS).</p>
                 <p><strong>5.</strong> ONG-ul poate solicita stergerea tuturor datelor in conformitate cu dreptul la uitare (Art. 17 GDPR). Anonimizarea este disponibila in platforma.</p>
               </div>
               {complianceData?.gdprAcceptedAt ? (

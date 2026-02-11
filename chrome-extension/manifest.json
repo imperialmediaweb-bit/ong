@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "NGO Hub - LinkedIn Prospect Importer",
+  "name": "Binevo - LinkedIn Prospect Importer",
   "version": "1.0.0",
-  "description": "Import LinkedIn prospects directly into NGO Hub CRM. Capture profiles from search pages and import them with one click.",
+  "description": "Import LinkedIn prospects directly into Binevo CRM. Capture profiles from search pages and import them with one click.",
   "permissions": ["storage", "activeTab", "scripting"],
   "host_permissions": ["https://www.linkedin.com/*"],
   "action": {

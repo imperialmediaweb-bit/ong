@@ -79,7 +79,7 @@ export async function POST(
           </div>
         </div>
         <div class="email-footer">
-          <p>Acest email a fost trimis automat de pe mini-site-ul ${ngo.name} prin platforma NGO HUB.</p>
+          <p>Acest email a fost trimis automat de pe mini-site-ul ${ngo.name} prin platforma Binevo.</p>
         </div>
       </body>
       </html>
@@ -89,7 +89,7 @@ export async function POST(
       to: contactEmail,
       subject: `Contract sponsorizare ${contractNumber} - ${companyName || "Sponsor"}`,
       html: emailHtml,
-      fromName: "NGO HUB - Contracte",
+      fromName: "Binevo - Contracte",
     });
 
     if (!result.success) {

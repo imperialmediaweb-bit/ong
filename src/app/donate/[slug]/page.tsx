@@ -50,7 +50,7 @@ export default async function DonatePage({ params }: Props) {
           </Link>
           <Link href="/" className="flex items-center gap-2">
             <Heart className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg">NGO HUB</span>
+            <span className="font-bold text-lg">Binevo</span>
           </Link>
         </div>
       </header>
@@ -166,7 +166,7 @@ export default async function DonatePage({ params }: Props) {
             className="flex items-center gap-2 hover:text-foreground transition-colors"
           >
             <Heart className="h-4 w-4 text-primary" />
-            <span>NGO HUB - Platforma CRM pentru ONG-uri</span>
+            <span>Binevo - Platforma CRM pentru ONG-uri</span>
           </Link>
           <span>Plati securizate prin Stripe, transfer bancar si Revolut</span>
         </div>

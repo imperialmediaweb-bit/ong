@@ -1,4 +1,4 @@
-// ─── NGO Hub LinkedIn Content Script ─────────
+// ─── Binevo LinkedIn Content Script ─────────
 // Runs on linkedin.com pages
 
 let isAutoImporting = false;
@@ -169,7 +169,7 @@ let bannerEl = null;
 function showBanner(text) {
   if (!bannerEl) {
     bannerEl = document.createElement("div");
-    bannerEl.id = "ngo-hub-banner";
+    bannerEl.id = "binevo-banner";
     bannerEl.style.cssText = `
       position: fixed;
       top: 0;
@@ -191,11 +191,11 @@ function showBanner(text) {
     `;
     document.body.prepend(bannerEl);
   }
-  bannerEl.textContent = `🎯 NGO Hub: ${text}`;
+  bannerEl.textContent = `🎯 Binevo: ${text}`;
 }
 
 function updateBanner(text) {
-  if (bannerEl) bannerEl.textContent = `🎯 NGO Hub: ${text}`;
+  if (bannerEl) bannerEl.textContent = `🎯 Binevo: ${text}`;
 }
 
 function hideBanner() {

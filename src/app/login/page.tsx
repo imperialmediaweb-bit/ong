@@ -54,7 +54,7 @@ export default function LoginPage() {
           <div className="flex justify-center mb-2">
             <Heart className="h-8 w-8 text-primary" />
           </div>
-          <CardTitle>Autentificare NGO HUB</CardTitle>
+          <CardTitle>Autentificare Binevo</CardTitle>
           <CardDescription>Introdu datele de acces pentru a accesa panoul de control</CardDescription>
         </CardHeader>
         <CardContent>
@@ -116,7 +116,7 @@ export default function LoginPage() {
                 size="sm"
                 className="text-xs border-purple-200 text-purple-700 hover:bg-purple-50"
                 onClick={() => {
-                  setEmail("superadmin@ngohub.ro");
+                  setEmail("superadmin@binevo.ro");
                   setPassword("password123");
                 }}
               >
@@ -125,7 +125,7 @@ export default function LoginPage() {
             </div>
             <div className="text-[10px] text-muted-foreground text-center space-y-0.5">
               <p>ONG: admin@demo-ngo.org / password123</p>
-              <p>Super Admin: superadmin@ngohub.ro / password123</p>
+              <p>Super Admin: superadmin@binevo.ro / password123</p>
             </div>
           </div>
         </CardContent>

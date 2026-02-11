@@ -75,7 +75,7 @@ export function Sidebar() {
           <Heart className="h-5 w-5" />
         </div>
         <div className="min-w-0">
-          <h1 className="text-base font-bold tracking-tight">NGO HUB</h1>
+          <h1 className="text-base font-bold tracking-tight">Binevo</h1>
           <p className="text-[11px] text-muted-foreground truncate max-w-[150px]">
             {(session?.user as any)?.ngoName || "Platforma CRM"}
           </p>

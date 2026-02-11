@@ -1,9 +1,9 @@
-/* NGO Hub LinkedIn Extension - Content Script Styles */
-#ngo-hub-banner {
-  animation: ngo-hub-slide-in 0.3s ease-out;
+/* Binevo LinkedIn Extension - Content Script Styles */
+#binevo-banner {
+  animation: binevo-slide-in 0.3s ease-out;
 }
 
-@keyframes ngo-hub-slide-in {
+@keyframes binevo-slide-in {
   from {
     transform: translateY(-100%);
     opacity: 0;

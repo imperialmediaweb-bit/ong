@@ -2207,7 +2207,7 @@ export default async function MiniSitePage({ params }: Props) {
                   className="font-bold transition-colors hover:text-white/70"
                   style={{ color: `rgba(${accentRgb}, 0.7)` }}
                 >
-                  NGO HUB
+                  Binevo
                 </span>
               </span>
             </div>

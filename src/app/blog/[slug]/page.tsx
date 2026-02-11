@@ -59,7 +59,7 @@ export default async function BlogPostPage({ params }: Props) {
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <header className="flex items-center justify-between mb-8">
           <Link href="/" className="text-primary font-bold text-xl">
-            NGO HUB
+            Binevo
           </Link>
           <Link href="/blog">
             <Button variant="ghost" size="sm">
@@ -89,7 +89,7 @@ export default async function BlogPostPage({ params }: Props) {
           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-8 pb-8 border-b">
             <span className="flex items-center gap-1">
               <User className="h-3.5 w-3.5" />
-              {post.author?.name || "NGO HUB"}
+              {post.author?.name || "Binevo"}
             </span>
             <span className="flex items-center gap-1">
               <CalendarDays className="h-3.5 w-3.5" />
@@ -125,7 +125,7 @@ export default async function BlogPostPage({ params }: Props) {
 
         <footer className="text-center text-xs text-muted-foreground mt-16 pb-8">
           <p>
-            <Link href="/" className="text-primary hover:underline">NGO HUB</Link>
+            <Link href="/" className="text-primary hover:underline">Binevo</Link>
             {" "}&middot;{" "}
             <Link href="/blog" className="text-primary hover:underline">Blog</Link>
           </p>

@@ -46,7 +46,7 @@ export async function createConnectAccount(
     },
     metadata: {
       ngoId,
-      platform: "ngo-hub",
+      platform: "binevo",
     },
   });
 
@@ -183,7 +183,7 @@ export async function createDonationCheckout(params: {
           currency: params.currency.toLowerCase(),
           product_data: {
             name: `Donatie pentru ${params.ngoName}`,
-            description: `Donatie prin platforma NGO HUB`,
+            description: `Donatie prin platforma Binevo`,
           },
           unit_amount: params.amount,
         },

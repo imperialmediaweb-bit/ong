@@ -1,8 +1,8 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Politica Anti-Spam | NGO HUB",
-  description: "Politica anti-spam a platformei NGO HUB pentru trimiterea de emailuri si SMS-uri.",
+  title: "Politica Anti-Spam | Binevo",
+  description: "Politica anti-spam a platformei Binevo pentru trimiterea de emailuri si SMS-uri.",
 };
 
 export default function AntiSpamPolicyPage() {
@@ -16,7 +16,7 @@ export default function AntiSpamPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">1. Introducere</h2>
             <p className="text-slate-700 leading-relaxed">
-              NGO HUB este o platforma tehnica ce permite organizatiilor non-profit (ONG-uri) sa comunice cu donatorii si sustinatorii lor
+              Binevo este o platforma tehnica ce permite organizatiilor non-profit (ONG-uri) sa comunice cu donatorii si sustinatorii lor
               prin email si SMS. Aceasta politica anti-spam stabileste regulile si obligatiile legate de trimiterea de mesaje prin platforma noastra.
             </p>
           </section>
@@ -24,8 +24,8 @@ export default function AntiSpamPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">2. Cine este expeditorul?</h2>
             <p className="text-slate-700 leading-relaxed">
-              <strong>Expeditorul mesajelor este exclusiv organizatia (ONG-ul)</strong> care utilizeaza platforma NGO HUB.
-              NGO HUB actioneaza doar ca furnizor de servicii tehnice de trimitere (Email Service Provider) si nu este parte
+              <strong>Expeditorul mesajelor este exclusiv organizatia (ONG-ul)</strong> care utilizeaza platforma Binevo.
+              Binevo actioneaza doar ca furnizor de servicii tehnice de trimitere (Email Service Provider) si nu este parte
               in relatia de comunicare intre ONG si destinatarii mesajelor.
             </p>
           </section>
@@ -33,7 +33,7 @@ export default function AntiSpamPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">3. Consimtamantul destinatarilor</h2>
             <p className="text-slate-700 leading-relaxed">
-              Fiecare ONG care utilizeaza NGO HUB se obliga sa:
+              Fiecare ONG care utilizeaza Binevo se obliga sa:
             </p>
             <ul className="list-disc pl-6 text-slate-700 space-y-2 mt-2">
               <li>Obtina consimtamantul explicit (opt-in) al fiecarui destinatar inainte de a-i trimite mesaje.</li>
@@ -66,7 +66,7 @@ export default function AntiSpamPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">5. Mecanism de dezabonare</h2>
             <p className="text-slate-700 leading-relaxed">
-              Fiecare mesaj trimis prin NGO HUB contine automat un link de dezabonare (unsubscribe).
+              Fiecare mesaj trimis prin Binevo contine automat un link de dezabonare (unsubscribe).
               Cererile de dezabonare sunt procesate imediat si adresa respectiva este adaugata pe o lista
               globala de blocari pentru a preveni trimiterea viitoare de mesaje.
             </p>
@@ -75,7 +75,7 @@ export default function AntiSpamPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">6. Lista globala de blocari (Blacklist)</h2>
             <p className="text-slate-700 leading-relaxed">
-              NGO HUB mentine o lista globala de adrese de email si numere de telefon blocate.
+              Binevo mentine o lista globala de adrese de email si numere de telefon blocate.
               Adresele sunt adaugate automat in urma:
             </p>
             <ul className="list-disc pl-6 text-slate-700 space-y-1 mt-2">
@@ -133,8 +133,8 @@ export default function AntiSpamPolicyPage() {
           <section>
             <h2 className="text-xl font-semibold mb-3">10. Raportare abuz</h2>
             <p className="text-slate-700 leading-relaxed">
-              Daca primiti mesaje nesolicitate trimise prin platforma NGO HUB, va rugam sa ne contactati la
-              adresa <strong>abuse@ngohub.ro</strong> cu detalii despre mesajul primit.
+              Daca primiti mesaje nesolicitate trimise prin platforma Binevo, va rugam sa ne contactati la
+              adresa <strong>abuse@binevo.ro</strong> cu detalii despre mesajul primit.
               Vom investiga si vom lua masurile necesare in termen de 48 de ore.
             </p>
           </section>
@@ -145,14 +145,14 @@ export default function AntiSpamPolicyPage() {
               Pentru intrebari legate de aceasta politica, ne puteti contacta la:
             </p>
             <ul className="list-disc pl-6 text-slate-700 space-y-1 mt-2">
-              <li>Email: <strong>legal@ngohub.ro</strong></li>
+              <li>Email: <strong>legal@binevo.ro</strong></li>
               <li>Adresa: Conform datelor de pe site</li>
             </ul>
           </section>
         </div>
 
         <div className="mt-12 pt-8 border-t text-center text-sm text-muted-foreground">
-          <p>NGO HUB - Platforma pentru ONG-uri din Romania</p>
+          <p>Binevo - Platforma pentru ONG-uri din Romania</p>
         </div>
       </div>
     </div>

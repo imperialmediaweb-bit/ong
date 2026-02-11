@@ -75,7 +75,7 @@ function wrapTemplate(content: string): string {
   <div style="${baseStyle}">
     ${content}
     <div style="${footerStyle}">
-      <p>NGO HUB - Platforma de management pentru ONG-uri din Romania</p>
+      <p>Binevo - Platforma de management pentru ONG-uri din Romania</p>
       <p>Acest email a fost trimis automat. Va rugam sa nu raspundeti la acest mesaj.</p>
     </div>
   </div>
@@ -164,7 +164,7 @@ export function subscriptionExpiringEmail(params: {
           <a href="${params.dashboardUrl}" style="${buttonStyle}">Reinnoieste Abonamentul</a>
         </div>
 
-        <p style="font-size:14px;color:#6b7280;">Contactati-ne la <a href="mailto:contact@ngohub.ro" style="color:#6366f1;">contact@ngohub.ro</a> pentru intrebari.</p>
+        <p style="font-size:14px;color:#6b7280;">Contactati-ne la <a href="mailto:contact@binevo.ro" style="color:#6366f1;">contact@binevo.ro</a> pentru intrebari.</p>
       </div>
     `),
   };
@@ -204,7 +204,7 @@ export function subscriptionExpiredEmail(params: {
           <a href="${params.dashboardUrl}" style="${buttonStyle.replace('#6366f1', '#dc2626').replace('#8b5cf6', '#ef4444')}">Reinnoieste Acum</a>
         </div>
 
-        <p style="font-size:14px;color:#6b7280;">Contactati-ne la <a href="mailto:contact@ngohub.ro" style="color:#6366f1;">contact@ngohub.ro</a> pentru reinnoire.</p>
+        <p style="font-size:14px;color:#6b7280;">Contactati-ne la <a href="mailto:contact@binevo.ro" style="color:#6366f1;">contact@binevo.ro</a> pentru reinnoire.</p>
       </div>
     `),
   };

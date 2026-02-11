@@ -20,7 +20,7 @@ export async function GET() {
       settings = await prisma.platformSettings.create({
         data: {
           id: "platform",
-          siteName: "NGO HUB",
+          siteName: "Binevo",
           siteDescription: "Platforma de management pentru organizatii non-profit",
           primaryColor: "#6366f1",
           heroTitle: "Digitalizeaza-ti ONG-ul",
@@ -53,7 +53,7 @@ export async function GET() {
               { name: "ELITE", price: 249, label: "Enterprise" },
             ],
           } as any,
-          footerText: "NGO HUB - Platforma pentru ONG-uri din Romania",
+          footerText: "Binevo - Platforma pentru ONG-uri din Romania",
           socialLinks: {} as any,
         },
       });

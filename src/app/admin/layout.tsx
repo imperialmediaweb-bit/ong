@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-700">
         <Shield className="h-7 w-7 text-blue-400" />
         <div>
-          <h1 className="text-lg font-bold text-white">NGO HUB</h1>
+          <h1 className="text-lg font-bold text-white">Binevo</h1>
           <Badge className="bg-blue-600 text-white text-[10px] mt-0.5">
             Super Admin
           </Badge>

@@ -34,7 +34,7 @@ export default async function BlogPage() {
       <div className="container mx-auto px-4 py-12 max-w-5xl">
         <header className="text-center mb-12">
           <Link href="/" className="text-primary font-bold text-xl">
-            NGO HUB
+            Binevo
           </Link>
           <h1 className="text-4xl font-bold mt-4">Blog</h1>
           <p className="text-muted-foreground mt-2">
@@ -110,7 +110,7 @@ export default async function BlogPage() {
 
         <footer className="text-center text-xs text-muted-foreground mt-16 pb-8">
           <Link href="/" className="text-primary hover:underline">
-            Inapoi la NGO HUB
+            Inapoi la Binevo
           </Link>
         </footer>
       </div>

@@ -7,7 +7,7 @@ import {
   subscriptionExpiredEmail,
 } from "@/lib/subscription-emails";
 
-const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://ngohub.ro";
+const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://binevo.ro";
 
 export async function POST(req: NextRequest) {
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
@@ -97,8 +97,8 @@ export async function POST(req: NextRequest) {
                 to: admin.email,
                 subject: emailData.subject,
                 html: emailData.html,
-                from: "noreply@ngohub.ro",
-                fromName: "NGO HUB",
+                from: "noreply@binevo.ro",
+                fromName: "Binevo",
               }).catch(console.error);
             }
           }
@@ -143,8 +143,8 @@ export async function POST(req: NextRequest) {
                 to: admin.email,
                 subject: emailData.subject,
                 html: emailData.html,
-                from: "noreply@ngohub.ro",
-                fromName: "NGO HUB",
+                from: "noreply@binevo.ro",
+                fromName: "Binevo",
               }).catch(console.error);
             }
           }
@@ -193,8 +193,8 @@ export async function POST(req: NextRequest) {
               to: admin.email,
               subject: emailData.subject,
               html: emailData.html,
-              from: "noreply@ngohub.ro",
-              fromName: "NGO HUB",
+              from: "noreply@binevo.ro",
+              fromName: "Binevo",
             }).catch(console.error);
           }
         }
