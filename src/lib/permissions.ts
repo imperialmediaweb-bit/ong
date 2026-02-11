@@ -15,10 +15,15 @@ type Feature =
   | "export_csv";
 
 const PLAN_FEATURES: Record<SubscriptionPlan, Feature[]> = {
-  BASIC: ["donors_view", "gdpr_tools"],
-  PRO: [
+  BASIC: [
     "donors_view", "donors_manage", "campaigns_email",
     "ai_generator", "automations_basic", "gdpr_tools",
+    "analytics", "export_csv",
+  ],
+  PRO: [
+    "donors_view", "donors_manage", "campaigns_email",
+    "campaigns_sms", "ai_generator", "automations_basic",
+    "automations_advanced", "gdpr_tools",
     "analytics", "export_csv",
   ],
   ELITE: [
@@ -29,7 +34,8 @@ const PLAN_FEATURES: Record<SubscriptionPlan, Feature[]> = {
   ],
 };
 
-export function hasFeature(plan: SubscriptionPlan, feature: Feature): boolean {
+export function hasFeature(plan: SubscriptionPlan, feature: Feature, role?: string): boolean {
+  if (role === "SUPER_ADMIN") return true;
   return PLAN_FEATURES[plan]?.includes(feature) ?? false;
 }
 

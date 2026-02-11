@@ -50,15 +50,35 @@ export const authOptions: NextAuthOptions = {
 
           console.log(`[AUTH] Login success: ${user.email} (${user.role})`);
 
+          // For SUPER_ADMIN without an NGO, auto-assign the first available NGO
+          let ngoId = user.ngoId;
+          let ngoName = user.ngo?.name;
+          let ngoSlug = user.ngo?.slug;
+          let plan = user.ngo?.subscriptionPlan;
+
+          if (user.role === "SUPER_ADMIN") {
+            plan = "ELITE" as any; // Super Admin always gets full access
+            if (!ngoId) {
+              const firstNgo = await prisma.ngo.findFirst({
+                orderBy: { createdAt: "asc" },
+              });
+              if (firstNgo) {
+                ngoId = firstNgo.id;
+                ngoName = firstNgo.name;
+                ngoSlug = firstNgo.slug;
+              }
+            }
+          }
+
           return {
             id: user.id,
             email: user.email,
             name: user.name,
             role: user.role,
-            ngoId: user.ngoId,
-            ngoName: user.ngo?.name,
-            ngoSlug: user.ngo?.slug,
-            plan: user.ngo?.subscriptionPlan,
+            ngoId,
+            ngoName,
+            ngoSlug,
+            plan,
           };
         } catch (error: any) {
           console.error(`[AUTH] Database error:`, error.message);
@@ -76,6 +96,24 @@ export const authOptions: NextAuthOptions = {
         token.ngoName = (user as any).ngoName;
         token.ngoSlug = (user as any).ngoSlug;
         token.plan = (user as any).plan;
+      }
+      // Ensure SUPER_ADMIN always has ELITE plan and an ngoId
+      if (token.role === "SUPER_ADMIN") {
+        token.plan = "ELITE";
+        if (!token.ngoId) {
+          try {
+            const firstNgo = await prisma.ngo.findFirst({
+              orderBy: { createdAt: "asc" },
+            });
+            if (firstNgo) {
+              token.ngoId = firstNgo.id;
+              token.ngoName = firstNgo.name;
+              token.ngoSlug = firstNgo.slug;
+            }
+          } catch {
+            // Ignore DB errors in jwt callback
+          }
+        }
       }
       return token;
     },
