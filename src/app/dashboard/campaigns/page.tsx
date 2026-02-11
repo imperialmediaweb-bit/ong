@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -25,8 +26,15 @@ import {
   Eye,
   MousePointerClick,
   Send,
-  BarChart3,
   Calendar,
+  CreditCard,
+  Package,
+  TrendingUp,
+  CheckCircle2,
+  Star,
+  Zap,
+  ArrowRight,
+  History,
 } from "lucide-react";
 
 interface Campaign {
@@ -47,6 +55,27 @@ interface Campaign {
   createdAt: string;
   goalAmount: number | null;
   currentAmount: number;
+}
+
+interface CreditPkg {
+  id: string;
+  name: string;
+  channel: string;
+  emailCredits: number;
+  smsCredits: number;
+  price: number;
+  popular?: boolean;
+  description: string;
+}
+
+interface CreditTx {
+  id: string;
+  type: string;
+  channel: string;
+  amount: number;
+  balance: number;
+  description: string | null;
+  createdAt: string;
 }
 
 const TYPE_OPTIONS = [
@@ -79,36 +108,21 @@ const CHANNEL_OPTIONS = [
 
 const statusBadgeVariant = (status: string) => {
   switch (status) {
-    case "DRAFT":
-      return "secondary" as const;
-    case "SCHEDULED":
-      return "warning" as const;
-    case "SENDING":
-      return "default" as const;
-    case "SENT":
-      return "success" as const;
-    case "PAUSED":
-      return "warning" as const;
-    case "CANCELLED":
-      return "destructive" as const;
-    default:
-      return "secondary" as const;
+    case "DRAFT": return "secondary" as const;
+    case "SCHEDULED": return "warning" as const;
+    case "SENDING": return "default" as const;
+    case "SENT": return "success" as const;
+    case "PAUSED": return "warning" as const;
+    case "CANCELLED": return "destructive" as const;
+    default: return "secondary" as const;
   }
 };
 
 const channelIcon = (channel: string) => {
   switch (channel) {
-    case "EMAIL":
-      return <Mail className="h-3 w-3" />;
-    case "SMS":
-      return <MessageSquare className="h-3 w-3" />;
-    default:
-      return (
-        <div className="flex gap-0.5">
-          <Mail className="h-3 w-3" />
-          <MessageSquare className="h-3 w-3" />
-        </div>
-      );
+    case "EMAIL": return <Mail className="h-3 w-3" />;
+    case "SMS": return <MessageSquare className="h-3 w-3" />;
+    default: return <div className="flex gap-0.5"><Mail className="h-3 w-3" /><MessageSquare className="h-3 w-3" /></div>;
   }
 };
 
@@ -116,12 +130,21 @@ export default function CampaignsPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("campaigns");
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [channelFilter, setChannelFilter] = useState("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Credits
+  const [emailCredits, setEmailCredits] = useState(0);
+  const [smsCredits, setSmsCredits] = useState(0);
+  const [packages, setPackages] = useState<CreditPkg[]>([]);
+  const [transactions, setTransactions] = useState<CreditTx[]>([]);
+  const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [creditsLoaded, setCreditsLoaded] = useState(false);
 
   const fetchCampaigns = useCallback(async () => {
     setLoading(true);
@@ -134,7 +157,7 @@ export default function CampaignsPage() {
       if (channelFilter !== "all") params.set("channel", channelFilter);
 
       const res = await fetch(`/api/campaigns?${params.toString()}`);
-      if (!res.ok) throw new Error("Failed to fetch campaigns");
+      if (!res.ok) throw new Error("Eroare la incarcarea campaniilor");
       const data = await res.json();
       setCampaigns(data.campaigns || []);
     } catch (err: any) {
@@ -144,206 +167,367 @@ export default function CampaignsPage() {
     }
   }, [search, typeFilter, statusFilter, channelFilter]);
 
+  const fetchCredits = async () => {
+    try {
+      const res = await fetch("/api/campaigns/credits");
+      if (res.ok) {
+        const data = await res.json();
+        setEmailCredits(data.emailCredits || 0);
+        setSmsCredits(data.smsCredits || 0);
+        setPackages(data.packages || []);
+        setTransactions(data.transactions || []);
+        setCreditsLoaded(true);
+      }
+    } catch { /* ignore */ }
+  };
+
   useEffect(() => {
     const timeout = setTimeout(fetchCampaigns, 300);
     return () => clearTimeout(timeout);
   }, [fetchCampaigns]);
+
+  useEffect(() => {
+    if (activeTab === "credits" && !creditsLoaded) {
+      fetchCredits();
+    }
+  }, [activeTab, creditsLoaded]);
+
+  const handlePurchase = async (packageId: string) => {
+    setPurchasing(packageId);
+    try {
+      const res = await fetch("/api/campaigns/credits", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ packageId }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Eroare la achizitie");
+      }
+      const data = await res.json();
+      setEmailCredits(data.emailCredits);
+      setSmsCredits(data.smsCredits);
+      await fetchCredits(); // Refresh transactions
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setPurchasing(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Campanii</h1>
-          <p className="text-muted-foreground">Creeaza si gestioneaza campanii email si SMS.</p>
+          <p className="text-muted-foreground">Campanii email si SMS cu template-uri, AI si credite.</p>
         </div>
-        <Link href="/dashboard/campaigns/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Campanie noua
-          </Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2">
+            <div className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 rounded-full">
+              <Mail className="h-3.5 w-3.5 text-blue-600" />
+              <span className="text-sm font-medium text-blue-700">{emailCredits}</span>
+            </div>
+            <div className="flex items-center gap-1 px-3 py-1.5 bg-green-50 rounded-full">
+              <MessageSquare className="h-3.5 w-3.5 text-green-600" />
+              <span className="text-sm font-medium text-green-700">{smsCredits}</span>
+            </div>
+          </div>
+          <Link href="/dashboard/campaigns/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Campanie noua
+            </Button>
+          </Link>
+        </div>
       </div>
 
-      {/* Search & Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Cauta campanii..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="campaigns" className="flex items-center gap-2">
+            <Send className="h-4 w-4" />
+            Campanii
+          </TabsTrigger>
+          <TabsTrigger value="credits" className="flex items-center gap-2">
+            <CreditCard className="h-4 w-4" />
+            Credite &amp; Pachete
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ═══ Campaigns Tab ═══ */}
+        <TabsContent value="campaigns" className="space-y-4 mt-4">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Cauta campanii..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+                </div>
+                <Button variant={filtersOpen ? "secondary" : "outline"} onClick={() => setFiltersOpen(!filtersOpen)}>
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filtre
+                </Button>
+              </div>
+              {filtersOpen && (
+                <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t">
+                  <div className="w-48">
+                    <Select value={typeFilter} onValueChange={setTypeFilter}>
+                      <SelectTrigger><SelectValue placeholder="Tip" /></SelectTrigger>
+                      <SelectContent>
+                        {TYPE_OPTIONS.map((opt) => (<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-48">
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                      <SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger>
+                      <SelectContent>
+                        {STATUS_OPTIONS.map((opt) => (<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="w-48">
+                    <Select value={channelFilter} onValueChange={setChannelFilter}>
+                      <SelectTrigger><SelectValue placeholder="Canal" /></SelectTrigger>
+                      <SelectContent>
+                        {CHANNEL_OPTIONS.map((opt) => (<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {error && (
+            <Card className="border-destructive">
+              <CardContent className="py-4"><p className="text-sm text-destructive">{error}</p></CardContent>
+            </Card>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-            <Button
-              variant={filtersOpen ? "secondary" : "outline"}
-              onClick={() => setFiltersOpen(!filtersOpen)}
-            >
-              <Filter className="mr-2 h-4 w-4" />
-              Filtre
-            </Button>
-          </div>
-          {filtersOpen && (
-            <div className="flex flex-wrap gap-3 mt-4 pt-4 border-t">
-              <div className="w-48">
-                <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tip" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TYPE_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="w-48">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {STATUS_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="w-48">
-                <Select value={channelFilter} onValueChange={setChannelFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Canal" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CHANNEL_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+          ) : campaigns.length === 0 ? (
+            <Card>
+              <CardContent className="py-20 text-center">
+                <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold">Nicio campanie gasita</h3>
+                <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
+                  {search || typeFilter !== "all"
+                    ? "Incercati sa ajustati cautarea sau filtrele."
+                    : "Creati prima campanie pentru a interactiona cu donatorii."}
+                </p>
+                <Link href="/dashboard/campaigns/new">
+                  <Button className="mt-4"><Plus className="mr-2 h-4 w-4" />Creeaza campanie</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {campaigns.map((campaign) => {
+                const openRate = campaign.totalSent > 0 ? (campaign.totalOpened / campaign.totalSent) * 100 : 0;
+                const clickRate = campaign.totalSent > 0 ? (campaign.totalClicked / campaign.totalSent) * 100 : 0;
+                return (
+                  <Link key={campaign.id} href={`/dashboard/campaigns/${campaign.id}`}>
+                    <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                      <CardHeader className="pb-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <CardTitle className="text-base truncate">{campaign.name}</CardTitle>
+                            <CardDescription className="flex items-center gap-2 mt-1">
+                              {channelIcon(campaign.channel)}
+                              <span>{campaign.type.replace(/_/g, " ")}</span>
+                            </CardDescription>
+                          </div>
+                          <Badge variant={statusBadgeVariant(campaign.status)}>{campaign.status}</Badge>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        {campaign.subject && (
+                          <p className="text-sm text-muted-foreground truncate">Subiect: {campaign.subject}</p>
+                        )}
+                        {campaign.totalSent > 0 ? (
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-3 gap-2 text-center">
+                              <div>
+                                <p className="text-lg font-bold">{campaign.totalSent}</p>
+                                <p className="text-[10px] text-muted-foreground">Trimise</p>
+                              </div>
+                              <div>
+                                <p className="text-lg font-bold">{openRate.toFixed(1)}%</p>
+                                <p className="text-[10px] text-muted-foreground">Deschise</p>
+                              </div>
+                              <div>
+                                <p className="text-lg font-bold">{clickRate.toFixed(1)}%</p>
+                                <p className="text-[10px] text-muted-foreground">Click</p>
+                              </div>
+                            </div>
+                            <Progress value={openRate} className="h-1.5" />
+                          </div>
+                        ) : (
+                          <div className="text-center py-2">
+                            <p className="text-xs text-muted-foreground">
+                              {campaign.recipientCount > 0 ? `${campaign.recipientCount} destinatari` : "Niciun destinatar inca"}
+                            </p>
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground pt-2 border-t">
+                          <Calendar className="h-3 w-3" />
+                          {campaign.sentAt ? `Trimis ${formatDate(campaign.sentAt)}`
+                            : campaign.scheduledAt ? `Programat ${formatDate(campaign.scheduledAt)}`
+                            : `Creat ${formatDate(campaign.createdAt)}`}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </TabsContent>
 
-      {/* Error */}
-      {error && (
-        <Card className="border-destructive">
-          <CardContent className="py-4">
-            <p className="text-sm text-destructive">{error}</p>
-          </CardContent>
-        </Card>
-      )}
+        {/* ═══ Credits Tab ═══ */}
+        <TabsContent value="credits" className="space-y-6 mt-4">
+          {/* Credit Balance */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2.5 bg-blue-100 rounded-xl">
+                    <Mail className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-blue-700">Credite Email</p>
+                    <p className="text-3xl font-bold text-blue-900">{emailCredits}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-blue-600">1 credit = 1 email trimis</p>
+              </CardContent>
+            </Card>
+            <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="p-2.5 bg-green-100 rounded-xl">
+                    <MessageSquare className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-green-700">Credite SMS</p>
+                    <p className="text-3xl font-bold text-green-900">{smsCredits}</p>
+                  </div>
+                </div>
+                <p className="text-xs text-green-600">1 credit = 1 segment SMS (160 caractere)</p>
+              </CardContent>
+            </Card>
+          </div>
 
-      {/* Campaign Grid */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : campaigns.length === 0 ? (
-        <Card>
-          <CardContent className="py-20 text-center">
-            <Mail className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold">Nicio campanie gasita</h3>
-            <p className="text-sm text-muted-foreground mt-1 max-w-sm mx-auto">
-              {search || typeFilter !== "all"
-                ? "Incercati sa ajustati cautarea sau filtrele."
-                : "Creati prima campanie pentru a interactiona cu donatorii."}
-            </p>
-            <Link href="/dashboard/campaigns/new">
-              <Button className="mt-4">
-                <Plus className="mr-2 h-4 w-4" />
-                Creeaza campanie
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {campaigns.map((campaign) => {
-            const openRate = campaign.totalSent > 0 ? (campaign.totalOpened / campaign.totalSent) * 100 : 0;
-            const clickRate = campaign.totalSent > 0 ? (campaign.totalClicked / campaign.totalSent) * 100 : 0;
-
-            return (
-              <Link key={campaign.id} href={`/dashboard/campaigns/${campaign.id}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base truncate">{campaign.name}</CardTitle>
-                        <CardDescription className="flex items-center gap-2 mt-1">
-                          {channelIcon(campaign.channel)}
-                          <span>{campaign.type.replace(/_/g, " ")}</span>
-                        </CardDescription>
-                      </div>
-                      <Badge variant={statusBadgeVariant(campaign.status)}>
-                        {campaign.status}
+          {/* Packages */}
+          <div>
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <Package className="h-5 w-5 text-indigo-600" />
+              Pachete de credite
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {packages.map((pkg) => (
+                <Card
+                  key={pkg.id}
+                  className={`relative transition-all hover:shadow-md ${
+                    pkg.popular ? "border-indigo-300 shadow-sm ring-1 ring-indigo-200" : ""
+                  }`}
+                >
+                  {pkg.popular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-indigo-600 text-white">
+                        <Star className="h-3 w-3 mr-1" />
+                        Popular
                       </Badge>
                     </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {campaign.subject && (
-                      <p className="text-sm text-muted-foreground truncate">
-                        Subiect: {campaign.subject}
-                      </p>
-                    )}
-
-                    {/* Stats */}
-                    {campaign.totalSent > 0 ? (
-                      <div className="space-y-3">
-                        <div className="grid grid-cols-3 gap-2 text-center">
-                          <div>
-                            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                              <Send className="h-3 w-3" />
-                            </div>
-                            <p className="text-lg font-bold">{campaign.totalSent}</p>
-                            <p className="text-[10px] text-muted-foreground">Trimise</p>
-                          </div>
-                          <div>
-                            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                              <Eye className="h-3 w-3" />
-                            </div>
-                            <p className="text-lg font-bold">{openRate.toFixed(1)}%</p>
-                            <p className="text-[10px] text-muted-foreground">Deschise</p>
-                          </div>
-                          <div>
-                            <div className="flex items-center justify-center gap-1 text-muted-foreground mb-1">
-                              <MousePointerClick className="h-3 w-3" />
-                            </div>
-                            <p className="text-lg font-bold">{clickRate.toFixed(1)}%</p>
-                            <p className="text-[10px] text-muted-foreground">Click</p>
-                          </div>
-                        </div>
-                        <Progress value={openRate} className="h-1.5" />
-                      </div>
-                    ) : (
-                      <div className="text-center py-2">
-                        <p className="text-xs text-muted-foreground">
-                          {campaign.recipientCount > 0
-                            ? `${campaign.recipientCount} destinatari`
-                            : "Niciun destinatar inca"}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Date */}
-                    <div className="flex items-center gap-1 text-xs text-muted-foreground pt-2 border-t">
-                      <Calendar className="h-3 w-3" />
-                      {campaign.sentAt
-                        ? `Trimis ${formatDate(campaign.sentAt)}`
-                        : campaign.scheduledAt
-                        ? `Programat pentru ${formatDate(campaign.scheduledAt)}`
-                        : `Creat ${formatDate(campaign.createdAt)}`}
+                  )}
+                  <CardContent className="p-5 pt-6">
+                    <div className="flex items-center gap-2 mb-2">
+                      {pkg.channel === "EMAIL" && <Mail className="h-4 w-4 text-blue-600" />}
+                      {pkg.channel === "SMS" && <MessageSquare className="h-4 w-4 text-green-600" />}
+                      {pkg.channel === "BOTH" && <Zap className="h-4 w-4 text-purple-600" />}
+                      <h3 className="font-semibold text-sm">{pkg.name}</h3>
                     </div>
+                    <p className="text-xs text-muted-foreground mb-3">{pkg.description}</p>
+                    <div className="flex items-baseline gap-1 mb-4">
+                      <span className="text-2xl font-bold">{pkg.price}</span>
+                      <span className="text-sm text-muted-foreground">RON</span>
+                    </div>
+                    <div className="space-y-1 mb-4 text-xs">
+                      {pkg.emailCredits > 0 && (
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-blue-600" />
+                          <span>{pkg.emailCredits.toLocaleString()} emailuri</span>
+                        </div>
+                      )}
+                      {pkg.smsCredits > 0 && (
+                        <div className="flex items-center gap-1.5">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-green-600" />
+                          <span>{pkg.smsCredits.toLocaleString()} SMS-uri</span>
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      className="w-full"
+                      size="sm"
+                      variant={pkg.popular ? "default" : "outline"}
+                      onClick={() => handlePurchase(pkg.id)}
+                      disabled={purchasing === pkg.id}
+                    >
+                      {purchasing === pkg.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <CreditCard className="h-4 w-4 mr-1" />
+                      )}
+                      Achizitioneaza
+                    </Button>
                   </CardContent>
                 </Card>
-              </Link>
-            );
-          })}
-        </div>
-      )}
+              ))}
+            </div>
+          </div>
+
+          {/* Transaction History */}
+          {transactions.length > 0 && (
+            <div>
+              <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <History className="h-5 w-5 text-slate-600" />
+                Istoric tranzactii
+              </h2>
+              <Card>
+                <CardContent className="p-0">
+                  <div className="divide-y">
+                    {transactions.map((tx) => (
+                      <div key={tx.id} className="flex items-center gap-3 px-4 py-3">
+                        <div className={`p-1.5 rounded-lg ${
+                          tx.type === "PURCHASE" ? "bg-green-100" :
+                          tx.type === "USAGE" ? "bg-red-100" :
+                          tx.type === "BONUS" ? "bg-purple-100" : "bg-slate-100"
+                        }`}>
+                          {tx.channel === "EMAIL" ? <Mail className="h-3.5 w-3.5" /> : <MessageSquare className="h-3.5 w-3.5" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{tx.description || tx.type}</p>
+                          <p className="text-xs text-muted-foreground">{formatDate(tx.createdAt)}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-sm font-semibold ${tx.amount > 0 ? "text-green-600" : "text-red-600"}`}>
+                            {tx.amount > 0 ? "+" : ""}{tx.amount}
+                          </p>
+                          <p className="text-xs text-muted-foreground">Sold: {tx.balance}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -112,6 +112,24 @@ export async function POST(
       );
     }
 
+    // Check credit balance
+    const emailRecipients = (campaign.channel === "EMAIL" || campaign.channel === "BOTH") ? donors.filter(d => d.email).length : 0;
+    const smsRecipients = (campaign.channel === "SMS" || campaign.channel === "BOTH") ? donors.filter(d => d.phone).length : 0;
+
+    if (emailRecipients > 0 && ngo.emailCredits < emailRecipients) {
+      return NextResponse.json(
+        { error: `Credite email insuficiente. Necesare: ${emailRecipients}, disponibile: ${ngo.emailCredits}. Achizitioneaza mai multe credite.` },
+        { status: 400 }
+      );
+    }
+
+    if (smsRecipients > 0 && ngo.smsCredits < smsRecipients) {
+      return NextResponse.json(
+        { error: `Credite SMS insuficiente. Necesare: ${smsRecipients}, disponibile: ${ngo.smsCredits}. Achizitioneaza mai multe credite.` },
+        { status: 400 }
+      );
+    }
+
     // Mark campaign as sending
     await prisma.campaign.update({
       where: { id: params.id },
@@ -209,6 +227,49 @@ export async function POST(
       } catch (err: any) {
         console.error(`Error sending to donor ${donor.id}:`, err.message);
         totalFailed++;
+      }
+    }
+
+    // Deduct credits based on actual sends
+    const emailsSent = (campaign.channel === "EMAIL" || campaign.channel === "BOTH") ? totalSent : 0;
+    const smsSent = (campaign.channel === "SMS" || campaign.channel === "BOTH") ? totalSent : 0;
+
+    const creditUpdates: any = {};
+    if (emailsSent > 0) creditUpdates.emailCredits = { decrement: emailsSent };
+    if (smsSent > 0) creditUpdates.smsCredits = { decrement: smsSent };
+
+    if (Object.keys(creditUpdates).length > 0) {
+      const updatedNgo = await prisma.ngo.update({
+        where: { id: ngoId },
+        data: creditUpdates,
+      });
+
+      // Log credit transactions
+      if (emailsSent > 0) {
+        await prisma.creditTransaction.create({
+          data: {
+            ngoId,
+            type: "USAGE",
+            channel: "EMAIL",
+            amount: -emailsSent,
+            balance: updatedNgo.emailCredits,
+            description: `Campanie: ${campaign.name} (${emailsSent} emailuri trimise)`,
+            campaignId: campaign.id,
+          },
+        });
+      }
+      if (smsSent > 0) {
+        await prisma.creditTransaction.create({
+          data: {
+            ngoId,
+            type: "USAGE",
+            channel: "SMS",
+            amount: -smsSent,
+            balance: updatedNgo.smsCredits,
+            description: `Campanie: ${campaign.name} (${smsSent} SMS-uri trimise)`,
+            campaignId: campaign.id,
+          },
+        });
       }
     }
 
