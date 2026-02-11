@@ -1,19 +1,67 @@
 /**
  * Multi-AI Provider Support
  * Supports: OpenAI, Claude (Anthropic), Gemini (Google)
- * Falls back to available providers in order
+ * Reads API keys from: 1) PlatformSettings DB  2) Environment variables (fallback)
  */
+
+import prisma from "@/lib/db";
 
 interface AiResponse {
   text: string;
   provider: string;
 }
 
+// Cache keys for 5 minutes to avoid DB hits on every AI call
+let cachedKeys: { openai?: string; anthropic?: string; google?: string } | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+async function getApiKeys() {
+  const now = Date.now();
+  if (cachedKeys && now - cacheTimestamp < CACHE_TTL) {
+    return cachedKeys;
+  }
+
+  try {
+    const settings = await prisma.platformSettings.findUnique({
+      where: { id: "platform" },
+      select: {
+        openaiApiKey: true,
+        anthropicApiKey: true,
+        googleAiApiKey: true,
+      },
+    });
+
+    cachedKeys = {
+      openai: settings?.openaiApiKey || process.env.OPENAI_API_KEY || undefined,
+      anthropic: settings?.anthropicApiKey || process.env.ANTHROPIC_API_KEY || undefined,
+      google: settings?.googleAiApiKey || process.env.GOOGLE_AI_API_KEY || undefined,
+    };
+  } catch {
+    // If DB fails, fall back to env vars
+    cachedKeys = {
+      openai: process.env.OPENAI_API_KEY || undefined,
+      anthropic: process.env.ANTHROPIC_API_KEY || undefined,
+      google: process.env.GOOGLE_AI_API_KEY || undefined,
+    };
+  }
+
+  cacheTimestamp = now;
+  return cachedKeys;
+}
+
+// Force cache refresh (call after saving new keys)
+export function invalidateApiKeysCache() {
+  cachedKeys = null;
+  cacheTimestamp = 0;
+}
+
 async function callOpenAI(systemMsg: string, userMsg: string, options?: { temperature?: number; maxTokens?: number }): Promise<AiResponse | null> {
-  if (!process.env.OPENAI_API_KEY) return null;
+  const keys = await getApiKeys();
+  if (!keys.openai) return null;
   try {
     const { default: OpenAI } = await import("openai");
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const openai = new OpenAI({ apiKey: keys.openai });
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -33,13 +81,14 @@ async function callOpenAI(systemMsg: string, userMsg: string, options?: { temper
 }
 
 async function callClaude(systemMsg: string, userMsg: string, options?: { temperature?: number; maxTokens?: number }): Promise<AiResponse | null> {
-  if (!process.env.ANTHROPIC_API_KEY) return null;
+  const keys = await getApiKeys();
+  if (!keys.anthropic) return null;
   try {
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "x-api-key": keys.anthropic,
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
@@ -63,9 +112,10 @@ async function callClaude(systemMsg: string, userMsg: string, options?: { temper
 }
 
 async function callGemini(systemMsg: string, userMsg: string, options?: { temperature?: number; maxTokens?: number }): Promise<AiResponse | null> {
-  if (!process.env.GOOGLE_AI_API_KEY) return null;
+  const keys = await getApiKeys();
+  if (!keys.google) return null;
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GOOGLE_AI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${keys.google}`;
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -92,8 +142,6 @@ async function callGemini(systemMsg: string, userMsg: string, options?: { temper
 
 /**
  * Call AI with fallback between providers
- * Tries providers in order: preferred -> others
- * Default order: OpenAI -> Claude -> Gemini
  */
 export async function callAI(
   systemMsg: string,
@@ -110,7 +158,6 @@ export async function callAI(
     { name: "gemini" as const, fn: callGemini },
   ];
 
-  // Reorder if preferred provider specified
   if (options?.preferredProvider) {
     const preferred = providers.find(p => p.name === options.preferredProvider);
     if (preferred) {
@@ -129,7 +176,7 @@ export async function callAI(
 }
 
 /**
- * Parse JSON from AI response, handling markdown code blocks
+ * Parse JSON from AI response
  */
 export function parseAiJson(text: string): any {
   try {
@@ -150,12 +197,13 @@ export function parseAiJson(text: string): any {
 }
 
 /**
- * Get available providers for display
+ * Get available providers
  */
-export function getAvailableProviders(): string[] {
+export async function getAvailableProviders(): Promise<string[]> {
+  const keys = await getApiKeys();
   const providers: string[] = [];
-  if (process.env.OPENAI_API_KEY) providers.push("openai");
-  if (process.env.ANTHROPIC_API_KEY) providers.push("claude");
-  if (process.env.GOOGLE_AI_API_KEY) providers.push("gemini");
+  if (keys.openai) providers.push("openai");
+  if (keys.anthropic) providers.push("claude");
+  if (keys.google) providers.push("gemini");
   return providers;
 }

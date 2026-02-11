@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Settings, Save } from "lucide-react";
+import { Settings, Save, Key, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface PlatformSettings {
   name: string;
@@ -24,6 +25,13 @@ interface PlatformSettings {
   linkedinUrl: string;
   twitterUrl: string;
   instagramUrl: string;
+  openaiApiKey: string;
+  anthropicApiKey: string;
+  googleAiApiKey: string;
+  sendgridApiKey: string;
+  twilioSid: string;
+  twilioToken: string;
+  twilioPhone: string;
 }
 
 const defaultSettings: PlatformSettings = {
@@ -41,14 +49,23 @@ const defaultSettings: PlatformSettings = {
   linkedinUrl: "",
   twitterUrl: "",
   instagramUrl: "",
+  openaiApiKey: "",
+  anthropicApiKey: "",
+  googleAiApiKey: "",
+  sendgridApiKey: "",
+  twilioSid: "",
+  twilioToken: "",
+  twilioPhone: "",
 };
 
 export default function AdminSettingsPage() {
   const [data, setData] = useState<PlatformSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingKeys, setSavingKeys] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchSettings();
@@ -62,20 +79,27 @@ export default function AdminSettingsPage() {
       const result = await res.json();
       const settings = result.settings || result;
       setData({
-        name: settings.name || "",
-        description: settings.description || "",
+        name: settings.name || settings.siteName || "",
+        description: settings.description || settings.siteDescription || "",
         logoUrl: settings.logoUrl || "",
         primaryColor: settings.primaryColor || "#3b82f6",
         heroTitle: settings.heroTitle || "",
         heroSubtitle: settings.heroSubtitle || "",
-        ctaButtonText: settings.ctaButtonText || "",
+        ctaButtonText: settings.ctaButtonText || settings.heroCtaText || "",
         statsEnabled: settings.statsEnabled ?? true,
         contactEmail: settings.contactEmail || "",
         footerText: settings.footerText || "",
-        facebookUrl: settings.facebookUrl || "",
-        linkedinUrl: settings.linkedinUrl || "",
-        twitterUrl: settings.twitterUrl || "",
-        instagramUrl: settings.instagramUrl || "",
+        facebookUrl: settings.facebookUrl || (settings.socialLinks as any)?.facebook || "",
+        linkedinUrl: settings.linkedinUrl || (settings.socialLinks as any)?.linkedin || "",
+        twitterUrl: settings.twitterUrl || (settings.socialLinks as any)?.twitter || "",
+        instagramUrl: settings.instagramUrl || (settings.socialLinks as any)?.instagram || "",
+        openaiApiKey: settings.openaiApiKey || "",
+        anthropicApiKey: settings.anthropicApiKey || "",
+        googleAiApiKey: settings.googleAiApiKey || "",
+        sendgridApiKey: settings.sendgridApiKey || "",
+        twilioSid: settings.twilioSid || "",
+        twilioToken: settings.twilioToken || "",
+        twilioPhone: settings.twilioPhone || "",
       });
     } catch (err) {
       console.error(err);
@@ -99,14 +123,32 @@ export default function AdminSettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      const payload = {
+        siteName: data.name,
+        siteDescription: data.description,
+        logoUrl: data.logoUrl,
+        primaryColor: data.primaryColor,
+        heroTitle: data.heroTitle,
+        heroSubtitle: data.heroSubtitle,
+        heroCtaText: data.ctaButtonText,
+        statsEnabled: data.statsEnabled,
+        contactEmail: data.contactEmail,
+        footerText: data.footerText,
+        socialLinks: {
+          facebook: data.facebookUrl,
+          linkedin: data.linkedinUrl,
+          twitter: data.twitterUrl,
+          instagram: data.instagramUrl,
+        },
+      };
       const res = await fetch("/api/admin/platform", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error("Eroare la salvare");
       showSuccess("Setarile au fost salvate cu succes");
-    } catch (err) {
+    } catch {
       showError("Eroare la salvarea setarilor");
     } finally {
       setSaving(false);
@@ -115,6 +157,41 @@ export default function AdminSettingsPage() {
 
   const updateField = (field: keyof PlatformSettings, value: string | boolean) => {
     setData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const toggleKeyVisibility = (field: string) => {
+    setShowKeys((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
+
+  const handleSaveApiKeys = async () => {
+    setSavingKeys(true);
+    try {
+      const res = await fetch("/api/admin/platform", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          openaiApiKey: data.openaiApiKey,
+          anthropicApiKey: data.anthropicApiKey,
+          googleAiApiKey: data.googleAiApiKey,
+          sendgridApiKey: data.sendgridApiKey,
+          twilioSid: data.twilioSid,
+          twilioToken: data.twilioToken,
+          twilioPhone: data.twilioPhone,
+        }),
+      });
+      if (!res.ok) throw new Error("Eroare la salvare");
+      showSuccess("Cheile API au fost salvate cu succes");
+    } catch {
+      showError("Eroare la salvarea cheilor API");
+    } finally {
+      setSavingKeys(false);
+    }
+  };
+
+  const maskKey = (key: string) => {
+    if (!key) return "";
+    if (key.length <= 8) return "****";
+    return key.substring(0, 4) + "****" + key.substring(key.length - 4);
   };
 
   if (loading) {
@@ -274,6 +351,215 @@ export default function AdminSettingsPage() {
                 placeholder="Textul afisat in footer-ul site-ului"
                 rows={3}
               />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* API Keys - AI Providers */}
+      <Card className="border-blue-200">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Key className="h-5 w-5 text-blue-600" />
+              <h2 className="text-lg font-semibold">Chei API - Provideri AI</h2>
+            </div>
+            <Button onClick={handleSaveApiKeys} disabled={savingKeys} size="sm" variant="outline">
+              <Save className="h-4 w-4 mr-2" />
+              {savingKeys ? "Se salveaza..." : "Salveaza cheile"}
+            </Button>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Configureaza cheile API pentru generarea de continut AI. Cel putin un provider AI trebuie configurat.
+          </p>
+          <div className="space-y-4">
+            {/* OpenAI */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label>OpenAI API Key</Label>
+                {data.openaiApiKey ? (
+                  <Badge className="bg-green-100 text-green-800 text-[10px]"><CheckCircle2 className="h-3 w-3 mr-1" />Configurat</Badge>
+                ) : (
+                  <Badge className="bg-slate-100 text-slate-600 text-[10px]"><XCircle className="h-3 w-3 mr-1" />Neconfigurat</Badge>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type={showKeys.openaiApiKey ? "text" : "password"}
+                  value={data.openaiApiKey}
+                  onChange={(e) => updateField("openaiApiKey", e.target.value)}
+                  placeholder="sk-..."
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleKeyVisibility("openaiApiKey")}
+                >
+                  {showKeys.openaiApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Model: GPT-4o-mini. Obtine cheia de la platform.openai.com</p>
+            </div>
+
+            {/* Anthropic / Claude */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label>Anthropic (Claude) API Key</Label>
+                {data.anthropicApiKey ? (
+                  <Badge className="bg-green-100 text-green-800 text-[10px]"><CheckCircle2 className="h-3 w-3 mr-1" />Configurat</Badge>
+                ) : (
+                  <Badge className="bg-slate-100 text-slate-600 text-[10px]"><XCircle className="h-3 w-3 mr-1" />Neconfigurat</Badge>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type={showKeys.anthropicApiKey ? "text" : "password"}
+                  value={data.anthropicApiKey}
+                  onChange={(e) => updateField("anthropicApiKey", e.target.value)}
+                  placeholder="sk-ant-..."
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleKeyVisibility("anthropicApiKey")}
+                >
+                  {showKeys.anthropicApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Model: Claude Sonnet 4.5. Obtine cheia de la console.anthropic.com</p>
+            </div>
+
+            {/* Google AI / Gemini */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label>Google AI (Gemini) API Key</Label>
+                {data.googleAiApiKey ? (
+                  <Badge className="bg-green-100 text-green-800 text-[10px]"><CheckCircle2 className="h-3 w-3 mr-1" />Configurat</Badge>
+                ) : (
+                  <Badge className="bg-slate-100 text-slate-600 text-[10px]"><XCircle className="h-3 w-3 mr-1" />Neconfigurat</Badge>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type={showKeys.googleAiApiKey ? "text" : "password"}
+                  value={data.googleAiApiKey}
+                  onChange={(e) => updateField("googleAiApiKey", e.target.value)}
+                  placeholder="AIza..."
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleKeyVisibility("googleAiApiKey")}
+                >
+                  {showKeys.googleAiApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Model: Gemini 2.0 Flash. Obtine cheia de la aistudio.google.com</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* API Keys - Email & SMS */}
+      <Card className="border-purple-200">
+        <CardContent className="p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Key className="h-5 w-5 text-purple-600" />
+            <h2 className="text-lg font-semibold">Chei API - Email &amp; SMS</h2>
+          </div>
+          <div className="space-y-4">
+            {/* SendGrid */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label>SendGrid API Key</Label>
+                {data.sendgridApiKey ? (
+                  <Badge className="bg-green-100 text-green-800 text-[10px]"><CheckCircle2 className="h-3 w-3 mr-1" />Configurat</Badge>
+                ) : (
+                  <Badge className="bg-slate-100 text-slate-600 text-[10px]"><XCircle className="h-3 w-3 mr-1" />Neconfigurat</Badge>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type={showKeys.sendgridApiKey ? "text" : "password"}
+                  value={data.sendgridApiKey}
+                  onChange={(e) => updateField("sendgridApiKey", e.target.value)}
+                  placeholder="SG...."
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleKeyVisibility("sendgridApiKey")}
+                >
+                  {showKeys.sendgridApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Pentru trimiterea de emailuri. Obtine cheia de la app.sendgrid.com</p>
+            </div>
+
+            {/* Twilio */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label>Twilio Account SID</Label>
+                {data.twilioSid ? (
+                  <Badge className="bg-green-100 text-green-800 text-[10px]"><CheckCircle2 className="h-3 w-3 mr-1" />Configurat</Badge>
+                ) : (
+                  <Badge className="bg-slate-100 text-slate-600 text-[10px]"><XCircle className="h-3 w-3 mr-1" />Neconfigurat</Badge>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type={showKeys.twilioSid ? "text" : "password"}
+                  value={data.twilioSid}
+                  onChange={(e) => updateField("twilioSid", e.target.value)}
+                  placeholder="AC..."
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleKeyVisibility("twilioSid")}
+                >
+                  {showKeys.twilioSid ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Twilio Auth Token</Label>
+              <div className="flex gap-2">
+                <Input
+                  type={showKeys.twilioToken ? "text" : "password"}
+                  value={data.twilioToken}
+                  onChange={(e) => updateField("twilioToken", e.target.value)}
+                  placeholder="Auth token..."
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleKeyVisibility("twilioToken")}
+                >
+                  {showKeys.twilioToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Twilio Phone Number</Label>
+              <Input
+                value={data.twilioPhone}
+                onChange={(e) => updateField("twilioPhone", e.target.value)}
+                placeholder="+40..."
+              />
+              <p className="text-xs text-muted-foreground">Pentru trimiterea de SMS-uri. Configureaza de la twilio.com/console</p>
             </div>
           </div>
         </CardContent>

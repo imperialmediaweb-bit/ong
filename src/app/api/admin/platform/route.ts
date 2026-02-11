@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { invalidateApiKeysCache } from "@/lib/ai-providers";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -90,6 +91,13 @@ export async function PATCH(request: NextRequest) {
       "footerText",
       "contactEmail",
       "socialLinks",
+      "openaiApiKey",
+      "anthropicApiKey",
+      "googleAiApiKey",
+      "sendgridApiKey",
+      "twilioSid",
+      "twilioToken",
+      "twilioPhone",
     ];
 
     const data: any = {};
@@ -111,6 +119,12 @@ export async function PATCH(request: NextRequest) {
       },
       update: data,
     });
+
+    // Invalidate cached API keys if any key fields were updated
+    const apiKeyFields = ["openaiApiKey", "anthropicApiKey", "googleAiApiKey", "sendgridApiKey", "twilioSid", "twilioToken", "twilioPhone"];
+    if (apiKeyFields.some(f => data[f] !== undefined)) {
+      invalidateApiKeysCache();
+    }
 
     return NextResponse.json({
       settings,

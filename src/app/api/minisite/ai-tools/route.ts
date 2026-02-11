@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { tool, context } = body;
 
-    const providers = getAvailableProviders();
+    const providers = await getAvailableProviders();
     if (providers.length === 0) {
       return NextResponse.json({ error: "Niciun provider AI nu este configurat (OPENAI_API_KEY, ANTHROPIC_API_KEY, sau GOOGLE_AI_API_KEY)" }, { status: 500 });
     }
