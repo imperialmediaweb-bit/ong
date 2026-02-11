@@ -172,7 +172,8 @@ export default function ReteaPage() {
   const [prospectLoading, setProspectLoading] = useState(false);
   const [prospectSaving, setProspectSaving] = useState<string | null>(null);
   const [prospectSaved, setProspectSaved] = useState<Set<string>>(new Set());
-  const [prospectMsg, setProspectMsg] = useState<{ company: string; loading: boolean; message?: string; subject?: string; tips?: string[]; channel?: string } | null>(null);
+  const [prospectMsg, setProspectMsg] = useState<{ company: string; loading: boolean; message?: string; subject?: string; tips?: string[]; channel?: string; psychologicalApproach?: string; followUpSuggestion?: string } | null>(null);
+  const [prospectAnalysis, setProspectAnalysis] = useState<{ company: string; loading: boolean; analysis?: any } | null>(null);
 
   // Discover state
   const [discoverResults, setDiscoverResults] = useState<DiscoverItem[]>([]);
@@ -457,9 +458,93 @@ export default function ReteaPage() {
         subject: data.subject,
         tips: data.tips,
         channel,
+        psychologicalApproach: data.psychologicalApproach,
+        followUpSuggestion: data.followUpSuggestion,
       });
     } catch (err) {
       console.error("Prospect message error:", err);
+      setProspectMsg(null);
+    }
+  };
+
+  // ─── Prospect: Analyze company profile ──
+  const handleProspectAnalyze = async (company: any) => {
+    setProspectAnalysis({ company: company.name, loading: true });
+    try {
+      const res = await fetch("/api/sponsors/prospect/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyName: company.name,
+          industry: company.industry,
+          city: company.city,
+          website: company.website,
+          description: company.description,
+          estimatedSize: company.estimatedSize,
+        }),
+      });
+      if (!res.ok) {
+        setProspectAnalysis(null);
+        alert("Eroare la analiza profilului");
+        return;
+      }
+      const data = await res.json();
+      setProspectAnalysis({
+        company: company.name,
+        loading: false,
+        analysis: data.analysis,
+      });
+    } catch (err) {
+      console.error("Prospect analyze error:", err);
+      setProspectAnalysis(null);
+    }
+  };
+
+  // Generate message WITH analysis context
+  const handleSmartMessage = async (company: any, channel: "linkedin" | "email") => {
+    const hasAnalysis = prospectAnalysis && prospectAnalysis.company === company.name && prospectAnalysis.analysis;
+    const analysisCtx = hasAnalysis
+      ? {
+          motivations: prospectAnalysis!.analysis?.psychologicalProfile?.motivations,
+          persuasionTriggers: prospectAnalysis!.analysis?.psychologicalProfile?.persuasionTriggers,
+          toneOfVoice: prospectAnalysis!.analysis?.approachStrategy?.toneOfVoice,
+          openingHook: prospectAnalysis!.analysis?.approachStrategy?.openingHook,
+          keyArguments: prospectAnalysis!.analysis?.approachStrategy?.keyArguments,
+        }
+      : undefined;
+
+    setProspectMsg({ company: company.name, loading: true, channel });
+    try {
+      const res = await fetch("/api/sponsors/prospect/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyName: company.name,
+          industry: company.industry,
+          city: company.city,
+          whySponsor: company.whySponsor,
+          channel,
+          analysisContext: analysisCtx,
+        }),
+      });
+      if (!res.ok) {
+        setProspectMsg(null);
+        alert("Eroare la generarea mesajului");
+        return;
+      }
+      const data = await res.json();
+      setProspectMsg({
+        company: company.name,
+        loading: false,
+        message: data.message,
+        subject: data.subject,
+        tips: data.tips,
+        channel,
+        psychologicalApproach: data.psychologicalApproach,
+        followUpSuggestion: data.followUpSuggestion,
+      });
+    } catch (err) {
+      console.error("Smart message error:", err);
       setProspectMsg(null);
     }
   };
@@ -957,6 +1042,19 @@ export default function ReteaPage() {
 
                     {/* Actions bar */}
                     <div className="flex flex-wrap gap-2 pt-4 mt-4 border-t">
+                      <Button
+                        size="sm"
+                        onClick={() => handleProspectAnalyze(company)}
+                        disabled={prospectAnalysis?.loading && prospectAnalysis.company === company.name}
+                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700"
+                      >
+                        {prospectAnalysis?.loading && prospectAnalysis.company === company.name ? (
+                          <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                        )}
+                        Analizeaza profilul
+                      </Button>
                       {prospectSaved.has(company.name) ? (
                         <Button size="sm" variant="outline" disabled className="text-emerald-600 border-emerald-300">
                           <Check className="h-3.5 w-3.5 mr-1.5" /> Salvat in CRM
@@ -980,7 +1078,7 @@ export default function ReteaPage() {
                         size="sm"
                         variant="outline"
                         className="border-[#0A66C2]/30 text-[#0A66C2] hover:bg-[#0A66C2]/10"
-                        onClick={() => handleProspectMessage(company, "linkedin")}
+                        onClick={() => handleSmartMessage(company, "linkedin")}
                         disabled={prospectMsg?.loading && prospectMsg.company === company.name}
                       >
                         {prospectMsg?.loading && prospectMsg.company === company.name && prospectMsg.channel === "linkedin" ? (
@@ -988,13 +1086,13 @@ export default function ReteaPage() {
                         ) : (
                           <Linkedin className="h-3.5 w-3.5 mr-1.5" />
                         )}
-                        Genereaza mesaj LinkedIn
+                        Mesaj LinkedIn
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         className="border-indigo-300 text-indigo-600 hover:bg-indigo-50"
-                        onClick={() => handleProspectMessage(company, "email")}
+                        onClick={() => handleSmartMessage(company, "email")}
                         disabled={prospectMsg?.loading && prospectMsg.company === company.name}
                       >
                         {prospectMsg?.loading && prospectMsg.company === company.name && prospectMsg.channel === "email" ? (
@@ -1002,7 +1100,7 @@ export default function ReteaPage() {
                         ) : (
                           <Mail className="h-3.5 w-3.5 mr-1.5" />
                         )}
-                        Genereaza email
+                        Mesaj Email
                       </Button>
                       <a
                         href={`https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(company.name)}&origin=GLOBAL_SEARCH_HEADER`}
@@ -1012,11 +1110,177 @@ export default function ReteaPage() {
                       >
                         <Button size="sm" variant="ghost" className="text-[#0A66C2]">
                           <UserSearch className="h-3.5 w-3.5 mr-1.5" />
-                          Toti angajatii pe LinkedIn
+                          Angajati LinkedIn
                           <ExternalLink className="h-3 w-3 ml-1" />
                         </Button>
                       </a>
                     </div>
+
+                    {/* Inline Analysis Card */}
+                    {prospectAnalysis && prospectAnalysis.company === company.name && !prospectAnalysis.loading && prospectAnalysis.analysis && (
+                      <div className="mt-4 pt-4 border-t space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-bold flex items-center gap-2">
+                            <Sparkles className="h-4 w-4 text-purple-600" />
+                            Analiza profil - {company.name}
+                          </h4>
+                          <Button size="sm" variant="ghost" onClick={() => setProspectAnalysis(null)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+
+                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          {/* Why match */}
+                          {prospectAnalysis.analysis.whyThisMatch && (
+                            <div className="sm:col-span-2 lg:col-span-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+                              <p className="text-xs font-semibold text-emerald-800 mb-1 flex items-center gap-1.5">
+                                <Target className="h-3.5 w-3.5" /> De ce e potrivita pentru ONG-ul tau
+                              </p>
+                              <p className="text-sm text-emerald-700">{prospectAnalysis.analysis.whyThisMatch}</p>
+                              <div className="flex gap-3 mt-2 text-xs">
+                                {prospectAnalysis.analysis.riskLevel && (
+                                  <span className={`px-2 py-0.5 rounded-full font-medium ${
+                                    prospectAnalysis.analysis.riskLevel === "scazut" ? "bg-green-100 text-green-700" :
+                                    prospectAnalysis.analysis.riskLevel === "mediu" ? "bg-amber-100 text-amber-700" :
+                                    "bg-red-100 text-red-700"
+                                  }`}>
+                                    Sansa: {prospectAnalysis.analysis.riskLevel}
+                                  </span>
+                                )}
+                                {prospectAnalysis.analysis.estimatedConversionTime && (
+                                  <span className="text-muted-foreground">Timp estimat: {prospectAnalysis.analysis.estimatedConversionTime}</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Psychological profile */}
+                          <div className="bg-purple-50 border border-purple-200 rounded-xl p-3">
+                            <p className="text-xs font-semibold text-purple-800 mb-2">Profil psihologic</p>
+                            {prospectAnalysis.analysis.psychologicalProfile?.motivations && (
+                              <div className="mb-2">
+                                <p className="text-[10px] uppercase tracking-wider text-purple-600 font-semibold mb-1">Motivatii</p>
+                                <ul className="space-y-0.5">
+                                  {prospectAnalysis.analysis.psychologicalProfile.motivations.map((m: string, i: number) => (
+                                    <li key={i} className="text-xs text-purple-700 flex items-start gap-1">
+                                      <span className="text-purple-400 mt-0.5 flex-shrink-0">&#9679;</span> {m}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                            {prospectAnalysis.analysis.psychologicalProfile?.values && (
+                              <div className="mb-2">
+                                <p className="text-[10px] uppercase tracking-wider text-purple-600 font-semibold mb-1">Valori</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {prospectAnalysis.analysis.psychologicalProfile.values.map((v: string, i: number) => (
+                                    <span key={i} className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">{v}</span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {prospectAnalysis.analysis.psychologicalProfile?.fears && (
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wider text-purple-600 font-semibold mb-1">Obiectii posibile</p>
+                                <ul className="space-y-0.5">
+                                  {prospectAnalysis.analysis.psychologicalProfile.fears.map((f: string, i: number) => (
+                                    <li key={i} className="text-xs text-purple-700 flex items-start gap-1">
+                                      <AlertTriangle className="h-3 w-3 text-purple-400 mt-0.5 flex-shrink-0" /> {f}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Persuasion triggers */}
+                          <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                            <p className="text-xs font-semibold text-blue-800 mb-2">Tactici de persuasiune</p>
+                            {prospectAnalysis.analysis.psychologicalProfile?.persuasionTriggers && (
+                              <ul className="space-y-1.5">
+                                {prospectAnalysis.analysis.psychologicalProfile.persuasionTriggers.map((t: string, i: number) => (
+                                  <li key={i} className="text-xs text-blue-700 flex items-start gap-1.5">
+                                    <Zap className="h-3 w-3 text-blue-500 mt-0.5 flex-shrink-0" /> {t}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+
+                          {/* Approach strategy */}
+                          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                            <p className="text-xs font-semibold text-amber-800 mb-2">Strategie de abordare</p>
+                            {prospectAnalysis.analysis.approachStrategy && (
+                              <div className="space-y-1.5 text-xs text-amber-700">
+                                <p><strong>Canal:</strong> {prospectAnalysis.analysis.approachStrategy.bestChannel}</p>
+                                <p><strong>Moment:</strong> {prospectAnalysis.analysis.approachStrategy.bestTiming}</p>
+                                <p><strong>Ton:</strong> {prospectAnalysis.analysis.approachStrategy.toneOfVoice}</p>
+                                {prospectAnalysis.analysis.approachStrategy.openingHook && (
+                                  <div className="bg-white/60 rounded-lg p-2 border border-amber-200">
+                                    <p className="text-[10px] uppercase tracking-wider text-amber-600 font-semibold mb-0.5">Propozitie de deschidere</p>
+                                    <p className="italic">&quot;{prospectAnalysis.analysis.approachStrategy.openingHook}&quot;</p>
+                                  </div>
+                                )}
+                                <p><strong>CTA:</strong> {prospectAnalysis.analysis.approachStrategy.callToAction}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Key arguments */}
+                        {prospectAnalysis.analysis.approachStrategy?.keyArguments && (
+                          <div className="bg-slate-50 border rounded-xl p-3">
+                            <p className="text-xs font-semibold text-slate-700 mb-2">Argumente cheie (in ordinea impactului)</p>
+                            <div className="grid gap-1.5 sm:grid-cols-2">
+                              {prospectAnalysis.analysis.approachStrategy.keyArguments.map((arg: string, i: number) => (
+                                <div key={i} className="flex items-start gap-2 text-xs text-slate-600">
+                                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-slate-700 font-bold text-[10px] flex-shrink-0">{i + 1}</span>
+                                  {arg}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Objection handling */}
+                        {prospectAnalysis.analysis.approachStrategy?.objectionHandling && (
+                          <div className="bg-red-50 border border-red-200 rounded-xl p-3">
+                            <p className="text-xs font-semibold text-red-800 mb-2">Raspunsuri la obiectii</p>
+                            <div className="space-y-2">
+                              {prospectAnalysis.analysis.approachStrategy.objectionHandling.map((o: any, i: number) => (
+                                <div key={i} className="text-xs">
+                                  <p className="text-red-700 font-medium">&quot;{o.objection}&quot;</p>
+                                  <p className="text-red-600 mt-0.5 pl-3 border-l-2 border-red-200">{o.response}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Quick action: generate message using analysis */}
+                        <div className="flex gap-2 pt-2">
+                          <Button
+                            size="sm"
+                            className="bg-gradient-to-r from-[#0A66C2] to-blue-700"
+                            onClick={() => handleSmartMessage(company, "linkedin")}
+                            disabled={prospectMsg?.loading}
+                          >
+                            <Linkedin className="h-3.5 w-3.5 mr-1.5" />
+                            Genereaza mesaj bazat pe analiza
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="border-indigo-300 text-indigo-600"
+                            onClick={() => handleSmartMessage(company, "email")}
+                            disabled={prospectMsg?.loading}
+                          >
+                            <Mail className="h-3.5 w-3.5 mr-1.5" />
+                            Genereaza email bazat pe analiza
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -1092,6 +1356,15 @@ export default function ReteaPage() {
                     )}
                   </div>
                 </div>
+                {prospectMsg.psychologicalApproach && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-purple-800 mb-1">
+                      <Sparkles className="h-3 w-3 inline mr-1" />
+                      Strategie psihologica folosita:
+                    </p>
+                    <p className="text-xs text-purple-700">{prospectMsg.psychologicalApproach}</p>
+                  </div>
+                )}
                 {prospectMsg.tips && prospectMsg.tips.length > 0 && (
                   <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                     <p className="text-xs font-semibold text-amber-800 mb-1.5">Sfaturi pentru abordare:</p>
@@ -1102,6 +1375,15 @@ export default function ReteaPage() {
                         </li>
                       ))}
                     </ul>
+                  </div>
+                )}
+                {prospectMsg.followUpSuggestion && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-blue-800 mb-1">
+                      <Send className="h-3 w-3 inline mr-1" />
+                      Daca nu raspunde (follow-up):
+                    </p>
+                    <p className="text-xs text-blue-700">{prospectMsg.followUpSuggestion}</p>
                   </div>
                 )}
               </CardContent>
