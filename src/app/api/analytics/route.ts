@@ -71,6 +71,10 @@ export async function GET(request: NextRequest) {
       donationsByMonth,
       donorsByChannel,
       recentDonations,
+      campaignsList,
+      emailCampaignStats,
+      smsCampaignStats,
+      creditInfo,
     ] = await Promise.all([
       // Total donors
       prisma.donor.count({
@@ -185,9 +189,79 @@ export async function GET(request: NextRequest) {
           campaign: { select: { id: true, name: true } },
         },
       }),
+
+      // Individual campaigns list with stats (for table + charts)
+      prisma.campaign.findMany({
+        where: {
+          ngoId,
+          status: "SENT",
+          ...(period !== "all" ? { sentAt: { gte: startDate, lte: endDate } } : {}),
+        },
+        orderBy: { sentAt: "desc" },
+        take: 20,
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          channel: true,
+          totalSent: true,
+          totalDelivered: true,
+          totalOpened: true,
+          totalClicked: true,
+          totalBounced: true,
+          totalComplaints: true,
+          totalUnsubscribed: true,
+          recipientCount: true,
+          sentAt: true,
+          _count: { select: { donations: true } },
+        },
+      }),
+
+      // Email-only campaign stats
+      prisma.campaign.aggregate({
+        where: {
+          ngoId,
+          status: "SENT",
+          channel: { in: ["EMAIL", "BOTH"] },
+          ...(period !== "all" ? { sentAt: { gte: startDate, lte: endDate } } : {}),
+        },
+        _sum: {
+          totalSent: true,
+          totalDelivered: true,
+          totalOpened: true,
+          totalClicked: true,
+          totalBounced: true,
+        },
+        _count: true,
+      }),
+
+      // SMS-only campaign stats
+      prisma.campaign.aggregate({
+        where: {
+          ngoId,
+          status: "SENT",
+          channel: { in: ["SMS", "BOTH"] },
+          ...(period !== "all" ? { sentAt: { gte: startDate, lte: endDate } } : {}),
+        },
+        _sum: {
+          totalSent: true,
+          totalDelivered: true,
+          totalOpened: true,
+          totalClicked: true,
+        },
+        _count: true,
+      }),
+
+      // NGO credit balance
+      prisma.ngo.findUnique({
+        where: { id: ngoId },
+        select: { emailCredits: true, smsCredits: true },
+      }),
     ]);
 
     const campaignStatsSum = campaignStats._sum;
+    const emailSum = emailCampaignStats._sum;
+    const smsSum = smsCampaignStats._sum;
 
     return NextResponse.json({
       data: {
@@ -213,6 +287,49 @@ export async function GET(request: NextRequest) {
           clickRate: campaignStatsSum.totalSent
             ? ((campaignStatsSum.totalClicked || 0) / campaignStatsSum.totalSent * 100).toFixed(1)
             : "0.0",
+        },
+        // Email vs SMS breakdown
+        emailStats: {
+          campaignCount: emailCampaignStats._count || 0,
+          totalSent: emailSum.totalSent || 0,
+          totalDelivered: emailSum.totalDelivered || 0,
+          totalOpened: emailSum.totalOpened || 0,
+          totalClicked: emailSum.totalClicked || 0,
+          totalBounced: emailSum.totalBounced || 0,
+          openRate: emailSum.totalSent
+            ? ((emailSum.totalOpened || 0) / emailSum.totalSent * 100).toFixed(1)
+            : "0.0",
+          clickRate: emailSum.totalSent
+            ? ((emailSum.totalClicked || 0) / emailSum.totalSent * 100).toFixed(1)
+            : "0.0",
+        },
+        smsStats: {
+          campaignCount: smsCampaignStats._count || 0,
+          totalSent: smsSum.totalSent || 0,
+          totalDelivered: smsSum.totalDelivered || 0,
+          totalOpened: smsSum.totalOpened || 0,
+          totalClicked: smsSum.totalClicked || 0,
+        },
+        // Per-campaign list
+        campaigns: campaignsList.map((c) => ({
+          id: c.id,
+          name: c.name,
+          type: c.type,
+          channel: c.channel,
+          sent: c.totalSent,
+          delivered: c.totalDelivered,
+          opened: c.totalOpened,
+          clicked: c.totalClicked,
+          bounced: c.totalBounced,
+          unsubscribed: c.totalUnsubscribed,
+          openRate: c.totalSent ? ((c.totalOpened / c.totalSent) * 100) : 0,
+          clickRate: c.totalSent ? ((c.totalClicked / c.totalSent) * 100) : 0,
+          donations: c._count.donations,
+          sentAt: c.sentAt,
+        })),
+        credits: {
+          emailCredits: creditInfo?.emailCredits || 0,
+          smsCredits: creditInfo?.smsCredits || 0,
         },
         topDonors,
         donationsByMonth,

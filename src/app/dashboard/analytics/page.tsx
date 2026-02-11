@@ -30,6 +30,9 @@ import {
   TrendingUp,
   Target,
   Zap,
+  Mail,
+  MessageSquare,
+  CreditCard,
 } from "lucide-react";
 import {
   BarChart,
@@ -76,6 +79,7 @@ interface CampaignPerformance {
   id: string;
   name: string;
   type: string;
+  channel: string;
   sent: number;
   openRate: number;
   clickRate: number;
@@ -92,6 +96,22 @@ interface DonorGrowth {
   date: string;
   total: number;
   new: number;
+}
+
+interface ChannelStats {
+  campaignCount: number;
+  totalSent: number;
+  totalDelivered: number;
+  totalOpened: number;
+  totalClicked: number;
+  totalBounced?: number;
+  openRate: string;
+  clickRate: string;
+}
+
+interface CreditsInfo {
+  emailCredits: number;
+  smsCredits: number;
 }
 
 const PIE_COLORS = ["#6366f1", "#22c55e", "#f59e0b", "#ef4444", "#3b82f6", "#8b5cf6", "#ec4899"];
@@ -114,6 +134,9 @@ export default function AnalyticsPage() {
   const [campaignPerformance, setCampaignPerformance] = useState<CampaignPerformance[]>([]);
   const [donationsByCampaign, setDonationsByCampaign] = useState<DonationByCampaign[]>([]);
   const [donorGrowth, setDonorGrowth] = useState<DonorGrowth[]>([]);
+  const [emailStats, setEmailStats] = useState<ChannelStats | null>(null);
+  const [smsStats, setSmsStats] = useState<ChannelStats | null>(null);
+  const [credits, setCredits] = useState<CreditsInfo | null>(null);
 
   // AI Marketing Agent state
   const [agentMessages, setAgentMessages] = useState<AgentMessage[]>([]);
@@ -201,10 +224,21 @@ export default function AnalyticsPage() {
         opened: 0,
       })));
 
-      // Build campaignPerformance list from topDonors or recentDonations
-      setCampaignPerformance([]);
+      // Campaign performance from API
+      const campaigns = d.campaigns || [];
+      setCampaignPerformance(campaigns.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        type: c.type || "CUSTOM",
+        channel: c.channel || "EMAIL",
+        sent: c.sent || 0,
+        openRate: c.openRate || 0,
+        clickRate: c.clickRate || 0,
+        donations: c.donations || 0,
+        revenue: 0,
+      })));
 
-      // Build donationsByCampaign from donorsByChannel or recentDonations
+      // Build donationsByCampaign from recentDonations
       const donations = d.recentDonations || [];
       const campaignMap = new Map<string, number>();
       donations.forEach((don: any) => {
@@ -214,6 +248,11 @@ export default function AnalyticsPage() {
       setDonationsByCampaign(
         Array.from(campaignMap.entries()).map(([name, amount]) => ({ name, amount: Number(amount) }))
       );
+
+      // Email / SMS stats
+      setEmailStats(d.emailStats || null);
+      setSmsStats(d.smsStats || null);
+      setCredits(d.credits || null);
 
       // Donor growth - use donorsByChannel for now
       setDonorGrowth([]);
@@ -502,6 +541,123 @@ export default function AnalyticsPage() {
         </div>
       )}
 
+      {/* ── Email & SMS Performance ──────────────────────────────── */}
+      {(emailStats || smsStats) && (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Email Stats */}
+          {emailStats && (
+            <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-white">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Mail className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-blue-900">Campanii Email</h3>
+                    <p className="text-xs text-blue-600">{emailStats.campaignCount} campanii trimise</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-2.5 bg-white rounded-lg border border-blue-100">
+                    <p className="text-xs text-muted-foreground">Trimise</p>
+                    <p className="text-lg font-bold text-blue-900">{emailStats.totalSent.toLocaleString()}</p>
+                  </div>
+                  <div className="p-2.5 bg-white rounded-lg border border-blue-100">
+                    <p className="text-xs text-muted-foreground">Livrate</p>
+                    <p className="text-lg font-bold text-blue-900">{emailStats.totalDelivered.toLocaleString()}</p>
+                  </div>
+                  <div className="p-2.5 bg-white rounded-lg border border-blue-100">
+                    <p className="text-xs text-muted-foreground">Deschise</p>
+                    <p className="text-lg font-bold text-blue-700">{emailStats.totalOpened.toLocaleString()}</p>
+                    <p className="text-[10px] text-blue-500">{emailStats.openRate}% rata</p>
+                  </div>
+                  <div className="p-2.5 bg-white rounded-lg border border-blue-100">
+                    <p className="text-xs text-muted-foreground">Click-uri</p>
+                    <p className="text-lg font-bold text-blue-700">{emailStats.totalClicked.toLocaleString()}</p>
+                    <p className="text-[10px] text-blue-500">{emailStats.clickRate}% rata</p>
+                  </div>
+                </div>
+                {(emailStats.totalBounced || 0) > 0 && (
+                  <p className="text-xs text-red-500 mt-2">{emailStats.totalBounced} bounce-uri</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* SMS Stats */}
+          {smsStats && (
+            <Card className="border-green-200 bg-gradient-to-br from-green-50 to-white">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <MessageSquare className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-green-900">Campanii SMS</h3>
+                    <p className="text-xs text-green-600">{smsStats.campaignCount} campanii trimise</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-2.5 bg-white rounded-lg border border-green-100">
+                    <p className="text-xs text-muted-foreground">Trimise</p>
+                    <p className="text-lg font-bold text-green-900">{smsStats.totalSent.toLocaleString()}</p>
+                  </div>
+                  <div className="p-2.5 bg-white rounded-lg border border-green-100">
+                    <p className="text-xs text-muted-foreground">Livrate</p>
+                    <p className="text-lg font-bold text-green-900">{smsStats.totalDelivered.toLocaleString()}</p>
+                  </div>
+                  <div className="p-2.5 bg-white rounded-lg border border-green-100">
+                    <p className="text-xs text-muted-foreground">Deschise</p>
+                    <p className="text-lg font-bold text-green-700">{smsStats.totalOpened.toLocaleString()}</p>
+                  </div>
+                  <div className="p-2.5 bg-white rounded-lg border border-green-100">
+                    <p className="text-xs text-muted-foreground">Click-uri</p>
+                    <p className="text-lg font-bold text-green-700">{smsStats.totalClicked.toLocaleString()}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Credits Remaining */}
+          {credits && (
+            <Card className="border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+              <CardContent className="pt-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <CreditCard className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-purple-900">Credite disponibile</h3>
+                    <p className="text-xs text-purple-600">Sold curent</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="p-3 bg-white rounded-lg border border-purple-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Mail className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium">Email</span>
+                      </div>
+                      <span className="text-xl font-bold text-purple-900">{credits.emailCredits.toLocaleString()}</span>
+                    </div>
+                  </div>
+                  <div className="p-3 bg-white rounded-lg border border-purple-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <MessageSquare className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium">SMS</span>
+                      </div>
+                      <span className="text-xl font-bold text-purple-900">{credits.smsCredits.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      )}
+
       {/* Donation Stats Cards */}
       {summary && (summary.totalDonations > 0 || summary.totalDonationAmount > 0) && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -742,12 +898,11 @@ export default function AnalyticsPage() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="p-3 text-left font-medium">Campanie</th>
-                    <th className="p-3 text-left font-medium">Tip</th>
+                    <th className="p-3 text-left font-medium">Canal</th>
                     <th className="p-3 text-right font-medium">Trimise</th>
                     <th className="p-3 text-right font-medium">Rata deschidere</th>
                     <th className="p-3 text-right font-medium">Rata click</th>
                     <th className="p-3 text-right font-medium hidden md:table-cell">Donatii</th>
-                    <th className="p-3 text-right font-medium hidden md:table-cell">Venituri</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -758,8 +913,11 @@ export default function AnalyticsPage() {
                       <tr key={camp.id} className="border-b hover:bg-muted/30 transition-colors">
                         <td className="p-3 font-medium max-w-[200px] truncate">{camp.name}</td>
                         <td className="p-3">
-                          <Badge variant="secondary" className="text-xs">
-                            {camp.type.replace(/_/g, " ")}
+                          <Badge variant="secondary" className="text-xs flex items-center gap-1 w-fit">
+                            {(camp as any).channel === "EMAIL" && <Mail className="h-3 w-3" />}
+                            {(camp as any).channel === "SMS" && <MessageSquare className="h-3 w-3" />}
+                            {(camp as any).channel === "BOTH" && <><Mail className="h-3 w-3" /><MessageSquare className="h-3 w-3" /></>}
+                            {(camp as any).channel || camp.type.replace(/_/g, " ")}
                           </Badge>
                         </td>
                         <td className="p-3 text-right">{camp.sent.toLocaleString()}</td>
@@ -775,9 +933,6 @@ export default function AnalyticsPage() {
                         </td>
                         <td className="p-3 text-right hidden md:table-cell">
                           {camp.donations.toLocaleString()}
-                        </td>
-                        <td className="p-3 text-right font-medium hidden md:table-cell">
-                          {formatCurrency(camp.revenue)}
                         </td>
                       </tr>
                     ))}
