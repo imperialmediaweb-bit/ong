@@ -795,6 +795,14 @@ model PlatformSettings {
   footerText      String?
   contactEmail    String?
   socialLinks     Json?    // { facebook, twitter, linkedin, etc }
+  // AI & Service API Keys (managed from Super Admin panel)
+  openaiApiKey    String?
+  anthropicApiKey String?
+  googleAiApiKey  String?
+  sendgridApiKey  String?
+  twilioSid       String?
+  twilioToken     String?
+  twilioPhone     String?
   updatedAt       DateTime @updatedAt
 }
 

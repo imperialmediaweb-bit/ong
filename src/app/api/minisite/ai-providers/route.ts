@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const providers = getAvailableProviders();
+    const providers = await getAvailableProviders();
 
     return NextResponse.json({
       providers,
