@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Users, Search, MessageCircle, UserPlus, Check, X,
   Loader2, Send, Building, Heart, Globe, ChevronRight, Briefcase,
+  Sparkles, Linkedin, Copy, Mail, ExternalLink, Save, MapPin, Target,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { SponsorCRM } from "@/components/dashboard/sponsor-crm";
@@ -153,7 +154,7 @@ export default function ReteaPage() {
   const { data: session } = useSession();
   const currentUserId = (session?.user as any)?.id;
 
-  const [activeTab, setActiveTab] = useState("sponsori");
+  const [activeTab, setActiveTab] = useState("prospectare");
 
   // Connections state
   const [accepted, setAccepted] = useState<ConnectionItem[]>([]);
@@ -161,6 +162,16 @@ export default function ReteaPage() {
   const [pendingSent, setPendingSent] = useState<ConnectionItem[]>([]);
   const [loadingConnections, setLoadingConnections] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+
+  // Prospect state
+  const [prospectKeywords, setProspectKeywords] = useState("");
+  const [prospectIndustry, setProspectIndustry] = useState("");
+  const [prospectCity, setProspectCity] = useState("");
+  const [prospectResults, setProspectResults] = useState<any[]>([]);
+  const [prospectLoading, setProspectLoading] = useState(false);
+  const [prospectSaving, setProspectSaving] = useState<string | null>(null);
+  const [prospectSaved, setProspectSaved] = useState<Set<string>>(new Set());
+  const [prospectMsg, setProspectMsg] = useState<{ company: string; loading: boolean; message?: string; subject?: string; tips?: string[]; channel?: string } | null>(null);
 
   // Discover state
   const [discoverResults, setDiscoverResults] = useState<DiscoverItem[]>([]);
@@ -350,6 +361,105 @@ export default function ReteaPage() {
     setSelectedConversation(userId);
   };
 
+  // ─── Prospect: Search companies ──────
+  const handleProspectSearch = async () => {
+    if (!prospectKeywords.trim() && !prospectIndustry.trim()) return;
+    setProspectLoading(true);
+    setProspectResults([]);
+    try {
+      const res = await fetch("/api/sponsors/prospect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          keywords: prospectKeywords,
+          industry: prospectIndustry,
+          city: prospectCity,
+          count: 8,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        alert(data?.error || "Eroare la cautare");
+        return;
+      }
+      const data = await res.json();
+      setProspectResults(data.companies || []);
+    } catch (err) {
+      console.error("Prospect search error:", err);
+      alert("Eroare la cautare. Verificati conexiunea.");
+    } finally {
+      setProspectLoading(false);
+    }
+  };
+
+  // ─── Prospect: Save to CRM ──────────
+  const handleProspectSave = async (company: any) => {
+    setProspectSaving(company.name);
+    try {
+      const res = await fetch("/api/sponsors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: company.name,
+          domain: company.website?.replace(/https?:\/\/(www\.)?/, "").replace(/\/.*/, "") || null,
+          website: company.website || null,
+          industry: company.industry || null,
+          city: company.city || null,
+          country: "Romania",
+          status: "NEW",
+          tags: ["prospectare-ai"],
+          notes: [company.description, company.whySponsor, company.contactTip ? `Abordare: ${company.contactTip}` : ""].filter(Boolean).join("\n"),
+        }),
+      });
+      if (res.ok) {
+        setProspectSaved((prev) => new Set(prev).add(company.name));
+      } else if (res.status === 409) {
+        setProspectSaved((prev) => new Set(prev).add(company.name));
+      } else {
+        alert("Eroare la salvarea companiei");
+      }
+    } catch (err) {
+      console.error("Save sponsor error:", err);
+    } finally {
+      setProspectSaving(null);
+    }
+  };
+
+  // ─── Prospect: Generate message ──────
+  const handleProspectMessage = async (company: any, channel: "linkedin" | "email") => {
+    setProspectMsg({ company: company.name, loading: true, channel });
+    try {
+      const res = await fetch("/api/sponsors/prospect/message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyName: company.name,
+          industry: company.industry,
+          city: company.city,
+          whySponsor: company.whySponsor,
+          channel,
+        }),
+      });
+      if (!res.ok) {
+        setProspectMsg(null);
+        alert("Eroare la generarea mesajului");
+        return;
+      }
+      const data = await res.json();
+      setProspectMsg({
+        company: company.name,
+        loading: false,
+        message: data.message,
+        subject: data.subject,
+        tips: data.tips,
+        channel,
+      });
+    } catch (err) {
+      console.error("Prospect message error:", err);
+      setProspectMsg(null);
+    }
+  };
+
   // ─── Effects ──────────────────────────
 
   useEffect(() => {
@@ -451,27 +561,36 @@ export default function ReteaPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="sponsori" className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4" />
-            Companii sponsori
+        <TabsList className="grid w-full grid-cols-5">
+          <TabsTrigger value="prospectare" className="flex items-center gap-1.5 text-xs sm:text-sm">
+            <Target className="h-4 w-4" />
+            <span className="hidden sm:inline">Prospectare</span>
+            <span className="sm:hidden">Cauta</span>
           </TabsTrigger>
-          <TabsTrigger value="conexiuni" className="flex items-center gap-2">
+          <TabsTrigger value="sponsori" className="flex items-center gap-1.5 text-xs sm:text-sm">
+            <Briefcase className="h-4 w-4" />
+            <span className="hidden sm:inline">Companii</span>
+            <span className="sm:hidden">CRM</span>
+          </TabsTrigger>
+          <TabsTrigger value="conexiuni" className="flex items-center gap-1.5 text-xs sm:text-sm">
             <Users className="h-4 w-4" />
-            Conexiuni
+            <span className="hidden sm:inline">Conexiuni</span>
+            <span className="sm:hidden">Retea</span>
             {pendingReceived.length > 0 && (
               <Badge variant="destructive" className="ml-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center">
                 {pendingReceived.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="descopera" className="flex items-center gap-2">
+          <TabsTrigger value="descopera" className="flex items-center gap-1.5 text-xs sm:text-sm">
             <Search className="h-4 w-4" />
-            Descopera
+            <span className="hidden sm:inline">Descopera</span>
+            <span className="sm:hidden">ONG</span>
           </TabsTrigger>
-          <TabsTrigger value="mesaje" className="flex items-center gap-2">
+          <TabsTrigger value="mesaje" className="flex items-center gap-1.5 text-xs sm:text-sm">
             <MessageCircle className="h-4 w-4" />
-            Mesaje
+            <span className="hidden sm:inline">Mesaje</span>
+            <span className="sm:hidden">Chat</span>
             {totalUnread > 0 && (
               <Badge variant="destructive" className="ml-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center">
                 {totalUnread}
@@ -479,6 +598,308 @@ export default function ReteaPage() {
             )}
           </TabsTrigger>
         </TabsList>
+
+        {/* ═══════════════════════════════════════ */}
+        {/* PROSPECTARE COMPANII TAB               */}
+        {/* ═══════════════════════════════════════ */}
+        <TabsContent value="prospectare" className="space-y-6">
+          {/* Search Form */}
+          <Card className="border-0 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white">
+                  <Target className="h-5 w-5" />
+                </div>
+                Prospectare companii cu AI
+              </CardTitle>
+              <CardDescription>
+                Cauta companii potentiale sponsor pe baza de cuvinte cheie, industrie si oras. AI-ul analizeaza potrivirea cu organizatia ta.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Cuvinte cheie *</label>
+                  <Input
+                    placeholder="Ex: IT, software, banci, retail..."
+                    value={prospectKeywords}
+                    onChange={(e) => setProspectKeywords(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleProspectSearch()}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Industrie</label>
+                  <Input
+                    placeholder="Ex: Tehnologie, Constructii..."
+                    value={prospectIndustry}
+                    onChange={(e) => setProspectIndustry(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">Oras</label>
+                  <Input
+                    placeholder="Ex: Bucuresti, Cluj, Timisoara..."
+                    value={prospectCity}
+                    onChange={(e) => setProspectCity(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-4">
+                <Button
+                  onClick={handleProspectSearch}
+                  disabled={prospectLoading || (!prospectKeywords.trim() && !prospectIndustry.trim())}
+                  className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
+                >
+                  {prospectLoading ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 mr-2" />
+                  )}
+                  Cauta cu AI
+                </Button>
+                {prospectResults.length > 0 && (
+                  <p className="text-sm text-muted-foreground self-center">
+                    {prospectResults.length} companii gasite
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Results */}
+          {prospectLoading && (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="relative">
+                <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
+                <Sparkles className="h-5 w-5 text-purple-500 absolute -top-1 -right-1 animate-pulse" />
+              </div>
+              <p className="text-sm text-muted-foreground mt-4">AI cauta companii potrivite...</p>
+            </div>
+          )}
+
+          {!prospectLoading && prospectResults.length > 0 && (
+            <div className="grid gap-4 md:grid-cols-2">
+              {prospectResults.map((company, idx) => (
+                <Card key={`${company.name}-${idx}`} className="group hover:shadow-md transition-all duration-300 border-0 shadow-sm overflow-hidden">
+                  <div className="h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
+                  <CardContent className="p-5">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 flex-shrink-0">
+                        <Building className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-base truncate">{company.name}</h3>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {company.industry && (
+                            <Badge variant="secondary" className="text-xs">{company.industry}</Badge>
+                          )}
+                          {company.city && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <MapPin className="h-3 w-3" /> {company.city}
+                            </span>
+                          )}
+                          {company.estimatedSize && (
+                            <span className="text-xs text-muted-foreground capitalize">
+                              {company.estimatedSize}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {company.description && (
+                      <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
+                        {company.description}
+                      </p>
+                    )}
+
+                    {company.whySponsor && (
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 mb-3">
+                        <p className="text-xs text-emerald-700">
+                          <strong>De ce e potrivita:</strong> {company.whySponsor}
+                        </p>
+                      </div>
+                    )}
+
+                    {company.contactTip && (
+                      <p className="text-xs text-muted-foreground mb-3">
+                        <strong>Abordare:</strong> {company.contactTip}
+                      </p>
+                    )}
+
+                    {/* Links */}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {company.website && (
+                        <a
+                          href={company.website.startsWith("http") ? company.website : `https://${company.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                        >
+                          <Globe className="h-3 w-3" /> Website
+                        </a>
+                      )}
+                      {company.linkedinUrl && (
+                        <a
+                          href={company.linkedinUrl.startsWith("http") ? company.linkedinUrl : `https://${company.linkedinUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-blue-700 hover:underline"
+                        >
+                          <Linkedin className="h-3 w-3" /> LinkedIn
+                        </a>
+                      )}
+                      <a
+                        href={`https://www.linkedin.com/search/results/companies/?keywords=${encodeURIComponent(company.name)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-xs text-indigo-600 hover:underline"
+                      >
+                        <Search className="h-3 w-3" /> Cauta pe LinkedIn
+                      </a>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-wrap gap-2 pt-3 border-t">
+                      {prospectSaved.has(company.name) ? (
+                        <Button size="sm" variant="outline" disabled className="text-emerald-600">
+                          <Check className="h-3.5 w-3.5 mr-1" /> Salvat in CRM
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleProspectSave(company)}
+                          disabled={prospectSaving === company.name}
+                        >
+                          {prospectSaving === company.name ? (
+                            <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                          ) : (
+                            <Save className="h-3.5 w-3.5 mr-1" />
+                          )}
+                          Salveaza in CRM
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleProspectMessage(company, "linkedin")}
+                        disabled={prospectMsg?.loading && prospectMsg.company === company.name}
+                      >
+                        {prospectMsg?.loading && prospectMsg.company === company.name && prospectMsg.channel === "linkedin" ? (
+                          <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <Linkedin className="h-3.5 w-3.5 mr-1" />
+                        )}
+                        Mesaj LinkedIn
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleProspectMessage(company, "email")}
+                        disabled={prospectMsg?.loading && prospectMsg.company === company.name}
+                      >
+                        {prospectMsg?.loading && prospectMsg.company === company.name && prospectMsg.channel === "email" ? (
+                          <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
+                        ) : (
+                          <Mail className="h-3.5 w-3.5 mr-1" />
+                        )}
+                        Mesaj Email
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {/* Generated Message Modal */}
+          {prospectMsg && !prospectMsg.loading && prospectMsg.message && (
+            <Card className="border-indigo-200 bg-indigo-50/30 shadow-sm">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    {prospectMsg.channel === "linkedin" ? (
+                      <Linkedin className="h-5 w-5 text-blue-700" />
+                    ) : (
+                      <Mail className="h-5 w-5 text-indigo-600" />
+                    )}
+                    Mesaj generat pentru {prospectMsg.company}
+                  </CardTitle>
+                  <Button size="sm" variant="ghost" onClick={() => setProspectMsg(null)}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {prospectMsg.subject && (
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Subiect</label>
+                    <div className="bg-white rounded-lg p-3 border mt-1 flex items-center justify-between">
+                      <p className="text-sm font-medium">{prospectMsg.subject}</p>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => navigator.clipboard.writeText(prospectMsg.subject || "")}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Mesaj</label>
+                  <div className="bg-white rounded-lg p-4 border mt-1">
+                    <p className="text-sm whitespace-pre-wrap">{prospectMsg.message}</p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-2"
+                    onClick={() => {
+                      const fullText = prospectMsg.subject
+                        ? `Subiect: ${prospectMsg.subject}\n\n${prospectMsg.message}`
+                        : prospectMsg.message || "";
+                      navigator.clipboard.writeText(fullText);
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5 mr-1" /> Copiaza tot
+                  </Button>
+                </div>
+                {prospectMsg.tips && prospectMsg.tips.length > 0 && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                    <p className="text-xs font-semibold text-amber-800 mb-1.5">Sfaturi pentru abordare:</p>
+                    <ul className="space-y-1">
+                      {prospectMsg.tips.map((tip, i) => (
+                        <li key={i} className="text-xs text-amber-700 flex items-start gap-1.5">
+                          <span className="text-amber-500 mt-0.5">&#8226;</span> {tip}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Empty state */}
+          {!prospectLoading && prospectResults.length === 0 && (
+            <Card className="border-0 shadow-sm">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 mb-4">
+                  <Target className="h-10 w-10 text-indigo-600" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2">Gaseste companii sponsor potentiale</h3>
+                <p className="text-muted-foreground max-w-md mb-1">
+                  Introdu cuvinte cheie legate de industria companiilor pe care le cauti (ex: &quot;IT Bucuresti&quot;, &quot;constructii&quot;, &quot;banci&quot;).
+                </p>
+                <p className="text-muted-foreground max-w-md text-sm">
+                  AI-ul va cauta companii reale din Romania potrivite pentru organizatia ta si va genera mesaje personalizate de abordare.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
 
         {/* ═══════════════════════════════════════ */}
         {/* COMPANII SPONSORI TAB                  */}
