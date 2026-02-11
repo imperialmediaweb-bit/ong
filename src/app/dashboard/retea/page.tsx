@@ -937,7 +937,7 @@ export default function ReteaPage() {
 
             {/* Chrome Extension Token Section */}
             {linkedinShowToken && (
-              <CardContent className="pt-0 pb-4">
+              <CardContent className="pt-0 pb-4" id="chrome-extension-token">
                 <div className="bg-slate-50 rounded-xl p-4 border space-y-4">
                   <div className="flex items-center justify-between">
                     <h4 className="text-sm font-semibold flex items-center gap-2">
@@ -1120,7 +1120,12 @@ export default function ReteaPage() {
                   AI-ul va analiza fiecare prospect si va calcula scorul de potrivire.
                 </p>
                 <Button
-                  onClick={() => setLinkedinShowToken(true)}
+                  onClick={() => {
+                    setLinkedinShowToken(true);
+                    setTimeout(() => {
+                      document.getElementById("chrome-extension-token")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }, 100);
+                  }}
                   className="bg-[#0A66C2] hover:bg-[#004182]"
                 >
                   <Download className="h-4 w-4 mr-2" />
