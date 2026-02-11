@@ -119,6 +119,10 @@ model Ngo {
   // Sponsor Companies CRM
   sponsorCompanies    SponsorCompany[]
 
+  // LinkedIn Prospects (Chrome Extension)
+  linkedInProspects   LinkedInProspect[]
+  apiTokens           ApiToken[]
+
   // Provider settings (encrypted)
   sendgridApiKey    String?
   twilioAccountSid  String?
@@ -1254,4 +1258,75 @@ model GlobalBlacklist {
 enum BlacklistType {
   EMAIL
   PHONE
+}
+
+// ─── API Tokens (Chrome Extension Auth) ────────────────────────
+
+model ApiToken {
+  id          String    @id @default(cuid())
+  ngoId       String
+  ngo         Ngo       @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  userId      String
+  token       String    @unique
+  name        String    @default("Chrome Extension")
+  isActive    Boolean   @default(true)
+  lastUsedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([token])
+  @@index([ngoId])
+}
+
+// ─── LinkedIn Prospects (Chrome Extension Import) ──────────────
+
+model LinkedInProspect {
+  id                String                 @id @default(cuid())
+  ngoId             String
+  ngo               Ngo                    @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+
+  // LinkedIn profile data
+  fullName          String
+  headline          String?
+  company           String?
+  location          String?
+  profileUrl        String
+  profileImageUrl   String?
+
+  // AI matching & analysis
+  aiMatchScore      Int?
+  aiMatchReasons    Json?
+  aiAnalysis        Json?
+  aiAnalyzedAt      DateTime?
+
+  // Status tracking
+  status            LinkedInProspectStatus @default(NEW)
+  tags              String[]               @default([])
+  notes             String?
+
+  // Messaging
+  lastMessageAt     DateTime?
+  messageCount      Int                    @default(0)
+
+  // Import metadata
+  importedBy        String?
+  importSource      String?
+
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+
+  @@unique([ngoId, profileUrl])
+  @@index([ngoId])
+  @@index([status])
+  @@index([aiMatchScore])
+  @@index([createdAt])
+}
+
+enum LinkedInProspectStatus {
+  NEW
+  ANALYZED
+  CONTACTED
+  REPLIED
+  MEETING
+  CONVERTED
+  NOT_INTERESTED
 }
