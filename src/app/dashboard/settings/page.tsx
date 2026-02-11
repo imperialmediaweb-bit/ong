@@ -44,6 +44,11 @@ import {
   CreditCard,
   ExternalLink,
   Palette,
+  Wallet,
+  Banknote,
+  AlertTriangle,
+  ArrowUpRight,
+  Copy,
 } from "lucide-react";
 
 interface ProfileSettings {
@@ -173,6 +178,24 @@ export default function SettingsPage() {
   });
   const [subLoading, setSubLoading] = useState(true);
 
+  // Payment (Stripe Connect + Bank/Revolut)
+  const [payment, setPayment] = useState({
+    stripeConnectId: "",
+    stripeConnectStatus: "pending",
+    stripeConnectOnboarded: false,
+    stripeChargesEnabled: false,
+    stripePayoutsEnabled: false,
+    stripeLastSyncAt: null as string | null,
+    bankName: "",
+    ibanRon: "",
+    ibanEur: "",
+    revolutTag: "",
+    revolutPhone: "",
+    revolutLink: "",
+  });
+  const [paymentLoading, setPaymentLoading] = useState(true);
+  const [connectLoading, setConnectLoading] = useState(false);
+
   // Fetch profile settings
   const fetchProfile = useCallback(async () => {
     setProfileLoading(true);
@@ -291,6 +314,35 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // Fetch payment settings
+  const fetchPayment = useCallback(async () => {
+    setPaymentLoading(true);
+    try {
+      const res = await fetch("/api/settings/payment");
+      if (res.ok) {
+        const data = await res.json();
+        setPayment({
+          stripeConnectId: data.stripeConnectId || "",
+          stripeConnectStatus: data.stripeConnectStatus || "pending",
+          stripeConnectOnboarded: data.stripeConnectOnboarded || false,
+          stripeChargesEnabled: data.stripeChargesEnabled || false,
+          stripePayoutsEnabled: data.stripePayoutsEnabled || false,
+          stripeLastSyncAt: data.stripeLastSyncAt || null,
+          bankName: data.bankName || "",
+          ibanRon: data.ibanRon || "",
+          ibanEur: data.ibanEur || "",
+          revolutTag: data.revolutTag || "",
+          revolutPhone: data.revolutPhone || "",
+          revolutLink: data.revolutLink || "",
+        });
+      }
+    } catch (err: any) {
+      console.error(err);
+    } finally {
+      setPaymentLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     switch (activeTab) {
       case "profile":
@@ -311,8 +363,11 @@ export default function SettingsPage() {
       case "subscription":
         fetchSubscription();
         break;
+      case "payment":
+        fetchPayment();
+        break;
     }
-  }, [activeTab, fetchProfile, fetchEmail, fetchSms, fetchTeam, fetchMinisite, fetchSubscription]);
+  }, [activeTab, fetchProfile, fetchEmail, fetchSms, fetchTeam, fetchMinisite, fetchSubscription, fetchPayment]);
 
   const clearMessages = () => {
     setError(null);
@@ -454,6 +509,75 @@ export default function SettingsPage() {
     }
   };
 
+  const handleStartOnboarding = async () => {
+    clearMessages();
+    setConnectLoading(true);
+    try {
+      const res = await fetch("/api/connect/onboard", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Eroare la initierea onboarding-ului");
+      }
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setConnectLoading(false);
+    }
+  };
+
+  const handleStripeDashboard = async () => {
+    clearMessages();
+    setConnectLoading(true);
+    try {
+      const res = await fetch("/api/connect/dashboard", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Eroare la accesarea dashboard-ului Stripe");
+      }
+      const data = await res.json();
+      if (data.url) {
+        window.open(data.url, "_blank");
+      }
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setConnectLoading(false);
+    }
+  };
+
+  const handleSavePayment = async () => {
+    clearMessages();
+    setSaving(true);
+    try {
+      const res = await fetch("/api/settings/payment", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          bankName: payment.bankName,
+          ibanRon: payment.ibanRon,
+          ibanEur: payment.ibanEur,
+          revolutTag: payment.revolutTag,
+          revolutPhone: payment.revolutPhone,
+          revolutLink: payment.revolutLink,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Eroare la salvarea setarilor");
+      }
+      setSuccess("Setarile de plata au fost salvate cu succes.");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleChangePlan = async (plan: string) => {
     clearMessages();
     setSaving(true);
@@ -509,10 +633,14 @@ export default function SettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); clearMessages(); }}>
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="profile" className="gap-1 text-xs">
             <Building className="h-3 w-3" />
             Profil
+          </TabsTrigger>
+          <TabsTrigger value="payment" className="gap-1 text-xs">
+            <Wallet className="h-3 w-3" />
+            Plati
           </TabsTrigger>
           <TabsTrigger value="subscription" className="gap-1 text-xs">
             <CreditCard className="h-3 w-3" />
@@ -953,6 +1081,204 @@ export default function SettingsPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Payment Tab */}
+        <TabsContent value="payment">
+          <div className="space-y-6">
+            {/* Stripe Connect Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Stripe Connect - Plati cu cardul
+                </CardTitle>
+                <CardDescription>
+                  Primeste donatii direct pe cardul organizatiei prin Stripe.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {paymentLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Status Display */}
+                    <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/30">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold">Status cont Stripe</h3>
+                          {payment.stripeConnectStatus === "active" ? (
+                            <Badge className="bg-green-600 text-white">Activ</Badge>
+                          ) : payment.stripeConnectStatus === "restricted" ? (
+                            <Badge variant="destructive">Restrictionat</Badge>
+                          ) : payment.stripeConnectId ? (
+                            <Badge variant="secondary">In curs</Badge>
+                          ) : (
+                            <Badge variant="outline">Neconectat</Badge>
+                          )}
+                        </div>
+                        {payment.stripeConnectId ? (
+                          <div className="space-y-1 text-sm text-muted-foreground">
+                            <p>Plati card: {payment.stripeChargesEnabled ? "Activate" : "Dezactivate"}</p>
+                            <p>Transfer fonduri: {payment.stripePayoutsEnabled ? "Activat" : "Dezactivat"}</p>
+                            {payment.stripeLastSyncAt && (
+                              <p>Ultima sincronizare: {new Date(payment.stripeLastSyncAt).toLocaleDateString("ro-RO", { hour: "2-digit", minute: "2-digit" })}</p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">
+                            Conecteaza contul Stripe pentru a primi donatii online cu cardul.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Stripe Connect Actions */}
+                    <div className="flex gap-3">
+                      {!payment.stripeConnectId || payment.stripeConnectStatus !== "active" ? (
+                        <Button onClick={handleStartOnboarding} disabled={connectLoading}>
+                          {connectLoading ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <CreditCard className="mr-2 h-4 w-4" />
+                          )}
+                          {payment.stripeConnectId ? "Continua configurarea Stripe" : "Activeaza plati cu cardul"}
+                        </Button>
+                      ) : (
+                        <Button variant="outline" onClick={handleStripeDashboard} disabled={connectLoading}>
+                          {connectLoading ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                            <ArrowUpRight className="mr-2 h-4 w-4" />
+                          )}
+                          Dashboard Stripe
+                        </Button>
+                      )}
+                    </div>
+
+                    {payment.stripeConnectStatus === "restricted" && (
+                      <div className="flex items-start gap-2 p-3 rounded-md bg-yellow-50 border border-yellow-200 text-sm text-yellow-800">
+                        <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0" />
+                        <p>Contul tau Stripe necesita informatii suplimentare. Apasa pe butonul de mai sus pentru a completa procesul.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Bank Transfer Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Banknote className="h-5 w-5" />
+                  Transfer bancar
+                </CardTitle>
+                <CardDescription>
+                  Configureaza datele bancare pentru a primi donatii prin transfer bancar.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {paymentLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid gap-2">
+                      <Label htmlFor="bankName">Numele bancii</Label>
+                      <Input
+                        id="bankName"
+                        placeholder="Ex: Banca Transilvania, ING, BRD..."
+                        value={payment.bankName}
+                        onChange={(e) => setPayment({ ...payment, bankName: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="ibanRon">IBAN RON</Label>
+                      <Input
+                        id="ibanRon"
+                        placeholder="RO49 AAAA 1B31 0075 9384 0000"
+                        value={payment.ibanRon}
+                        onChange={(e) => setPayment({ ...payment, ibanRon: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="ibanEur">IBAN EUR (optional)</Label>
+                      <Input
+                        id="ibanEur"
+                        placeholder="RO49 AAAA 1B31 0075 9384 0001"
+                        value={payment.ibanEur}
+                        onChange={(e) => setPayment({ ...payment, ibanEur: e.target.value })}
+                      />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Revolut Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5" />
+                  Revolut
+                </CardTitle>
+                <CardDescription>
+                  Adauga detaliile Revolut pentru a primi donatii rapide.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {paymentLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid gap-2">
+                      <Label htmlFor="revolutTag">Revolut @tag</Label>
+                      <Input
+                        id="revolutTag"
+                        placeholder="@organizatia-ta"
+                        value={payment.revolutTag}
+                        onChange={(e) => setPayment({ ...payment, revolutTag: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="revolutPhone">Numar telefon Revolut (optional)</Label>
+                      <Input
+                        id="revolutPhone"
+                        placeholder="+40 7xx xxx xxx"
+                        value={payment.revolutPhone}
+                        onChange={(e) => setPayment({ ...payment, revolutPhone: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="revolutLink">Link Revolut.me (optional)</Label>
+                      <Input
+                        id="revolutLink"
+                        placeholder="https://revolut.me/organizatia-ta"
+                        value={payment.revolutLink}
+                        onChange={(e) => setPayment({ ...payment, revolutLink: e.target.value })}
+                      />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+              <CardFooter className="border-t pt-6">
+                <Button onClick={handleSavePayment} disabled={saving || paymentLoading}>
+                  {saving ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="mr-2 h-4 w-4" />
+                  )}
+                  Salveaza setarile de plata
+                </Button>
+              </CardFooter>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Subscription Tab */}

@@ -7,6 +7,7 @@ import {
   Users, Mail, Zap, BarChart3,
   Shield, Settings, Home, Heart, LogOut, Menu, X, FileText,
   Globe, Briefcase, Share2, Sparkles, ChevronRight, CircleDollarSign,
+  Banknote,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
@@ -26,6 +27,7 @@ const navGroups = [
     items: [
       { name: "Donatori", href: "/dashboard/donors", icon: Users },
       { name: "Donatii", href: "/dashboard/donations", icon: CircleDollarSign },
+      { name: "Verificare plati", href: "/dashboard/donations/pledges", icon: Banknote },
       { name: "Formular 230", href: "/dashboard/formular-230", icon: FileText },
     ],
   },

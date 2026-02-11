@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { calculateDonationFee } from "@/lib/donation-fee";
 
-// POST - Creeaza o sesiune de plata pentru donatie (endpoint public, fara autentificare)
+// POST - Creeaza o sesiune de plata Stripe pentru donatie (endpoint public)
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -22,6 +23,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (amount > 50000) {
+      return NextResponse.json(
+        { error: "Suma maxima pentru donatie este 50.000 RON" },
+        { status: 400 }
+      );
+    }
+
     // Cautam ONG-ul dupa slug
     const ngo = await prisma.ngo.findUnique({
       where: { slug: ngoSlug },
@@ -30,9 +38,14 @@ export async function POST(req: NextRequest) {
         name: true,
         slug: true,
         isActive: true,
+        subscriptionPlan: true,
         stripeConnectId: true,
         stripeConnectStatus: true,
         stripeConnectOnboarded: true,
+        stripeChargesEnabled: true,
+        donationFeePercent: true,
+        donationFeeFixedAmount: true,
+        donationFeeMinAmount: true,
       },
     });
 
@@ -54,8 +67,14 @@ export async function POST(req: NextRequest) {
     const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
     const donationCurrency = currency || "RON";
 
+    // Calculate plan-based fee
+    const feeResult = calculateDonationFee(amount, ngo.subscriptionPlan, {
+      donationFeePercent: ngo.donationFeePercent,
+      donationFeeFixedAmount: ngo.donationFeeFixedAmount,
+      donationFeeMinAmount: ngo.donationFeeMinAmount,
+    });
+
     // Suma in bani (Stripe lucreaza in cea mai mica unitate monetara)
-    // 1 RON = 100 bani
     const amountInSmallestUnit = Math.round(amount * 100);
 
     // Cautam sau cream donatorul
@@ -94,11 +113,15 @@ export async function POST(req: NextRequest) {
         currency: donationCurrency,
         status: "PENDING",
         source: "stripe_connect",
+        paymentProvider: "stripe",
+        applicationFeeAmount: feeResult.feeAmount,
         metadata: {
           donorEmail: donorEmail || null,
           donorName: donorName || null,
           message: message || null,
           stripeConnectId: ngo.stripeConnectId,
+          plan: ngo.subscriptionPlan,
+          feePercent: feeResult.feeAmount > 0 ? `${((feeResult.feeAmount / amount) * 100).toFixed(2)}%` : "0%",
         } as any,
       },
     });
@@ -108,7 +131,7 @@ export async function POST(req: NextRequest) {
 
     const successUrl = returnUrl
       ? `${returnUrl}?donation=success&donation_id=${donation.id}`
-      : `${appUrl}/api/donate/success?session_id={CHECKOUT_SESSION_ID}&donation_id=${donation.id}`;
+      : `${appUrl}/donate/${ngo.slug}?donation=success&donation_id=${donation.id}`;
     const cancelUrl = returnUrl
       ? `${returnUrl}?donation=cancelled`
       : `${appUrl}/s/${ngo.slug}?donation=cancelled`;
@@ -121,7 +144,7 @@ export async function POST(req: NextRequest) {
       successUrl,
       cancelUrl,
       donorEmail: donorEmail || undefined,
-      applicationFeePercent: 2.5, // Platforma ia 2.5% comision
+      applicationFeeAmount: feeResult.feeAmountCents > 0 ? feeResult.feeAmountCents : undefined,
       metadata: {
         donationId: donation.id,
         ngoId: ngo.id,
@@ -133,16 +156,18 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Salvam ID-ul sesiunii Stripe in metadata donatiei
+    // Salvam ID-ul sesiunii Stripe
     await prisma.donation.update({
       where: { id: donation.id },
       data: {
+        stripeCheckoutSessionId: checkoutSession.id,
         metadata: {
           donorEmail: donorEmail || null,
           donorName: donorName || null,
           message: message || null,
           stripeConnectId: ngo.stripeConnectId,
           stripeCheckoutSessionId: checkoutSession.id,
+          plan: ngo.subscriptionPlan,
         } as any,
       },
     });
