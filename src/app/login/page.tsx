@@ -93,6 +93,26 @@ export default function LoginPage() {
               </Link>
             </p>
           </form>
+
+          {/* Demo credentials */}
+          <div className="mt-4 pt-4 border-t">
+            <p className="text-xs text-muted-foreground text-center mb-2">Cont demo pentru testare:</p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full text-xs"
+              onClick={() => {
+                setEmail("admin@demo-ngo.org");
+                setPassword("password123");
+              }}
+            >
+              Completeaza cu date demo
+            </Button>
+            <p className="text-[10px] text-muted-foreground text-center mt-1.5">
+              admin@demo-ngo.org / password123
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>
