@@ -75,6 +75,7 @@ model Ngo {
   consentTexts      ConsentText[]
   auditLogs         AuditLog[]
   donations         Donation[]
+  manualPledges     ManualDonationPledge[]
   verification      NgoVerification?
 
   // Stripe subscription (platform plan)
@@ -94,9 +95,26 @@ model Ngo {
   autoRenew             Boolean     @default(false) // auto-renew on expiration
 
   // Stripe Connect (donations go directly to NGO)
-  stripeConnectId     String?   @unique  // acct_xxx - Stripe Connect account
-  stripeConnectStatus String?   @default("pending") // pending, active, restricted
-  stripeConnectOnboarded Boolean @default(false)
+  stripeConnectId         String?   @unique  // acct_xxx - Stripe Connect account
+  stripeConnectStatus     String?   @default("pending") // pending, active, restricted
+  stripeConnectOnboarded  Boolean   @default(false)
+  stripeChargesEnabled    Boolean   @default(false)
+  stripePayoutsEnabled    Boolean   @default(false)
+  stripeRequirementsJson  Json?     // requirements from Stripe
+  stripeLastSyncAt        DateTime?
+
+  // Bank transfer / Revolut donation settings
+  bankName          String?
+  ibanRon           String?
+  ibanEur           String?
+  revolutTag        String?
+  revolutPhone      String?
+  revolutLink       String?
+
+  // Donation fee config overrides (null = use plan defaults)
+  donationFeePercent      Float?
+  donationFeeFixedAmount  Float?    // in RON
+  donationFeeMinAmount    Float?    // minimum fee in RON
 
   // Public profile & rankings
   isFeatured        Boolean   @default(false)  // promoted/boosted
@@ -256,25 +274,31 @@ model DonorTagAssignment {
 // ─── Donations ────────────────────────────────────────────────────
 
 model Donation {
-  id          String        @id @default(cuid())
-  ngoId       String
-  ngo         Ngo           @relation(fields: [ngoId], references: [id], onDelete: Cascade)
-  donorId     String?
-  donor       Donor?        @relation(fields: [donorId], references: [id], onDelete: SetNull)
-  amount      Float
-  currency    String        @default("RON")
-  campaignId  String?
-  campaign    Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  isRecurring Boolean       @default(false)
-  status      DonationStatus @default(COMPLETED)
-  source      String?
-  metadata    Json?
-  createdAt   DateTime      @default(now())
+  id                    String        @id @default(cuid())
+  ngoId                 String
+  ngo                   Ngo           @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  donorId               String?
+  donor                 Donor?        @relation(fields: [donorId], references: [id], onDelete: SetNull)
+  amount                Float
+  currency              String        @default("RON")
+  campaignId            String?
+  campaign              Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  isRecurring           Boolean       @default(false)
+  status                DonationStatus @default(COMPLETED)
+  source                String?
+  paymentProvider       String?       // stripe, bank_transfer, revolut, manual
+  stripePaymentIntentId String?
+  stripeCheckoutSessionId String?
+  applicationFeeAmount  Float?        // platform fee in RON
+  metadata              Json?
+  createdAt             DateTime      @default(now())
 
   @@index([ngoId])
   @@index([donorId])
   @@index([campaignId])
   @@index([createdAt])
+  @@index([paymentProvider])
+  @@index([stripePaymentIntentId])
 }
 
 enum DonationStatus {
@@ -282,6 +306,40 @@ enum DonationStatus {
   COMPLETED
   FAILED
   REFUNDED
+}
+
+// ─── Manual Donation Pledges (bank transfer / Revolut) ──────────
+
+model ManualDonationPledge {
+  id              String              @id @default(cuid())
+  ngoId           String
+  ngo             Ngo                 @relation(fields: [ngoId], references: [id], onDelete: Cascade)
+  donorName       String?
+  donorEmail      String?
+  donorPhone      String?
+  amount          Float?
+  currency        String              @default("RON")
+  paymentMethod   String              // bank_transfer, revolut
+  referenceCode   String              @unique // ONG-XXXX unique reference
+  proofFilePath   String?             // uploaded proof file
+  status          PledgeStatus        @default(PENDING)
+  adminNotes      String?
+  verifiedBy      String?             // userId who verified
+  verifiedAt      DateTime?
+  donationId      String?             // linked Donation record after verification
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([ngoId])
+  @@index([status])
+  @@index([referenceCode])
+  @@index([createdAt])
+}
+
+enum PledgeStatus {
+  PENDING
+  VERIFIED
+  REJECTED
 }
 
 // ─── Consent ──────────────────────────────────────────────────────

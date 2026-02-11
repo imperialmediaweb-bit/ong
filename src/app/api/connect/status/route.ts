@@ -64,6 +64,14 @@ export async function GET(req: NextRequest) {
         data: {
           stripeConnectStatus: newStatus,
           stripeConnectOnboarded: newOnboarded,
+          stripeChargesEnabled: accountStatus.chargesEnabled,
+          stripePayoutsEnabled: accountStatus.payoutsEnabled,
+          stripeRequirementsJson: {
+            currentlyDue: accountStatus.currentlyDue,
+            eventuallyDue: accountStatus.eventuallyDue,
+            disabledReason: accountStatus.disabledReason,
+          } as any,
+          stripeLastSyncAt: new Date(),
         },
       });
     }

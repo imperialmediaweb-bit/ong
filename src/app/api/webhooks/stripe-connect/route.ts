@@ -27,7 +27,6 @@ export async function POST(req: NextRequest) {
         const account = event.data.object as any;
         const accountId = account.id;
 
-        // Cautam ONG-ul cu acest cont Connect
         const ngo = await prisma.ngo.findFirst({
           where: { stripeConnectId: accountId },
         });
@@ -35,11 +34,13 @@ export async function POST(req: NextRequest) {
         if (ngo) {
           let newStatus = "pending";
           let onboarded = false;
+          const chargesEnabled = account.charges_enabled || false;
+          const payoutsEnabled = account.payouts_enabled || false;
 
-          if (account.charges_enabled && account.payouts_enabled) {
+          if (chargesEnabled && payoutsEnabled) {
             newStatus = "active";
             onboarded = true;
-          } else if (account.details_submitted && !account.charges_enabled) {
+          } else if (account.details_submitted && !chargesEnabled) {
             newStatus = "restricted";
           }
 
@@ -48,6 +49,14 @@ export async function POST(req: NextRequest) {
             data: {
               stripeConnectStatus: newStatus,
               stripeConnectOnboarded: onboarded,
+              stripeChargesEnabled: chargesEnabled,
+              stripePayoutsEnabled: payoutsEnabled,
+              stripeRequirementsJson: {
+                currentlyDue: account.requirements?.currently_due || [],
+                eventuallyDue: account.requirements?.eventually_due || [],
+                disabledReason: account.requirements?.disabled_reason || null,
+              } as any,
+              stripeLastSyncAt: new Date(),
             },
           });
 
@@ -77,31 +86,35 @@ export async function POST(req: NextRequest) {
         break;
       }
 
-      // ─── Plata Reusita ──────────────────────────────────────
-      case "payment_intent.succeeded": {
-        const paymentIntent = event.data.object as any;
-        const donationId = paymentIntent.metadata?.donationId;
+      // ─── Checkout Session Completata ──────────────────────
+      case "checkout.session.completed": {
+        const session = event.data.object as any;
+        const donationId = session.metadata?.donationId;
 
-        if (donationId) {
+        if (donationId && session.payment_status === "paid") {
           const donation = await prisma.donation.findUnique({
             where: { id: donationId },
           });
 
-          if (donation && donation.status !== "COMPLETED") {
-            // Actualizam donatia
+          if (donation && donation.status === "PENDING") {
+            const paymentIntentId = typeof session.payment_intent === "string"
+              ? session.payment_intent
+              : session.payment_intent?.id;
+
             await prisma.donation.update({
               where: { id: donationId },
               data: {
                 status: "COMPLETED",
+                stripePaymentIntentId: paymentIntentId || null,
+                stripeCheckoutSessionId: session.id,
                 metadata: {
                   ...(donation.metadata as any || {}),
-                  stripePaymentIntentId: paymentIntent.id,
+                  stripePaymentIntentId: paymentIntentId,
                   completedAt: new Date().toISOString(),
                 } as any,
               },
             });
 
-            // Actualizam statisticile ONG-ului
             await prisma.ngo.update({
               where: { id: donation.ngoId },
               data: {
@@ -110,7 +123,6 @@ export async function POST(req: NextRequest) {
               },
             });
 
-            // Actualizam statisticile donatorului
             if (donation.donorId) {
               await prisma.donor.update({
                 where: { id: donation.donorId },
@@ -122,7 +134,70 @@ export async function POST(req: NextRequest) {
               });
             }
 
-            // Notificam ONG-ul
+            const donorName = session.metadata?.donorName || session.customer_email || "Anonim";
+            await prisma.notification.create({
+              data: {
+                ngoId: donation.ngoId,
+                type: "DONATION_RECEIVED",
+                title: "Donatie noua primita!",
+                message: `${donorName} a donat ${donation.amount} ${donation.currency} prin platforma.`,
+                actionUrl: "/dashboard/donations",
+                metadata: {
+                  donationId: donation.id,
+                  amount: donation.amount,
+                  currency: donation.currency,
+                  donorName,
+                } as any,
+              },
+            });
+          }
+        }
+        break;
+      }
+
+      // ─── Plata Reusita ──────────────────────────────────────
+      case "payment_intent.succeeded": {
+        const paymentIntent = event.data.object as any;
+        const donationId = paymentIntent.metadata?.donationId;
+
+        if (donationId) {
+          const donation = await prisma.donation.findUnique({
+            where: { id: donationId },
+          });
+
+          if (donation && donation.status !== "COMPLETED") {
+            await prisma.donation.update({
+              where: { id: donationId },
+              data: {
+                status: "COMPLETED",
+                stripePaymentIntentId: paymentIntent.id,
+                metadata: {
+                  ...(donation.metadata as any || {}),
+                  stripePaymentIntentId: paymentIntent.id,
+                  completedAt: new Date().toISOString(),
+                } as any,
+              },
+            });
+
+            await prisma.ngo.update({
+              where: { id: donation.ngoId },
+              data: {
+                totalRaised: { increment: donation.amount },
+                donorCountPublic: { increment: 1 },
+              },
+            });
+
+            if (donation.donorId) {
+              await prisma.donor.update({
+                where: { id: donation.donorId },
+                data: {
+                  totalDonated: { increment: donation.amount },
+                  donationCount: { increment: 1 },
+                  lastDonationAt: new Date(),
+                },
+              });
+            }
+
             const donorName = paymentIntent.metadata?.donorName || paymentIntent.metadata?.donorEmail || "Anonim";
             await prisma.notification.create({
               data: {
@@ -159,6 +234,7 @@ export async function POST(req: NextRequest) {
               where: { id: donationId },
               data: {
                 status: "FAILED",
+                stripePaymentIntentId: paymentIntent.id,
                 metadata: {
                   ...(donation.metadata as any || {}),
                   stripePaymentIntentId: paymentIntent.id,
@@ -168,7 +244,6 @@ export async function POST(req: NextRequest) {
               },
             });
 
-            // Notificam ONG-ul despre plata esuata
             await prisma.notification.create({
               data: {
                 ngoId: donation.ngoId,
@@ -188,8 +263,63 @@ export async function POST(req: NextRequest) {
         break;
       }
 
+      // ─── Refund ─────────────────────────────────────────────
+      case "charge.refunded": {
+        const charge = event.data.object as any;
+        const paymentIntentId = charge.payment_intent;
+
+        if (paymentIntentId) {
+          // Find donation by payment intent ID
+          const donation = await prisma.donation.findFirst({
+            where: { stripePaymentIntentId: paymentIntentId },
+          });
+
+          if (donation && donation.status === "COMPLETED") {
+            await prisma.donation.update({
+              where: { id: donation.id },
+              data: {
+                status: "REFUNDED",
+                metadata: {
+                  ...(donation.metadata as any || {}),
+                  refundedAt: new Date().toISOString(),
+                  refundAmount: charge.amount_refunded / 100,
+                } as any,
+              },
+            });
+
+            // Decrement NGO stats
+            await prisma.ngo.update({
+              where: { id: donation.ngoId },
+              data: {
+                totalRaised: { decrement: donation.amount },
+              },
+            });
+
+            if (donation.donorId) {
+              await prisma.donor.update({
+                where: { id: donation.donorId },
+                data: {
+                  totalDonated: { decrement: donation.amount },
+                  donationCount: { decrement: 1 },
+                },
+              });
+            }
+
+            await prisma.notification.create({
+              data: {
+                ngoId: donation.ngoId,
+                type: "SYSTEM",
+                title: "Donatie rambursata",
+                message: `O donatie de ${donation.amount} ${donation.currency} a fost rambursata.`,
+                actionUrl: "/dashboard/donations",
+              },
+            });
+          }
+        }
+        break;
+      }
+
       default:
-        // Eveniment netratat - nu facem nimic
         console.log(`Stripe Connect webhook netratat: ${event.type}`);
     }
 

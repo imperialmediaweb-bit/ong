@@ -1,6 +1,6 @@
 /**
  * Stripe Connect Integration - Donatiile merg direct in contul ONG-ului
- * Platforma ia un comision optional prin application_fee_amount
+ * Platforma ia un comision prin application_fee_amount bazat pe planul ONG-ului
  */
 
 import Stripe from "stripe";
@@ -77,16 +77,20 @@ export async function createOnboardingLink(
 
 // ─── Status Cont ────────────────────────────────────────────────
 
-/**
- * Verifica statusul contului Connect - daca poate primi plati si transferuri
- */
-export async function getAccountStatus(accountId: string): Promise<{
+export interface ConnectAccountStatus {
   chargesEnabled: boolean;
   payoutsEnabled: boolean;
   detailsSubmitted: boolean;
   requiresAction: boolean;
   currentlyDue: string[];
-}> {
+  eventuallyDue: string[];
+  disabledReason: string | null;
+}
+
+/**
+ * Verifica statusul contului Connect - daca poate primi plati si transferuri
+ */
+export async function getAccountStatus(accountId: string): Promise<ConnectAccountStatus> {
   const stripe = getStripe();
 
   const account = await stripe.accounts.retrieve(accountId);
@@ -97,6 +101,44 @@ export async function getAccountStatus(accountId: string): Promise<{
     detailsSubmitted: account.details_submitted || false,
     requiresAction: (account.requirements?.currently_due?.length || 0) > 0,
     currentlyDue: account.requirements?.currently_due || [],
+    eventuallyDue: account.requirements?.eventually_due || [],
+    disabledReason: account.requirements?.disabled_reason || null,
+  };
+}
+
+/**
+ * Full account sync - retrieves status and returns all data needed for DB update
+ */
+export async function syncAccountStatus(accountId: string): Promise<{
+  status: string;
+  onboarded: boolean;
+  chargesEnabled: boolean;
+  payoutsEnabled: boolean;
+  requirementsJson: Record<string, any>;
+}> {
+  const accountStatus = await getAccountStatus(accountId);
+
+  let status = "pending";
+  let onboarded = false;
+
+  if (accountStatus.chargesEnabled && accountStatus.payoutsEnabled) {
+    status = "active";
+    onboarded = true;
+  } else if (accountStatus.detailsSubmitted && !accountStatus.chargesEnabled) {
+    status = "restricted";
+  }
+
+  return {
+    status,
+    onboarded,
+    chargesEnabled: accountStatus.chargesEnabled,
+    payoutsEnabled: accountStatus.payoutsEnabled,
+    requirementsJson: {
+      currentlyDue: accountStatus.currentlyDue,
+      eventuallyDue: accountStatus.eventuallyDue,
+      disabledReason: accountStatus.disabledReason,
+      requiresAction: accountStatus.requiresAction,
+    },
   };
 }
 
@@ -113,62 +155,24 @@ export async function createDashboardLink(accountId: string): Promise<string> {
   return loginLink.url;
 }
 
-// ─── Payment Intent (plata directa) ─────────────────────────────
-
-/**
- * Creeaza un Payment Intent - banii merg direct in contul Connect al ONG-ului
- * application_fee_amount = comisionul platformei (in bani, ex: 250 = 2.50 RON)
- */
-export async function createPaymentIntent(params: {
-  amount: number;
-  currency: string;
-  connectedAccountId: string;
-  applicationFeePercent?: number;
-  donorEmail?: string;
-  metadata?: Record<string, string>;
-}): Promise<Stripe.PaymentIntent> {
-  const stripe = getStripe();
-
-  const applicationFeeAmount = params.applicationFeePercent
-    ? Math.round(params.amount * (params.applicationFeePercent / 100))
-    : undefined;
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: params.amount,
-    currency: params.currency.toLowerCase(),
-    application_fee_amount: applicationFeeAmount,
-    receipt_email: params.donorEmail,
-    metadata: params.metadata || {},
-    transfer_data: {
-      destination: params.connectedAccountId,
-    },
-  });
-
-  return paymentIntent;
-}
-
-// ─── Checkout Session (donatie) ─────────────────────────────────
+// ─── Checkout Session (donatie cu fee calculat) ─────────────────
 
 /**
  * Creeaza o sesiune Checkout pentru o donatie unica
- * Banii merg direct in contul ONG-ului, platforma ia comision optional
+ * Banii merg direct in contul ONG-ului, platforma ia comision calculat prin DonationFeeService
  */
 export async function createDonationCheckout(params: {
   ngoName: string;
-  amount: number;
+  amount: number;           // amount in minor units (bani)
   currency: string;
   connectedAccountId: string;
   successUrl: string;
   cancelUrl: string;
   donorEmail?: string;
-  applicationFeePercent?: number;
+  applicationFeeAmount?: number;  // fee in minor units (bani), pre-calculated
   metadata?: Record<string, string>;
 }): Promise<Stripe.Checkout.Session> {
   const stripe = getStripe();
-
-  const applicationFeeAmount = params.applicationFeePercent
-    ? Math.round(params.amount * (params.applicationFeePercent / 100))
-    : undefined;
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
@@ -187,7 +191,7 @@ export async function createDonationCheckout(params: {
       },
     ],
     payment_intent_data: {
-      application_fee_amount: applicationFeeAmount,
+      application_fee_amount: params.applicationFeeAmount || undefined,
       transfer_data: {
         destination: params.connectedAccountId,
       },

@@ -115,8 +115,8 @@ export default async function DonatePage({ params }: Props) {
           )}
         </div>
 
-        {/* Donation Section */}
-        {ngo.stripeConnectOnboarded ? (
+        {/* Donation Section - show if any payment method is configured */}
+        {(ngo.stripeConnectOnboarded || ngo.ibanRon || ngo.ibanEur || ngo.revolutTag || ngo.revolutLink) ? (
           <DonationWidget
             ngoSlug={ngo.slug}
             ngoName={ngo.name}
@@ -129,10 +129,10 @@ export default async function DonatePage({ params }: Props) {
                 <AlertCircle className="h-8 w-8 text-yellow-600" />
               </div>
               <h3 className="text-lg font-semibold mb-2">
-                Plati online indisponibile momentan
+                Donatii indisponibile momentan
               </h3>
               <p className="text-muted-foreground mb-6">
-                Acest ONG nu accepta inca plati online. Contacteaza-i direct
+                Acest ONG nu a configurat inca metode de plata. Contacteaza-i direct
                 pentru a face o donatie.
               </p>
               {ngo.websiteUrl && (
@@ -168,7 +168,7 @@ export default async function DonatePage({ params }: Props) {
             <Heart className="h-4 w-4 text-primary" />
             <span>NGO HUB - Platforma CRM pentru ONG-uri</span>
           </Link>
-          <span>Plati securizate prin Stripe</span>
+          <span>Plati securizate prin Stripe, transfer bancar si Revolut</span>
         </div>
       </footer>
     </div>
