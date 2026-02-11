@@ -16,7 +16,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   FileText,
-  Printer,
   Loader2,
   Heart,
   Building,
@@ -24,8 +23,9 @@ import {
   Download,
   ArrowLeft,
   Shield,
-  User,
   Briefcase,
+  Mail,
+  Send,
 } from "lucide-react";
 
 interface NgoData {
@@ -46,6 +46,7 @@ interface NgoData {
   miniSiteConfig: {
     bankAccount: string | null;
     bankName: string | null;
+    contactEmail: string | null;
   } | null;
 }
 
@@ -97,6 +98,9 @@ export default function ContractSponsorizarePage() {
   const [contractGenerated, setContractGenerated] = useState(false);
   const [contractNumber, setContractNumber] = useState("");
   const [contractDate, setContractDate] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   const contractRef = useRef<HTMLDivElement>(null);
 
@@ -168,7 +172,7 @@ export default function ContractSponsorizarePage() {
     }
   };
 
-  const handlePrint = () => {
+  const handleDownloadPdf = () => {
     const printContents = contractRef.current?.innerHTML;
     if (!printContents) return;
 
@@ -182,92 +186,28 @@ export default function ContractSponsorizarePage() {
         <meta charset="UTF-8">
         <title>Contract de Sponsorizare - ${contractNumber}</title>
         <style>
-          @page {
-            margin: 2cm;
-            size: A4;
-          }
+          @page { margin: 2cm; size: A4; }
           body {
             font-family: "Times New Roman", Times, serif;
-            font-size: 12pt;
-            line-height: 1.6;
-            color: #000;
-            max-width: 21cm;
-            margin: 0 auto;
-            padding: 1cm;
+            font-size: 12pt; line-height: 1.6; color: #000;
+            max-width: 21cm; margin: 0 auto; padding: 1cm;
           }
-          .contract-logo {
-            text-align: center;
-            margin-bottom: 10px;
-          }
-          .contract-logo img {
-            max-height: 80px;
-            max-width: 200px;
-          }
-          .contract-header {
-            text-align: center;
-            margin-bottom: 30px;
-          }
-          .contract-header h1 {
-            font-size: 18pt;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 8px;
-          }
-          .contract-header .contract-nr {
-            font-size: 12pt;
-            margin-bottom: 4px;
-          }
-          .contract-section {
-            margin-bottom: 18px;
-          }
-          .contract-section h2 {
-            font-size: 13pt;
-            font-weight: bold;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-          }
-          .contract-section p, .contract-section li {
-            text-align: justify;
-            margin-bottom: 6px;
-          }
-          .contract-section ol, .contract-section ul {
-            padding-left: 20px;
-          }
-          .contract-section ol li, .contract-section ul li {
-            margin-bottom: 4px;
-          }
-          .signatures {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 60px;
-            page-break-inside: avoid;
-          }
-          .signature-block {
-            width: 45%;
-            text-align: center;
-          }
-          .signature-block .role {
-            font-weight: bold;
-            margin-bottom: 4px;
-          }
-          .signature-block .name {
-            margin-bottom: 40px;
-          }
-          .signature-line {
-            border-top: 1px solid #000;
-            padding-top: 4px;
-            margin-top: 60px;
-            font-size: 10pt;
-          }
-          @media print {
-            body { padding: 0; }
-          }
+          .contract-logo { text-align: center; margin-bottom: 10px; }
+          .contract-logo img { max-height: 80px; max-width: 200px; }
+          .contract-header { text-align: center; margin-bottom: 30px; }
+          .contract-header h1 { font-size: 18pt; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+          .contract-header .contract-nr { font-size: 12pt; margin-bottom: 4px; }
+          .contract-section { margin-bottom: 18px; }
+          .contract-section h2 { font-size: 13pt; font-weight: bold; margin-bottom: 8px; text-transform: uppercase; }
+          .contract-section p, .contract-section li { text-align: justify; margin-bottom: 6px; }
+          .contract-section ol, .contract-section ul { padding-left: 20px; }
+          .signatures { display: flex; justify-content: space-between; margin-top: 60px; page-break-inside: avoid; }
+          .signature-block { width: 45%; text-align: center; }
+          .signature-line { border-top: 1px solid #000; padding-top: 4px; margin-top: 60px; font-size: 10pt; }
+          @media print { body { padding: 0; } }
         </style>
       </head>
-      <body>
-        ${printContents}
-      </body>
+      <body>${printContents}</body>
       </html>
     `);
     printWindow.document.close();
@@ -275,6 +215,45 @@ export default function ContractSponsorizarePage() {
     setTimeout(() => {
       printWindow.print();
     }, 250);
+  };
+
+  const handleSendEmail = async () => {
+    if (!ngo || !contractRef.current) return;
+
+    const contactEmail = ngo.miniSiteConfig?.contactEmail;
+    if (!contactEmail) {
+      setEmailError("Organizatia nu are o adresa de email configurata.");
+      return;
+    }
+
+    setSendingEmail(true);
+    setEmailError(null);
+
+    try {
+      const res = await fetch(`/api/public/contract-sponsorizare/${slug}/send-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contractHtml: contractRef.current.innerHTML,
+          contractNumber,
+          companyName: form.companyName,
+          companyEmail: form.companyEmail,
+          amount: form.amount,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Eroare la trimiterea emailului");
+      }
+
+      setEmailSent(true);
+    } catch (err: any) {
+      setEmailError(err.message);
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const formatAmount = (val: string) => {
@@ -783,25 +762,110 @@ export default function ContractSponsorizarePage() {
                     </h3>
                     <p className="text-sm text-green-700">
                       Nr. <span className="font-bold">{contractNumber}</span> din {contractDate}.
-                      Printati contractul, semnati si stampilati ambele exemplare.
                     </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
+            {/* Flow instructions */}
+            <Card className="mb-6 border-0 shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50">
+              <CardContent className="pt-6 pb-6">
+                <h3 className="font-bold text-blue-900 text-base mb-3 flex items-center gap-2">
+                  <Shield className="h-5 w-5 text-blue-600" />
+                  Cum finalizati contractul de sponsorizare
+                </h3>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="flex gap-3 items-start">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex-shrink-0">1</div>
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900">Descarcati</p>
+                      <p className="text-xs text-blue-600">Printati sau salvati contractul ca PDF</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex-shrink-0">2</div>
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900">Semnati si stampilati</p>
+                      <p className="text-xs text-blue-600">Ambele exemplare trebuie semnate de sponsor</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex-shrink-0">3</div>
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900">Trimiteti la ONG</p>
+                      <p className="text-xs text-blue-600">Folositi butonul de mai jos pentru a trimite pe email</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3 items-start">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex-shrink-0">4</div>
+                    <div>
+                      <p className="text-sm font-semibold text-blue-900">ONG-ul semneaza</p>
+                      <p className="text-xs text-blue-600">Asociatia semneaza, stampileaza si va trimite inapoi</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Email status */}
+            {emailSent && (
+              <Card className="mb-6 border-0 shadow-lg bg-gradient-to-r from-green-50 to-emerald-50">
+                <CardContent className="pt-5 pb-5">
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-green-600" />
+                    <p className="text-sm font-semibold text-green-800">
+                      Contractul a fost trimis cu succes pe email catre {ngo.miniSiteConfig?.contactEmail}!
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {emailError && (
+              <Card className="mb-6 border-0 shadow-lg bg-red-50">
+                <CardContent className="pt-5 pb-5">
+                  <div className="flex items-center gap-3">
+                    <Mail className="h-5 w-5 text-red-500" />
+                    <p className="text-sm text-red-700">{emailError}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Action buttons */}
             <div className="flex flex-wrap justify-center gap-3 mb-8">
-              <Button onClick={handlePrint} size="lg" className="h-12 shadow-md">
-                <Printer className="mr-2 h-5 w-5" />
-                Printeaza contractul
+              <Button onClick={handleDownloadPdf} size="lg" className="h-12 shadow-md">
+                <Download className="mr-2 h-5 w-5" />
+                Descarca / Printeaza contractul
               </Button>
+              {ngo.miniSiteConfig?.contactEmail && !emailSent && (
+                <Button
+                  onClick={handleSendEmail}
+                  disabled={sendingEmail}
+                  size="lg"
+                  className="h-12 shadow-md bg-emerald-600 hover:bg-emerald-700"
+                >
+                  {sendingEmail ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Se trimite...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-5 w-5" />
+                      Trimite pe email catre {ngo.name}
+                    </>
+                  )}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="lg"
                 className="h-12"
                 onClick={() => {
                   setContractGenerated(false);
+                  setEmailSent(false);
+                  setEmailError(null);
                   setForm(initialFormData);
                 }}
               >
@@ -1137,12 +1201,32 @@ export default function ContractSponsorizarePage() {
               </CardContent>
             </Card>
 
-            {/* Bottom print button */}
-            <div className="flex justify-center gap-3 mt-8">
-              <Button onClick={handlePrint} size="lg" className="h-12 shadow-md">
-                <Printer className="mr-2 h-5 w-5" />
-                Printeaza contractul
+            {/* Bottom action buttons */}
+            <div className="flex flex-wrap justify-center gap-3 mt-8">
+              <Button onClick={handleDownloadPdf} size="lg" className="h-12 shadow-md">
+                <Download className="mr-2 h-5 w-5" />
+                Descarca / Printeaza
               </Button>
+              {ngo.miniSiteConfig?.contactEmail && !emailSent && (
+                <Button
+                  onClick={handleSendEmail}
+                  disabled={sendingEmail}
+                  size="lg"
+                  className="h-12 shadow-md bg-emerald-600 hover:bg-emerald-700"
+                >
+                  {sendingEmail ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Se trimite...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="mr-2 h-5 w-5" />
+                      Trimite pe email catre {ngo.name}
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         )}

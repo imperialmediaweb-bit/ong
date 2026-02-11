@@ -775,14 +775,10 @@ export default function MiniSiteBuilderPage() {
 
       {/* Tabs wizard */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="date-ong" className="gap-1.5">
             <Building className="h-4 w-4" />
-            <span className="hidden sm:inline">Date ONG</span>
-          </TabsTrigger>
-          <TabsTrigger value="date-asociatie" className="gap-1.5">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Asociatie</span>
+            <span className="hidden sm:inline">Organizatie</span>
           </TabsTrigger>
           <TabsTrigger value="campanii" className="gap-1.5">
             <Heart className="h-4 w-4" />
@@ -808,11 +804,10 @@ export default function MiniSiteBuilderPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Building className="h-5 w-5" />
-                Date ONG
+                Datele organizatiei
               </CardTitle>
               <CardDescription>
-                Informatiile de baza ale organizatiei care vor aparea pe
-                mini-site
+                Informatii generale, legale, bancare si de contact ale organizatiei
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -951,23 +946,15 @@ export default function MiniSiteBuilderPage() {
                   </div>
                 )}
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
-        {/* ─── Tab 2: Date Asociatie ────────────────────────────── */}
-        <TabsContent value="date-asociatie">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Date asociatie
-              </CardTitle>
-              <CardDescription>
-                Informatii legale, bancare si de contact ale asociatiei
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+              {/* ── Date legale si bancare ──────────────────── */}
+              <div className="border-t pt-6 mt-6">
+                <h3 className="text-base font-semibold flex items-center gap-2 mb-4">
+                  <FileText className="h-5 w-5" />
+                  Date legale si bancare
+                </h3>
+              </div>
+
               {/* Legal info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -1910,6 +1897,33 @@ export default function MiniSiteBuilderPage() {
         {/* ─── Tab: Functionalitati ────────────────────────────── */}
         <TabsContent value="functionalitati">
           <div className="space-y-6">
+            {/* ── Intro description ─────────────────────── */}
+            <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+              <CardContent className="p-5">
+                <h3 className="font-semibold text-blue-900 mb-2 flex items-center gap-2">
+                  <Settings className="h-5 w-5" />
+                  Functionalitati Extra pentru mini-site
+                </h3>
+                <p className="text-sm text-blue-800 mb-3">
+                  Aceste sectiuni apar pe pagina publica a organizatiei tale. Adauga continut manual sau genereaza-l automat cu AI.
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs text-blue-700">
+                  <div className="flex items-center gap-1.5"><Search className="h-3 w-3" /> <span>SEO - vizibilitate Google</span></div>
+                  <div className="flex items-center gap-1.5"><Video className="h-3 w-3" /> <span>Video - embed YouTube</span></div>
+                  <div className="flex items-center gap-1.5"><Users className="h-3 w-3" /> <span>Echipa - membrii echipei</span></div>
+                  <div className="flex items-center gap-1.5"><MessageSquareQuote className="h-3 w-3" /> <span>Testimoniale - povesti</span></div>
+                  <div className="flex items-center gap-1.5"><HelpCircle className="h-3 w-3" /> <span>FAQ - intrebari frecvente</span></div>
+                  <div className="flex items-center gap-1.5"><Handshake className="h-3 w-3" /> <span>Parteneri - logo-uri sponsori</span></div>
+                  <div className="flex items-center gap-1.5"><CalendarDays className="h-3 w-3" /> <span>Evenimente - calendar</span></div>
+                  <div className="flex items-center gap-1.5"><BarChart3 className="h-3 w-3" /> <span>Statistici - numere animate</span></div>
+                  <div className="flex items-center gap-1.5"><FileDown className="h-3 w-3" /> <span>Transparenta - rapoarte PDF</span></div>
+                  <div className="flex items-center gap-1.5"><Map className="h-3 w-3" /> <span>Harta - Google Maps</span></div>
+                  <div className="flex items-center gap-1.5"><Bell className="h-3 w-3" /> <span>Banner urgent - campanie</span></div>
+                  <div className="flex items-center gap-1.5"><Heart className="h-3 w-3" /> <span>Popup donatie - conversie</span></div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* ── SEO ───────────────────────────────────── */}
             <Card>
               <CardHeader>

@@ -30,6 +30,8 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
           formular230Address: true,
           bankAccount: true,
           cui: true,
+          contactEmail: true,
+          contactPhone: true,
         },
       },
     },
@@ -57,5 +59,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     formular230EmbedCode: ngo.miniSiteConfig?.formular230EmbedCode || null,
     formular230PdfUrl: ngo.miniSiteConfig?.formular230PdfUrl || null,
     formular230Address: ngo.miniSiteConfig?.formular230Address || null,
+    contactEmail: ngo.miniSiteConfig?.contactEmail || null,
+    contactPhone: ngo.miniSiteConfig?.contactPhone || null,
   });
 }

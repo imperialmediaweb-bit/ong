@@ -30,6 +30,7 @@ export async function GET(
             showDonation: true,
             bankAccount: true,
             bankName: true,
+            contactEmail: true,
           },
         },
       },
