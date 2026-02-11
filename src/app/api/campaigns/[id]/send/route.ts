@@ -60,6 +60,76 @@ export async function POST(
       return NextResponse.json({ error: "NGO not found" }, { status: 404 });
     }
 
+    // ── Legal compliance checks ──────────────────────────────────
+    if (!ngo.tosAcceptedAt || !ngo.gdprAcceptedAt || !ngo.antiSpamAcceptedAt) {
+      return NextResponse.json(
+        { error: "Trebuie sa acceptati Termenii, GDPR si Politica Anti-Spam inainte de a trimite campanii. Mergeti la Campanii > Conformitate." },
+        { status: 400 }
+      );
+    }
+
+    if (!campaign.consentConfirmed) {
+      return NextResponse.json(
+        { error: "Trebuie sa confirmati ca aveti consimtamantul destinatarilor inainte de a trimite." },
+        { status: 400 }
+      );
+    }
+
+    // Rate limit check - reset daily
+    const now = new Date();
+    const lastReset = ngo.lastLimitReset ? new Date(ngo.lastLimitReset) : new Date(0);
+    const isNewDay = now.toDateString() !== lastReset.toDateString();
+
+    let emailsSentToday = isNewDay ? 0 : ngo.emailsSentToday;
+    let smsSentToday = isNewDay ? 0 : ngo.smsSentToday;
+
+    if (isNewDay) {
+      await prisma.ngo.update({
+        where: { id: ngoId },
+        data: { emailsSentToday: 0, smsSentToday: 0, lastLimitReset: now },
+      });
+    }
+
+    // Rate limit enforcement
+    if ((campaign.channel === "EMAIL" || campaign.channel === "BOTH") && emailsSentToday >= ngo.dailyEmailLimit) {
+      return NextResponse.json(
+        { error: `Limita zilnica de emailuri atinsa (${ngo.dailyEmailLimit}). Incercati maine sau contactati suportul pentru a creste limita.` },
+        { status: 429 }
+      );
+    }
+
+    if ((campaign.channel === "SMS" || campaign.channel === "BOTH") && smsSentToday >= ngo.dailySmsLimit) {
+      return NextResponse.json(
+        { error: `Limita zilnica de SMS-uri atinsa (${ngo.dailySmsLimit}). Incercati maine sau contactati suportul pentru a creste limita.` },
+        { status: 429 }
+      );
+    }
+
+    // Log the send consent (legal proof)
+    await prisma.campaignSendConsent.create({
+      data: {
+        campaignId: campaign.id,
+        userId: (session.user as any).id,
+        ngoId,
+        consentText: "Confirm ca am obtinut consimtamantul explicit al tuturor destinatarilor pentru a primi comunicari prin canalul selectat. Inteleg ca ONG-ul meu este singurul responsabil pentru respectarea legislatiei GDPR si anti-spam.",
+        confirmed: true,
+        ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || null,
+        userAgent: request.headers.get("user-agent") || null,
+      },
+    });
+
+    // Fetch global blacklist entries
+    const blacklistedEmails = await prisma.globalBlacklist.findMany({
+      where: { type: "EMAIL" },
+      select: { value: true },
+    });
+    const blacklistedPhones = await prisma.globalBlacklist.findMany({
+      where: { type: "PHONE" },
+      select: { value: true },
+    });
+    const blacklistEmailSet = new Set(blacklistedEmails.map(b => b.value.toLowerCase()));
+    const blacklistPhoneSet = new Set(blacklistedPhones.map(b => b.value));
+
     // Build donor query from segmentQuery
     const donorWhere: any = {
       ngoId,
@@ -155,10 +225,44 @@ export async function POST(
     let totalSent = 0;
     let totalFailed = 0;
 
+    let emailsSentCount = 0;
+    let smsSentCount = 0;
+
     for (const donor of donors) {
       try {
         const shouldSendEmail = (campaign.channel === "EMAIL" || campaign.channel === "BOTH") && donor.email;
         const shouldSendSms = (campaign.channel === "SMS" || campaign.channel === "BOTH") && donor.phone;
+
+        // Global blacklist check
+        if (shouldSendEmail && donor.email && blacklistEmailSet.has(donor.email.toLowerCase())) {
+          await prisma.messageRecipient.create({
+            data: {
+              messageId: message.id,
+              donorId: donor.id,
+              channel: "EMAIL",
+              address: donor.email,
+              status: "FAILED",
+              errorMsg: "Email pe lista globala de blocari",
+            },
+          });
+          totalFailed++;
+          continue;
+        }
+
+        if (shouldSendSms && donor.phone && blacklistPhoneSet.has(donor.phone)) {
+          await prisma.messageRecipient.create({
+            data: {
+              messageId: message.id,
+              donorId: donor.id,
+              channel: "SMS",
+              address: donor.phone,
+              status: "FAILED",
+              errorMsg: "Telefon pe lista globala de blocari",
+            },
+          });
+          totalFailed++;
+          continue;
+        }
 
         if (shouldSendEmail && donor.email) {
           const unsubscribeUrl = generateUnsubscribeUrl(donor.id, ngo.slug);
@@ -189,7 +293,7 @@ export async function POST(
             },
           });
 
-          if (emailResult.success) totalSent++;
+          if (emailResult.success) { totalSent++; emailsSentCount++; }
           else totalFailed++;
         }
 
@@ -221,7 +325,7 @@ export async function POST(
             },
           });
 
-          if (smsResult.success) totalSent++;
+          if (smsResult.success) { totalSent++; smsSentCount++; }
           else totalFailed++;
         }
       } catch (err: any) {
@@ -230,13 +334,16 @@ export async function POST(
       }
     }
 
-    // Deduct credits based on actual sends
-    const emailsSent = (campaign.channel === "EMAIL" || campaign.channel === "BOTH") ? totalSent : 0;
-    const smsSent = (campaign.channel === "SMS" || campaign.channel === "BOTH") ? totalSent : 0;
-
+    // Deduct credits and update daily counters
     const creditUpdates: any = {};
-    if (emailsSent > 0) creditUpdates.emailCredits = { decrement: emailsSent };
-    if (smsSent > 0) creditUpdates.smsCredits = { decrement: smsSent };
+    if (emailsSentCount > 0) {
+      creditUpdates.emailCredits = { decrement: emailsSentCount };
+      creditUpdates.emailsSentToday = { increment: emailsSentCount };
+    }
+    if (smsSentCount > 0) {
+      creditUpdates.smsCredits = { decrement: smsSentCount };
+      creditUpdates.smsSentToday = { increment: smsSentCount };
+    }
 
     if (Object.keys(creditUpdates).length > 0) {
       const updatedNgo = await prisma.ngo.update({
@@ -245,28 +352,28 @@ export async function POST(
       });
 
       // Log credit transactions
-      if (emailsSent > 0) {
+      if (emailsSentCount > 0) {
         await prisma.creditTransaction.create({
           data: {
             ngoId,
             type: "USAGE",
             channel: "EMAIL",
-            amount: -emailsSent,
+            amount: -emailsSentCount,
             balance: updatedNgo.emailCredits,
-            description: `Campanie: ${campaign.name} (${emailsSent} emailuri trimise)`,
+            description: `Campanie: ${campaign.name} (${emailsSentCount} emailuri trimise)`,
             campaignId: campaign.id,
           },
         });
       }
-      if (smsSent > 0) {
+      if (smsSentCount > 0) {
         await prisma.creditTransaction.create({
           data: {
             ngoId,
             type: "USAGE",
             channel: "SMS",
-            amount: -smsSent,
+            amount: -smsSentCount,
             balance: updatedNgo.smsCredits,
-            description: `Campanie: ${campaign.name} (${smsSent} SMS-uri trimise)`,
+            description: `Campanie: ${campaign.name} (${smsSentCount} SMS-uri trimise)`,
             campaignId: campaign.id,
           },
         });

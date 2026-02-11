@@ -135,6 +135,21 @@ model Ngo {
   emailTemplates    EmailTemplate[]
   smsTemplates      SmsTemplate[]
 
+  // Legal compliance
+  tosAcceptedAt       DateTime?
+  gdprAcceptedAt      DateTime?
+  antiSpamAcceptedAt  DateTime?
+  tosAcceptedBy       String?   // userId who accepted
+  legalRepresentative String?
+  cui                 String?   // Cod Unic Inregistrare
+  ngoRegistrationDoc  String?   // URL to document
+  isVerifiedSender    Boolean   @default(false)
+  dailyEmailLimit     Int       @default(500)
+  dailySmsLimit       Int       @default(200)
+  emailsSentToday     Int       @default(0)
+  smsSentToday        Int       @default(0)
+  lastLimitReset      DateTime  @default(now())
+
   @@index([slug])
 }
 
@@ -351,12 +366,19 @@ model Campaign {
   totalComplaints Int             @default(0)
   totalUnsubscribed Int           @default(0)
 
+  // Legal consent (logged per campaign)
+  consentConfirmed    Boolean     @default(false)
+  consentConfirmedAt  DateTime?
+  consentConfirmedBy  String?     // userId
+  consentIp           String?
+
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
 
   messages        Message[]
   donations       Donation[]
   automationSteps AutomationStep[]
+  sendConsents    CampaignSendConsent[]
 
   @@index([ngoId])
   @@index([status])
@@ -1195,4 +1217,41 @@ enum CreditTransactionType {
 enum CreditChannel {
   EMAIL
   SMS
+}
+
+// ─── Legal Compliance ───────────────────────────────────────────
+
+model CampaignSendConsent {
+  id              String   @id @default(cuid())
+  campaignId      String
+  campaign        Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  userId          String
+  ngoId           String
+  consentText     String   // exact text shown to user
+  confirmed       Boolean  @default(true)
+  ipAddress       String?
+  userAgent       String?
+  createdAt       DateTime @default(now())
+
+  @@index([campaignId])
+  @@index([ngoId])
+  @@index([userId])
+}
+
+model GlobalBlacklist {
+  id          String   @id @default(cuid())
+  type        BlacklistType  // EMAIL or PHONE
+  value       String         // the email or phone (hashed for privacy)
+  rawValue    String?        // original for lookup (encrypted)
+  reason      String         // UNSUBSCRIBE, BOUNCE, COMPLAINT, MANUAL
+  sourceNgoId String?        // which NGO triggered this
+  createdAt   DateTime @default(now())
+
+  @@unique([type, value])
+  @@index([type, value])
+}
+
+enum BlacklistType {
+  EMAIL
+  PHONE
 }
