@@ -178,7 +178,7 @@ export default function SettingsPage() {
   });
   const [subLoading, setSubLoading] = useState(true);
 
-  // Payment (Stripe Connect + Bank/Revolut)
+  // Payment (Stripe Connect + PayPal + Bank/Revolut)
   const [payment, setPayment] = useState({
     stripeConnectId: "",
     stripeConnectStatus: "pending",
@@ -186,6 +186,10 @@ export default function SettingsPage() {
     stripeChargesEnabled: false,
     stripePayoutsEnabled: false,
     stripeLastSyncAt: null as string | null,
+    paypalClientId: "",
+    paypalClientSecret: "",
+    paypalMerchantId: "",
+    paypalEnabled: false,
     bankName: "",
     ibanRon: "",
     ibanEur: "",
@@ -195,6 +199,9 @@ export default function SettingsPage() {
   });
   const [paymentLoading, setPaymentLoading] = useState(true);
   const [connectLoading, setConnectLoading] = useState(false);
+  const [editingPaypal, setEditingPaypal] = useState(false);
+  const [newPaypalClientId, setNewPaypalClientId] = useState("");
+  const [newPaypalClientSecret, setNewPaypalClientSecret] = useState("");
 
   // Fetch profile settings
   const fetchProfile = useCallback(async () => {
@@ -328,6 +335,10 @@ export default function SettingsPage() {
           stripeChargesEnabled: data.stripeChargesEnabled || false,
           stripePayoutsEnabled: data.stripePayoutsEnabled || false,
           stripeLastSyncAt: data.stripeLastSyncAt || null,
+          paypalClientId: data.paypalClientId || "",
+          paypalClientSecret: data.paypalClientSecret || "",
+          paypalMerchantId: data.paypalMerchantId || "",
+          paypalEnabled: data.paypalEnabled || false,
           bankName: data.bankName || "",
           ibanRon: data.ibanRon || "",
           ibanEur: data.ibanEur || "",
@@ -554,23 +565,34 @@ export default function SettingsPage() {
     clearMessages();
     setSaving(true);
     try {
+      const payload: any = {
+        bankName: payment.bankName,
+        ibanRon: payment.ibanRon,
+        ibanEur: payment.ibanEur,
+        revolutTag: payment.revolutTag,
+        revolutPhone: payment.revolutPhone,
+        revolutLink: payment.revolutLink,
+        paypalMerchantId: payment.paypalMerchantId,
+        paypalEnabled: payment.paypalEnabled,
+      };
+      if (editingPaypal) {
+        if (newPaypalClientId) payload.paypalClientId = newPaypalClientId;
+        if (newPaypalClientSecret) payload.paypalClientSecret = newPaypalClientSecret;
+      }
       const res = await fetch("/api/settings/payment", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          bankName: payment.bankName,
-          ibanRon: payment.ibanRon,
-          ibanEur: payment.ibanEur,
-          revolutTag: payment.revolutTag,
-          revolutPhone: payment.revolutPhone,
-          revolutLink: payment.revolutLink,
-        }),
+        body: JSON.stringify(payload),
       });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Eroare la salvarea setarilor");
       }
       setSuccess("Setarile de plata au fost salvate cu succes.");
+      setEditingPaypal(false);
+      setNewPaypalClientId("");
+      setNewPaypalClientSecret("");
+      fetchPayment();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -633,7 +655,7 @@ export default function SettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); clearMessages(); }}>
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-6 overflow-x-auto">
           <TabsTrigger value="profile" className="gap-1 text-xs">
             <Building className="h-3 w-3" />
             Profil
@@ -1165,6 +1187,140 @@ export default function SettingsPage() {
                       </div>
                     )}
                   </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* PayPal Section */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Wallet className="h-5 w-5" />
+                  PayPal
+                </CardTitle>
+                <CardDescription>
+                  Configureaza PayPal pentru a primi donatii online prin contul PayPal al organizatiei.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {paymentLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <>
+                    {/* PayPal Status */}
+                    <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/30">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold">Status PayPal</h3>
+                          {payment.paypalEnabled && payment.paypalClientId ? (
+                            <Badge className="bg-green-600 text-white">Activ</Badge>
+                          ) : payment.paypalClientId ? (
+                            <Badge variant="secondary">Configurat (dezactivat)</Badge>
+                          ) : (
+                            <Badge variant="outline">Neconfigurat</Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {payment.paypalClientId
+                            ? "Credentialele PayPal sunt configurate."
+                            : "Adauga credentialele PayPal API (Client ID si Secret) din PayPal Developer Dashboard."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Enable/Disable Toggle */}
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setPayment({ ...payment, paypalEnabled: !payment.paypalEnabled })}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          payment.paypalEnabled ? "bg-green-600" : "bg-gray-200"
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            payment.paypalEnabled ? "translate-x-6" : "translate-x-1"
+                          }`}
+                        />
+                      </button>
+                      <Label className="text-sm">
+                        {payment.paypalEnabled ? "PayPal activat" : "PayPal dezactivat"}
+                      </Label>
+                    </div>
+
+                    {/* PayPal Credentials */}
+                    {!editingPaypal ? (
+                      <div className="space-y-3">
+                        <div className="grid gap-2">
+                          <Label>PayPal Client ID</Label>
+                          <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
+                            <Key className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-mono">
+                              {payment.paypalClientId ? maskKey(payment.paypalClientId) : "Neconfigurat"}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="grid gap-2">
+                          <Label>PayPal Client Secret</Label>
+                          <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
+                            <Key className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-mono">
+                              {payment.paypalClientSecret ? maskKey(payment.paypalClientSecret) : "Neconfigurat"}
+                            </span>
+                          </div>
+                        </div>
+                        <Button variant="outline" onClick={() => setEditingPaypal(true)}>
+                          {payment.paypalClientId ? "Actualizeaza credentialele" : "Adauga credentiale PayPal"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 p-4 border rounded-lg bg-muted/20">
+                        <div className="grid gap-2">
+                          <Label>PayPal Client ID</Label>
+                          <Input
+                            type="text"
+                            placeholder="Axxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                            value={newPaypalClientId}
+                            onChange={(e) => setNewPaypalClientId(e.target.value)}
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label>PayPal Client Secret</Label>
+                          <Input
+                            type="password"
+                            placeholder="ELxxxxxxxxxxxxxxxxxxxxxxxx..."
+                            value={newPaypalClientSecret}
+                            onChange={(e) => setNewPaypalClientSecret(e.target.value)}
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setEditingPaypal(false);
+                            setNewPaypalClientId("");
+                            setNewPaypalClientSecret("");
+                          }}
+                        >
+                          Anuleaza
+                        </Button>
+                      </div>
+                    )}
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="paypalMerchantId">PayPal Merchant ID (optional)</Label>
+                      <Input
+                        id="paypalMerchantId"
+                        placeholder="Ex: ABCDE12345"
+                        value={payment.paypalMerchantId}
+                        onChange={(e) => setPayment({ ...payment, paypalMerchantId: e.target.value })}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Gasesti Merchant ID in PayPal Business settings.
+                      </p>
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>

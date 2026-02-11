@@ -26,6 +26,10 @@ export async function GET() {
         stripePayoutsEnabled: true,
         stripeRequirementsJson: true,
         stripeLastSyncAt: true,
+        paypalClientId: true,
+        paypalClientSecret: true,
+        paypalMerchantId: true,
+        paypalEnabled: true,
         bankName: true,
         ibanRon: true,
         ibanEur: true,
@@ -69,7 +73,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { bankName, ibanRon, ibanEur, revolutTag, revolutPhone, revolutLink } = body;
+    const { bankName, ibanRon, ibanEur, revolutTag, revolutPhone, revolutLink, paypalClientId, paypalClientSecret, paypalMerchantId, paypalEnabled } = body;
 
     // Basic IBAN validation (Romanian IBANs start with RO and are 24 chars)
     if (ibanRon && typeof ibanRon === "string") {
@@ -92,16 +96,25 @@ export async function PUT(req: NextRequest) {
       }
     }
 
+    // Build update data
+    const updateData: any = {
+      bankName: bankName || null,
+      ibanRon: ibanRon ? ibanRon.replace(/\s/g, "").toUpperCase() : null,
+      ibanEur: ibanEur ? ibanEur.replace(/\s/g, "").toUpperCase() : null,
+      revolutTag: revolutTag || null,
+      revolutPhone: revolutPhone || null,
+      revolutLink: revolutLink || null,
+    };
+
+    // PayPal fields
+    if (paypalClientId !== undefined) updateData.paypalClientId = paypalClientId || null;
+    if (paypalClientSecret !== undefined) updateData.paypalClientSecret = paypalClientSecret || null;
+    if (paypalMerchantId !== undefined) updateData.paypalMerchantId = paypalMerchantId || null;
+    if (paypalEnabled !== undefined) updateData.paypalEnabled = !!paypalEnabled;
+
     await prisma.ngo.update({
       where: { id: ngoId },
-      data: {
-        bankName: bankName || null,
-        ibanRon: ibanRon ? ibanRon.replace(/\s/g, "").toUpperCase() : null,
-        ibanEur: ibanEur ? ibanEur.replace(/\s/g, "").toUpperCase() : null,
-        revolutTag: revolutTag || null,
-        revolutPhone: revolutPhone || null,
-        revolutLink: revolutLink || null,
-      },
+      data: updateData,
     });
 
     return NextResponse.json({ message: "Setarile de plata au fost salvate cu succes" });

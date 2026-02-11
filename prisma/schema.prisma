@@ -103,6 +103,12 @@ model Ngo {
   stripeRequirementsJson  Json?     // requirements from Stripe
   stripeLastSyncAt        DateTime?
 
+  // PayPal donation settings
+  paypalClientId      String?
+  paypalClientSecret  String?
+  paypalMerchantId    String?
+  paypalEnabled       Boolean   @default(false)
+
   // Bank transfer / Revolut donation settings
   bankName          String?
   ibanRon           String?
@@ -289,6 +295,7 @@ model Donation {
   paymentProvider       String?       // stripe, bank_transfer, revolut, manual
   stripePaymentIntentId String?
   stripeCheckoutSessionId String?
+  paypalOrderId         String?
   applicationFeeAmount  Float?        // platform fee in RON
   metadata              Json?
   createdAt             DateTime      @default(now())

@@ -16,6 +16,8 @@ export async function GET(
         stripeConnectOnboarded: true,
         stripeConnectStatus: true,
         stripeChargesEnabled: true,
+        paypalEnabled: true,
+        paypalClientId: true,
         bankName: true,
         ibanRon: true,
         ibanEur: true,
@@ -37,6 +39,16 @@ export async function GET(
         id: "card",
         label: "Card bancar",
         description: "Plateste securizat cu cardul prin Stripe",
+        available: true,
+      });
+    }
+
+    // PayPal
+    if (ngo.paypalEnabled && ngo.paypalClientId) {
+      methods.push({
+        id: "paypal",
+        label: "PayPal",
+        description: "Plateste rapid si securizat prin PayPal",
         available: true,
       });
     }
