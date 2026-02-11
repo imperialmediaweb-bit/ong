@@ -100,7 +100,11 @@ async function callClaude(systemMsg: string, userMsg: string, options?: { temper
         ],
       }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => "");
+      console.error(`Claude API error (${res.status}):`, errBody);
+      return null;
+    }
     const data = await res.json();
     const text = data.content?.[0]?.text?.trim();
     if (!text) return null;
@@ -129,7 +133,11 @@ async function callGemini(systemMsg: string, userMsg: string, options?: { temper
         },
       }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const errBody = await res.text().catch(() => "");
+      console.error(`Gemini API error (${res.status}):`, errBody);
+      return null;
+    }
     const data = await res.json();
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     if (!text) return null;

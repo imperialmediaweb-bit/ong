@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Settings, Save, Key, Eye, EyeOff, CheckCircle2, XCircle } from "lucide-react";
+import { Settings, Save, Key, Eye, EyeOff, CheckCircle2, XCircle, Zap, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 interface PlatformSettings {
@@ -66,6 +66,8 @@ export default function AdminSettingsPage() {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
+  const [testingKeys, setTestingKeys] = useState(false);
+  const [testResults, setTestResults] = useState<Record<string, { status: string; error?: string; model?: string }> | null>(null);
 
   useEffect(() => {
     fetchSettings();
@@ -185,6 +187,29 @@ export default function AdminSettingsPage() {
       showError("Eroare la salvarea cheilor API");
     } finally {
       setSavingKeys(false);
+    }
+  };
+
+  const handleTestApiKeys = async () => {
+    setTestingKeys(true);
+    setTestResults(null);
+    try {
+      const res = await fetch("/api/admin/test-ai", { method: "POST" });
+      const result = await res.json();
+      if (result.results) {
+        setTestResults(result.results);
+        if (result.workingProviders?.length > 0) {
+          showSuccess(`Test reusit! Provideri activi: ${result.workingProviders.join(", ")}`);
+        } else {
+          showError("Niciun provider AI nu functioneaza. Verificati cheile.");
+        }
+      } else {
+        showError(result.error || "Eroare la testare");
+      }
+    } catch {
+      showError("Eroare la testarea cheilor API");
+    } finally {
+      setTestingKeys(false);
     }
   };
 
@@ -364,14 +389,41 @@ export default function AdminSettingsPage() {
               <Key className="h-5 w-5 text-blue-600" />
               <h2 className="text-lg font-semibold">Chei API - Provideri AI</h2>
             </div>
-            <Button onClick={handleSaveApiKeys} disabled={savingKeys} size="sm" variant="outline">
-              <Save className="h-4 w-4 mr-2" />
-              {savingKeys ? "Se salveaza..." : "Salveaza cheile"}
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={handleTestApiKeys} disabled={testingKeys} size="sm" variant="outline" className="border-green-300 text-green-700 hover:bg-green-50">
+                {testingKeys ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
+                {testingKeys ? "Se testeaza..." : "Testeaza cheile"}
+              </Button>
+              <Button onClick={handleSaveApiKeys} disabled={savingKeys} size="sm" variant="outline">
+                <Save className="h-4 w-4 mr-2" />
+                {savingKeys ? "Se salveaza..." : "Salveaza cheile"}
+              </Button>
+            </div>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
             Configureaza cheile API pentru generarea de continut AI. Cel putin un provider AI trebuie configurat.
+            Dupa salvare, apasati &quot;Testeaza cheile&quot; pentru a verifica ca functioneaza.
           </p>
+          {testResults && (
+            <div className="mb-4 p-3 rounded-lg bg-slate-50 border space-y-2">
+              <p className="text-sm font-medium">Rezultate test:</p>
+              {Object.entries(testResults).map(([provider, result]) => (
+                <div key={provider} className="flex items-center gap-2 text-sm">
+                  {result.status === "ok" ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-600 flex-shrink-0" />
+                  ) : result.status === "not_configured" ? (
+                    <XCircle className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-red-600 flex-shrink-0" />
+                  )}
+                  <span className="font-medium capitalize">{provider}:</span>
+                  {result.status === "ok" && <span className="text-green-700">Functioneaza ({result.model})</span>}
+                  {result.status === "not_configured" && <span className="text-slate-500">Neconfigurat</span>}
+                  {result.status === "error" && <span className="text-red-600">{result.error}</span>}
+                </div>
+              ))}
+            </div>
+          )}
           <div className="space-y-4">
             {/* OpenAI */}
             <div className="space-y-2">
