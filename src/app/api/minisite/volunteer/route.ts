@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { notifyVolunteerRequest } from "@/lib/platform-notifications";
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,6 +40,16 @@ export async function POST(request: NextRequest) {
     } catch {
       // Audit log is non-critical
     }
+
+    // Send email notifications (non-blocking)
+    notifyVolunteerRequest({
+      volunteerName: name,
+      volunteerEmail: email,
+      volunteerPhone: phone,
+      volunteerMessage: message,
+      ngoName: ngo.name,
+      ngoId: ngo.id,
+    }).catch(() => {});
 
     return NextResponse.json({ success: true });
   } catch (error) {

@@ -13,6 +13,7 @@ import {
   subscriptionRenewedEmail,
   paymentFailedEmail,
 } from "@/lib/subscription-emails";
+import { notifySubscriptionChange } from "@/lib/platform-notifications";
 
 const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://binevo.ro";
 
@@ -126,6 +127,14 @@ export async function assignSubscription(params: {
       });
     }
   }
+
+  // Alert super admin
+  notifySubscriptionChange({
+    ngoName: ngo.name,
+    event: "assigned",
+    plan: params.plan,
+    previousPlan,
+  }).catch(() => {});
 
   return {
     success: true,
@@ -309,6 +318,14 @@ export async function checkExpiringSubscriptions(): Promise<{
         });
       }
 
+      // Alert super admin about expired subscription
+      notifySubscriptionChange({
+        ngoName: ngo.name,
+        event: "expired",
+        plan: "BASIC",
+        previousPlan,
+      }).catch(() => {});
+
       results.expired++;
     } catch (err: any) {
       results.errors.push(`Error processing expired ngo ${ngo.id}: ${err.message}`);
@@ -398,6 +415,13 @@ export async function renewSubscription(params: {
       fromName: "Binevo",
     }).catch(console.error);
   }
+
+  // Alert super admin
+  notifySubscriptionChange({
+    ngoName: ngo.name,
+    event: "renewed",
+    plan: ngo.subscriptionPlan,
+  }).catch(() => {});
 
   return {
     success: true,
