@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { notifyVerificationChange } from "@/lib/platform-notifications";
 
 export async function POST(
   request: NextRequest,
@@ -132,7 +133,33 @@ export async function PATCH(
     const verification = await prisma.ngoVerification.update({
       where: { ngoId: params.id },
       data,
+      include: { ngo: { select: { name: true } } },
     });
+
+    // Send email notification on APPROVED/REJECTED
+    if (status === "APPROVED" || status === "REJECTED") {
+      notifyVerificationChange({
+        ngoName: verification.ngo.name,
+        ngoId: params.id,
+        status: status as "APPROVED" | "REJECTED",
+        reason: rejectionReason,
+      }).catch(() => {});
+
+      // Create in-app notification for the NGO
+      await prisma.notification.create({
+        data: {
+          ngoId: params.id,
+          type: status === "APPROVED" ? "VERIFICATION_APPROVED" : "VERIFICATION_REJECTED",
+          title: status === "APPROVED"
+            ? "ONG-ul a fost verificat cu succes!"
+            : "Verificarea ONG-ului a fost respinsa",
+          message: status === "APPROVED"
+            ? "Felicitari! Badge-ul de verificare este acum vizibil pe profilul public."
+            : `Motiv: ${rejectionReason || "Contactati administratorul pentru detalii."}`,
+          actionUrl: "/dashboard/settings",
+        },
+      });
+    }
 
     return NextResponse.json({
       verification,

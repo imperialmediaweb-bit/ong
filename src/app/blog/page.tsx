@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Eye, ArrowRight } from "lucide-react";
+import { BinevoLogo } from "@/components/BinevoLogo";
 
 export const dynamic = "force-dynamic";
 
@@ -33,8 +34,8 @@ export default async function BlogPage() {
     <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background">
       <div className="container mx-auto px-4 py-12 max-w-5xl">
         <header className="text-center mb-12">
-          <Link href="/" className="text-primary font-bold text-xl">
-            Binevo
+          <Link href="/" className="inline-block">
+            <BinevoLogo size="lg" />
           </Link>
           <h1 className="text-4xl font-bold mt-4">Blog</h1>
           <p className="text-muted-foreground mt-2">

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { notifyDonationReceived } from "@/lib/platform-notifications";
 
 // GET - Callback dupa aprobarea PayPal - captureaza plata si actualizeaza donatia
 export async function GET(req: NextRequest) {
@@ -104,7 +105,7 @@ export async function GET(req: NextRequest) {
         });
       }
 
-      // Cream notificare pentru ONG
+      // Cream notificare in-app pentru ONG
       const donorInfo = donation.donor?.name || donation.donor?.email || captureResult.payer?.email_address || "Anonim";
       await prisma.notification.create({
         data: {
@@ -122,6 +123,17 @@ export async function GET(req: NextRequest) {
           } as any,
         },
       });
+
+      // Send email notifications (non-blocking)
+      notifyDonationReceived({
+        donorName: donorInfo,
+        donorEmail: donation.donor?.email || captureResult.payer?.email_address || undefined,
+        ngoName: donation.ngo.name,
+        ngoId: donation.ngoId,
+        amount: donation.amount,
+        currency: donation.currency,
+        paymentMethod: "PayPal",
+      }).catch(() => {});
     }
 
     return NextResponse.redirect(

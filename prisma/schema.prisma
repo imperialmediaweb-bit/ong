@@ -110,6 +110,10 @@ model Ngo {
   paypalMerchantId    String?
   paypalEnabled       Boolean   @default(false)
 
+  // Netopia payment settings (per-NGO, when platform Netopia is enabled)
+  netopiaEnabled        Boolean   @default(false)
+  netopiaMerchantId     String?   // individual NGO merchant ID (or use platform default)
+
   // Bank transfer / Revolut donation settings
   bankName          String?
   ibanRon           String?
@@ -141,6 +145,9 @@ model Ngo {
   formularAnaf        FormularAnaf[]
   sponsorshipContracts SponsorshipContract[]
 
+  // Platform Invoices
+  invoices            Invoice[]
+
   // Sponsor Companies CRM
   sponsorCompanies    SponsorCompany[]
 
@@ -163,6 +170,18 @@ model Ngo {
   creditTransactions CreditTransaction[]
   emailTemplates    EmailTemplate[]
   smsTemplates      SmsTemplate[]
+
+  // Billing details (for invoice generation)
+  billingName         String?     // Denumire pe factura
+  billingCui          String?     // CUI pe factura
+  billingRegCom       String?     // Nr. Reg. Com.
+  billingAddress      String?     // Adresa facturare
+  billingCity         String?     // Oras facturare
+  billingCounty       String?     // Judet facturare
+  billingEmail        String?     // Email facturare
+  billingPhone        String?     // Telefon facturare
+  paymentMethod       String?     @default("invoice") // "recurring_card", "invoice" (manual)
+  stripePaymentMethodId String?   // Saved card for recurring
 
   // Legal compliance
   tosAcceptedAt       DateTime?
@@ -902,6 +921,69 @@ model PlatformSettings {
   twilioSid       String?
   twilioToken     String?
   twilioPhone     String?
+
+  // ─── SMTP / Email Sender Configuration ─────────────────
+  emailProvider       String   @default("smtp")    // smtp, sendgrid, mailgun
+  smtpHost            String?
+  smtpPort            Int?     @default(587)
+  smtpUser            String?
+  smtpPassword        String?
+  smtpEncryption      String   @default("tls")     // tls, ssl, none
+  smtpFromEmail       String?                       // sender email for platform notifications
+  smtpFromName        String?  @default("Binevo")  // sender name
+  smtpReplyTo         String?                       // reply-to address
+  mailgunApiKey       String?
+  mailgunDomain       String?
+  mailgunRegion       String   @default("eu")      // eu, us
+
+  // Notification settings
+  notifyOnRegistration    Boolean @default(true)   // email on new NGO registration
+  notifyOnVerification    Boolean @default(true)   // email on verification status change
+  notifyOnSubscription    Boolean @default(true)   // email on subscription changes
+  notifyOnDonation        Boolean @default(true)   // email on new donations
+  notifyOnInvoice         Boolean @default(true)   // automated invoice emails
+  notifyWelcomeEmail      Boolean @default(true)   // welcome email to new users
+  invoicePrefix           String  @default("BNV")  // invoice number prefix
+  invoiceNextNumber       Int     @default(1)      // next invoice number
+
+  // ─── Payment Processors Configuration ─────────────────
+  // Which payment processors are enabled at platform level
+  paymentProcessors       Json?    // { stripe: { enabled, mode }, netopia: { enabled }, paypal: { enabled } }
+
+  // Stripe (platform-level keys for Stripe Connect)
+  stripeEnabled           Boolean  @default(true)
+  stripeSecretKey         String?
+  stripePublishableKey    String?
+  stripeConnectWebhookSecret String?
+  stripeWebhookSecret     String?
+
+  // Netopia (Romanian payment processor)
+  netopiaEnabled          Boolean  @default(false)
+  netopiaApiKey           String?   // Netopia API key (POS Signature / API Key)
+  netopiaMerchantId       String?   // Netopia Merchant ID
+  netopiaPublicKey        String?   @db.Text // Netopia public certificate (PEM)
+  netopiaPrivateKey       String?   @db.Text // Netopia private key (PEM)
+  netopiaSandbox          Boolean  @default(true) // true = test mode, false = production
+  netopiaNotifyUrl        String?   // IPN callback URL
+
+  // PayPal (platform-level)
+  paypalPlatformEnabled   Boolean  @default(false)
+  paypalPlatformClientId  String?
+  paypalPlatformSecret    String?
+  paypalPlatformSandbox   Boolean  @default(true)
+
+  // ─── e-Factura (ANAF SPV) Configuration ────────────────
+  eFacturaEnabled         Boolean  @default(false)
+  eFacturaAutoSend        Boolean  @default(false)  // auto-send to ANAF on invoice creation
+  anafClientId            String?                     // OAuth2 client ID from ANAF
+  anafClientSecret        String?                     // OAuth2 client secret
+  anafAccessToken         String?  @db.Text           // Current OAuth2 access token
+  anafRefreshToken        String?  @db.Text           // OAuth2 refresh token
+  anafTokenExpiresAt      DateTime?                   // Token expiration
+  anafSandbox             Boolean  @default(true)     // true = test, false = production
+  anafCui                 String?                     // CUI for SPV (must match company CUI)
+  anafCallbackUrl         String?                     // OAuth callback URL
+
   updatedAt       DateTime @updatedAt
 }
 
@@ -1395,4 +1477,141 @@ enum LinkedInProspectStatus {
   MEETING
   CONVERTED
   NOT_INTERESTED
+}
+
+// ─── Platform Billing (Super Admin Company Details) ─────────────
+
+model PlatformBilling {
+  id                String   @id @default("billing")
+
+  // Company details
+  companyName       String?
+  companyCui        String?   // CUI (Cod Unic de Inregistrare)
+  companyRegCom     String?   // Nr. Reg. Com. (J12/345/2020)
+  companyAddress    String?
+  companyCity       String?
+  companyCounty     String?
+  companyPostalCode String?
+  companyCountry    String   @default("Romania")
+  companyEmail      String?
+  companyPhone      String?
+  companyIban       String?
+  companyBankName   String?
+  companyVatPayer   Boolean  @default(false) // Platitor de TVA
+  companyCapital    String?   // Capital social
+
+  // Invoice settings
+  invoicePrefix     String   @default("BNV")
+  invoiceNextNumber Int      @default(1)
+  invoiceSeries     String?  // Serie factura (ex: BNV)
+  invoiceCurrency   String   @default("RON")
+  invoiceVatRate    Float    @default(19)   // TVA rate (%)
+  invoiceNotes      String?  // Default notes on invoices
+  invoicePaymentTerms Int    @default(30)   // Termen de plata (zile)
+
+  updatedAt         DateTime @updatedAt
+}
+
+// ─── Invoices (Platform Invoices) ───────────────────────────────
+
+model Invoice {
+  id                String        @id @default(cuid())
+
+  // Invoice number
+  invoiceNumber     String        @unique // e.g. BNV-0001
+  invoiceSeries     String?
+
+  // Seller (Platform - from PlatformBilling)
+  sellerName        String
+  sellerCui         String?
+  sellerRegCom      String?
+  sellerAddress     String?
+  sellerCity        String?
+  sellerCounty      String?
+  sellerEmail       String?
+  sellerPhone       String?
+  sellerIban        String?
+  sellerBankName    String?
+  sellerVatPayer    Boolean       @default(false)
+
+  // Buyer (NGO or external client)
+  buyerName         String
+  buyerCui          String?
+  buyerRegCom       String?
+  buyerAddress      String?
+  buyerCity         String?
+  buyerCounty       String?
+  buyerEmail        String?
+  buyerPhone        String?
+
+  // Link to NGO if applicable
+  ngoId             String?
+
+  // Invoice details
+  issueDate         DateTime      @default(now())
+  dueDate           DateTime?
+  status            InvoiceStatus @default(DRAFT)
+
+  // Items stored as JSON array
+  // [{description, quantity, unitPrice, vatRate, totalNet, totalVat, totalGross}]
+  items             Json
+
+  // Totals
+  subtotal          Float         @default(0)   // Total fara TVA
+  vatAmount         Float         @default(0)   // Total TVA
+  totalAmount       Float         @default(0)   // Total cu TVA
+  currency          String        @default("RON")
+
+  // Payment
+  paidAt            DateTime?
+  paymentMethod     String?       // stripe, bank_transfer, cash
+
+  // Public payment link
+  paymentToken      String?       @unique  // unique token for public payment page
+  paymentProofUrl   String?       // uploaded proof of bank transfer
+  paymentProofNote  String?       // note from payer about the payment
+  stripePaymentIntentId String?   // Stripe payment intent for card payments
+
+  // Subscription link
+  subscriptionPlan  String?       // PRO, ELITE - which plan this invoice is for
+  subscriptionMonth String?       // e.g. "2026-02" - billing period
+  isRecurring       Boolean       @default(false) // part of recurring billing
+
+  // Notes
+  notes             String?
+  internalNotes     String?
+
+  // e-Factura (ANAF SPV integration)
+  eFacturaStatus    String?       // pending, uploaded, validated, rejected, storno
+  eFacturaId        String?       // ID-ul din sistemul ANAF (index_incarcare)
+  eFacturaUploadId  String?       // ID upload ANAF
+  eFacturaXml       String?       @db.Text // UBL XML generat
+  eFacturaErrors    Json?         // Erori de validare ANAF
+  eFacturaSentAt    DateTime?     // Data trimiterii la ANAF
+  eFacturaValidAt   DateTime?     // Data validarii de ANAF
+
+  // Metadata
+  createdBy         String?       // userId who created
+  metadata          Json?         // Additional metadata
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  ngo               Ngo?          @relation(fields: [ngoId], references: [id])
+
+  @@index([ngoId])
+  @@index([status])
+  @@index([issueDate])
+  @@index([invoiceNumber])
+  @@index([paymentToken])
+  @@index([eFacturaStatus])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+  STORNO
 }

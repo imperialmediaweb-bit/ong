@@ -7,12 +7,13 @@ import {
   Users, Mail, Zap, BarChart3,
   Shield, Settings, Home, Heart, LogOut, Menu, X, FileText,
   Globe, Briefcase, Share2, Sparkles, ChevronRight, CircleDollarSign,
-  Banknote,
+  Banknote, Receipt,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BinevoLogo } from "@/components/BinevoLogo";
 
 const navGroups = [
   {
@@ -53,6 +54,12 @@ const navGroups = [
       { name: "Retea & Sponsori", href: "/dashboard/retea", icon: Share2 },
     ],
   },
+  {
+    label: "Abonament",
+    items: [
+      { name: "Facturare", href: "/dashboard/billing", icon: Receipt },
+    ],
+  },
 ];
 
 export function Sidebar() {
@@ -71,11 +78,9 @@ export function Sidebar() {
     <div className="flex h-full flex-col">
       {/* Logo Header */}
       <div className="flex items-center gap-3 px-5 py-5 border-b">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm">
-          <Heart className="h-5 w-5" />
-        </div>
+        <BinevoLogo size="sm" showText={false} />
         <div className="min-w-0">
-          <h1 className="text-base font-bold tracking-tight">Binevo</h1>
+          <h1 className="text-base font-bold tracking-tight bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 bg-clip-text text-transparent">Binevo</h1>
           <p className="text-[11px] text-muted-foreground truncate max-w-[150px]">
             {(session?.user as any)?.ngoName || "Platforma CRM"}
           </p>

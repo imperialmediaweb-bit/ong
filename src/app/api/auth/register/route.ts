@@ -4,6 +4,7 @@ import prisma from "@/lib/db";
 import { registerSchema } from "@/lib/validations";
 import { createAuditLog } from "@/lib/audit";
 import { generateSlug } from "@/lib/utils";
+import { notifyWelcomeUser, notifyNewNgoRegistration } from "@/lib/platform-notifications";
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,6 +73,20 @@ export async function POST(request: NextRequest) {
       details: { email, ngoName },
       ipAddress: request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || undefined,
     });
+
+    // Send welcome email to new user (non-blocking)
+    notifyWelcomeUser({
+      userName: name || email,
+      userEmail: email,
+    }).catch(() => {});
+
+    // Alert super admins about new NGO registration (non-blocking)
+    notifyNewNgoRegistration({
+      ngoName,
+      ngoId: result.ngo.id,
+      adminEmail: email,
+      registeredBy: name || email,
+    }).catch(() => {});
 
     return NextResponse.json(
       {

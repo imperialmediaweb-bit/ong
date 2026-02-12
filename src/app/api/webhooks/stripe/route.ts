@@ -6,6 +6,7 @@ import {
   paymentFailedEmail,
   subscriptionExpiredEmail,
 } from "@/lib/subscription-emails";
+import { markInvoicePaid } from "@/lib/invoice-generator";
 
 const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://binevo.ro";
 
@@ -28,9 +29,28 @@ export async function POST(req: NextRequest) {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as any;
-        const { ngoId, plan } = session.metadata || {};
+        const { ngoId, plan, invoiceId, type: sessionType } = session.metadata || {};
 
-        if (ngoId && plan) {
+        // Handle invoice payment (from /factura/[token] page)
+        if (sessionType === "invoice_payment" && invoiceId) {
+          await markInvoicePaid({
+            invoiceId,
+            paymentMethod: "card",
+            stripePaymentIntentId: session.payment_intent,
+          });
+
+          // Save card for future recurring if customer consented
+          if (session.customer && ngoId) {
+            await prisma.ngo.update({
+              where: { id: ngoId },
+              data: {
+                stripeCustomerId: session.customer,
+              },
+            });
+          }
+        }
+        // Handle subscription checkout (from /checkout page)
+        else if (ngoId && plan) {
           await prisma.ngo.update({
             where: { id: ngoId },
             data: {

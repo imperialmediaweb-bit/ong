@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Sparkles,
 } from "lucide-react";
+import { BinevoLogo } from "@/components/BinevoLogo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -94,10 +95,7 @@ export default async function OngDirectoryPage() {
             <ArrowLeft className="h-4 w-4" />
             Inapoi la pagina principala
           </Link>
-          <div className="flex items-center gap-2">
-            <Heart className="h-6 w-6 text-primary" />
-            <span className="font-bold text-lg">Binevo</span>
-          </div>
+          <BinevoLogo size="md" />
         </div>
 
         <div className="text-center max-w-3xl mx-auto mb-10">
@@ -297,8 +295,8 @@ export default async function OngDirectoryPage() {
             href="/"
             className="flex items-center gap-2 hover:text-foreground transition-colors"
           >
-            <Heart className="h-4 w-4 text-primary" />
-            <span>Binevo - Platforma CRM pentru ONG-uri</span>
+            <BinevoLogo size="sm" />
+            <span className="ml-1">- Platforma CRM pentru ONG-uri</span>
           </Link>
           <div className="flex items-center gap-4">
             <span>Vrei sa-ti inregistrezi ONG-ul?</span>
