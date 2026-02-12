@@ -1421,3 +1421,115 @@ enum LinkedInProspectStatus {
   CONVERTED
   NOT_INTERESTED
 }
+
+// ─── Platform Billing (Super Admin Company Details) ─────────────
+
+model PlatformBilling {
+  id                String   @id @default("billing")
+
+  // Company details
+  companyName       String?
+  companyCui        String?   // CUI (Cod Unic de Inregistrare)
+  companyRegCom     String?   // Nr. Reg. Com. (J12/345/2020)
+  companyAddress    String?
+  companyCity       String?
+  companyCounty     String?
+  companyPostalCode String?
+  companyCountry    String   @default("Romania")
+  companyEmail      String?
+  companyPhone      String?
+  companyIban       String?
+  companyBankName   String?
+  companyVatPayer   Boolean  @default(false) // Platitor de TVA
+  companyCapital    String?   // Capital social
+
+  // Invoice settings
+  invoicePrefix     String   @default("BNV")
+  invoiceNextNumber Int      @default(1)
+  invoiceSeries     String?  // Serie factura (ex: BNV)
+  invoiceCurrency   String   @default("RON")
+  invoiceVatRate    Float    @default(19)   // TVA rate (%)
+  invoiceNotes      String?  // Default notes on invoices
+  invoicePaymentTerms Int    @default(30)   // Termen de plata (zile)
+
+  updatedAt         DateTime @updatedAt
+}
+
+// ─── Invoices (Platform Invoices) ───────────────────────────────
+
+model Invoice {
+  id                String        @id @default(cuid())
+
+  // Invoice number
+  invoiceNumber     String        @unique // e.g. BNV-0001
+  invoiceSeries     String?
+
+  // Seller (Platform - from PlatformBilling)
+  sellerName        String
+  sellerCui         String?
+  sellerRegCom      String?
+  sellerAddress     String?
+  sellerCity        String?
+  sellerCounty      String?
+  sellerEmail       String?
+  sellerPhone       String?
+  sellerIban        String?
+  sellerBankName    String?
+  sellerVatPayer    Boolean       @default(false)
+
+  // Buyer (NGO or external client)
+  buyerName         String
+  buyerCui          String?
+  buyerRegCom       String?
+  buyerAddress      String?
+  buyerCity         String?
+  buyerCounty       String?
+  buyerEmail        String?
+  buyerPhone        String?
+
+  // Link to NGO if applicable
+  ngoId             String?
+
+  // Invoice details
+  issueDate         DateTime      @default(now())
+  dueDate           DateTime?
+  status            InvoiceStatus @default(DRAFT)
+
+  // Items stored as JSON array
+  // [{description, quantity, unitPrice, vatRate, totalNet, totalVat, totalGross}]
+  items             Json
+
+  // Totals
+  subtotal          Float         @default(0)   // Total fara TVA
+  vatAmount         Float         @default(0)   // Total TVA
+  totalAmount       Float         @default(0)   // Total cu TVA
+  currency          String        @default("RON")
+
+  // Payment
+  paidAt            DateTime?
+  paymentMethod     String?       // stripe, bank_transfer, cash
+
+  // Notes
+  notes             String?
+  internalNotes     String?
+
+  // Metadata
+  createdBy         String?       // userId who created
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([ngoId])
+  @@index([status])
+  @@index([issueDate])
+  @@index([invoiceNumber])
+}
+
+enum InvoiceStatus {
+  DRAFT
+  ISSUED
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+  STORNO
+}
