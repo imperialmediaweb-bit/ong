@@ -82,7 +82,6 @@ export async function GET() {
 
       formular230EmbedCode: config?.formular230EmbedCode || "",
       formular230PdfUrl: config?.formular230PdfUrl || "",
-      formular230Address: config?.formular230Address || "",
 
       miniSiteCampaigns: config?.miniSiteCampaigns || [],
       templateStyle: config?.templateStyle || "modern",
@@ -135,7 +134,7 @@ const CONFIG_FIELDS = [
   "showNewsletter", "showDonation", "showUpdates",
   "showAbout", "showMission", "showImpact",
   "showContact", "showSocial", "showFormular230", "showContract",
-  "formular230EmbedCode", "formular230PdfUrl", "formular230Address",
+  "formular230EmbedCode", "formular230PdfUrl",
   "templateStyle", "customCss", "isPublished",
   // New fields
   "videoUrl", "showVideo",

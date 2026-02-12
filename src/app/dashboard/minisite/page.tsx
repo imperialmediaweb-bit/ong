@@ -98,8 +98,6 @@ interface MiniSiteState {
   // Formular 230
   formular230EmbedCode: string;
   formular230PdfUrl: string;
-  formular230Address: string;
-
   // Customization (Tab 4)
   primaryColor: string;
   accentColor: string;
@@ -191,7 +189,6 @@ const DEFAULT_STATE: MiniSiteState = {
   socialTwitter: "",
   formular230EmbedCode: "",
   formular230PdfUrl: "",
-  formular230Address: "",
   heroTitle: "",
   heroDescription: "",
   aboutText: "",
@@ -328,7 +325,6 @@ export default function MiniSiteBuilderPage() {
           socialTwitter: data.socialTwitter || "",
           formular230EmbedCode: data.formular230EmbedCode || "",
           formular230PdfUrl: data.formular230PdfUrl || "",
-          formular230Address: data.formular230Address || "",
           heroTitle: data.heroTitle || "",
           heroDescription: data.heroDescription || "",
           aboutText: data.aboutText || "",
@@ -1280,26 +1276,8 @@ export default function MiniSiteBuilderPage() {
                   </p>
                 </div>
 
-                {/* Mailing address */}
-                <div className="space-y-2">
-                  <Label htmlFor="formular230Address" className="font-medium flex items-center gap-2">
-                    <MapPinIcon className="h-4 w-4" />
-                    Adresa pentru trimiterea formularului prin posta (optional)
-                  </Label>
-                  <Textarea
-                    id="formular230Address"
-                    placeholder={"Administratia Finantelor Publice Sector 1\nStr. Exemplu nr. 10\nBucuresti, 010101"}
-                    value={state.formular230Address}
-                    onChange={(e) => updateField("formular230Address", e.target.value)}
-                    rows={3}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Adresa ANAF sau a asociatiei unde donatorii trimit formularul completat si semnat.
-                  </p>
-                </div>
-
                 {/* Summary of what's configured */}
-                {(state.formular230EmbedCode || state.formular230PdfUrl || state.formular230Address) && (
+                {(state.formular230EmbedCode || state.formular230PdfUrl) && (
                   <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
                     <p className="text-sm font-medium text-green-800 mb-2">Configurare Formular 230:</p>
                     <ul className="text-sm text-green-700 space-y-1">
@@ -1313,12 +1291,6 @@ export default function MiniSiteBuilderPage() {
                         <li className="flex items-center gap-2">
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           PDF descarcabil configurat
-                        </li>
-                      )}
-                      {state.formular230Address && (
-                        <li className="flex items-center gap-2">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          Adresa de trimitere configurata
                         </li>
                       )}
                     </ul>
