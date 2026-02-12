@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Receipt, ArrowLeft, Loader2, Printer, CheckCircle2,
-  Send, FileText, XCircle, Clock, AlertCircle, Trash2,
+  Send, FileText, XCircle, Clock, AlertCircle, Trash2, Upload, RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -58,6 +58,12 @@ interface InvoiceDetail {
   notes: string | null;
   internalNotes: string | null;
   createdAt: string;
+  // e-Factura
+  eFacturaStatus: string | null;
+  eFacturaId: string | null;
+  eFacturaSentAt: string | null;
+  eFacturaValidAt: string | null;
+  eFacturaErrors: any;
 }
 
 const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
@@ -77,6 +83,8 @@ export default function InvoiceDetailPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
+  const [eFacturaLoading, setEFacturaLoading] = useState(false);
+  const [eFacturaMsg, setEFacturaMsg] = useState("");
 
   useEffect(() => {
     fetchInvoice();
@@ -130,6 +138,34 @@ export default function InvoiceDetailPage() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleEFactura = async (action: "generate" | "upload" | "check") => {
+    setEFacturaLoading(true);
+    setEFacturaMsg("");
+    try {
+      const res = await fetch("/api/admin/efactura", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ invoiceId: params.id, action }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEFacturaMsg(`Eroare: ${data.error || "Eroare necunoscuta"}`);
+      } else {
+        const msgs: Record<string, string> = {
+          generate: "XML e-Factura generat cu succes",
+          upload: "e-Factura incarcata in ANAF cu succes",
+          check: `Status ANAF: ${data.eFacturaStatus || data.status}`,
+        };
+        setEFacturaMsg(msgs[action] || "Operatiune reusita");
+        fetchInvoice();
+      }
+    } catch {
+      setEFacturaMsg("Eroare la comunicarea cu serverul");
+    } finally {
+      setEFacturaLoading(false);
+    }
   };
 
   const formatDate = (dateStr: string) => {
@@ -216,6 +252,83 @@ export default function InvoiceDetailPage() {
           )}
         </div>
       </div>
+
+      {/* e-Factura Section */}
+      <Card className="print:hidden border-orange-200">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-orange-600" />
+              <div>
+                <p className="font-semibold text-sm">e-Factura ANAF</p>
+                <p className="text-xs text-muted-foreground">
+                  {invoice.eFacturaStatus === "validated" ? (
+                    <span className="text-green-600">Validata de ANAF</span>
+                  ) : invoice.eFacturaStatus === "uploaded" ? (
+                    <span className="text-blue-600">Incarcata in ANAF - in procesare</span>
+                  ) : invoice.eFacturaStatus === "generated" ? (
+                    <span className="text-amber-600">XML generat - gata de incarcare</span>
+                  ) : invoice.eFacturaStatus === "rejected" ? (
+                    <span className="text-red-600">Respinsa de ANAF</span>
+                  ) : invoice.eFacturaStatus === "error" ? (
+                    <span className="text-red-600">Eroare</span>
+                  ) : (
+                    "Negenerata"
+                  )}
+                  {invoice.eFacturaId && <span className="ml-2 font-mono">ID: {invoice.eFacturaId}</span>}
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              {!invoice.eFacturaStatus || invoice.eFacturaStatus === "rejected" || invoice.eFacturaStatus === "error" ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleEFactura("generate")}
+                  disabled={eFacturaLoading}
+                >
+                  {eFacturaLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <FileText className="h-3 w-3 mr-1" />}
+                  Genereaza XML
+                </Button>
+              ) : null}
+              {invoice.eFacturaStatus === "generated" && (
+                <Button
+                  size="sm"
+                  onClick={() => handleEFactura("upload")}
+                  disabled={eFacturaLoading}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  {eFacturaLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Upload className="h-3 w-3 mr-1" />}
+                  Trimite la ANAF
+                </Button>
+              )}
+              {invoice.eFacturaStatus === "uploaded" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleEFactura("check")}
+                  disabled={eFacturaLoading}
+                >
+                  {eFacturaLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <RefreshCw className="h-3 w-3 mr-1" />}
+                  Verifica status
+                </Button>
+              )}
+            </div>
+          </div>
+          {eFacturaMsg && (
+            <p className={`text-xs mt-2 ${eFacturaMsg.startsWith("Eroare") ? "text-red-600" : "text-green-600"}`}>
+              {eFacturaMsg}
+            </p>
+          )}
+          {invoice.eFacturaErrors && Array.isArray(invoice.eFacturaErrors) && invoice.eFacturaErrors.length > 0 && (
+            <div className="mt-2 text-xs text-red-600 bg-red-50 rounded p-2">
+              {(invoice.eFacturaErrors as string[]).map((err: string, i: number) => (
+                <p key={i}>{err}</p>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {error && <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm print:hidden">{error}</div>}
 

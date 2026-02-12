@@ -110,6 +110,10 @@ model Ngo {
   paypalMerchantId    String?
   paypalEnabled       Boolean   @default(false)
 
+  // Netopia payment settings (per-NGO, when platform Netopia is enabled)
+  netopiaEnabled        Boolean   @default(false)
+  netopiaMerchantId     String?   // individual NGO merchant ID (or use platform default)
+
   // Bank transfer / Revolut donation settings
   bankName          String?
   ibanRon           String?
@@ -140,6 +144,9 @@ model Ngo {
   // Documents & Forms
   formularAnaf        FormularAnaf[]
   sponsorshipContracts SponsorshipContract[]
+
+  // Platform Invoices
+  invoices            Invoice[]
 
   // Sponsor Companies CRM
   sponsorCompanies    SponsorCompany[]
@@ -939,6 +946,44 @@ model PlatformSettings {
   invoicePrefix           String  @default("BNV")  // invoice number prefix
   invoiceNextNumber       Int     @default(1)      // next invoice number
 
+  // ─── Payment Processors Configuration ─────────────────
+  // Which payment processors are enabled at platform level
+  paymentProcessors       Json?    // { stripe: { enabled, mode }, netopia: { enabled }, paypal: { enabled } }
+
+  // Stripe (platform-level keys for Stripe Connect)
+  stripeEnabled           Boolean  @default(true)
+  stripeSecretKey         String?
+  stripePublishableKey    String?
+  stripeConnectWebhookSecret String?
+  stripeWebhookSecret     String?
+
+  // Netopia (Romanian payment processor)
+  netopiaEnabled          Boolean  @default(false)
+  netopiaApiKey           String?   // Netopia API key (POS Signature / API Key)
+  netopiaMerchantId       String?   // Netopia Merchant ID
+  netopiaPublicKey        String?   @db.Text // Netopia public certificate (PEM)
+  netopiaPrivateKey       String?   @db.Text // Netopia private key (PEM)
+  netopiaSandbox          Boolean  @default(true) // true = test mode, false = production
+  netopiaNotifyUrl        String?   // IPN callback URL
+
+  // PayPal (platform-level)
+  paypalPlatformEnabled   Boolean  @default(false)
+  paypalPlatformClientId  String?
+  paypalPlatformSecret    String?
+  paypalPlatformSandbox   Boolean  @default(true)
+
+  // ─── e-Factura (ANAF SPV) Configuration ────────────────
+  eFacturaEnabled         Boolean  @default(false)
+  eFacturaAutoSend        Boolean  @default(false)  // auto-send to ANAF on invoice creation
+  anafClientId            String?                     // OAuth2 client ID from ANAF
+  anafClientSecret        String?                     // OAuth2 client secret
+  anafAccessToken         String?  @db.Text           // Current OAuth2 access token
+  anafRefreshToken        String?  @db.Text           // OAuth2 refresh token
+  anafTokenExpiresAt      DateTime?                   // Token expiration
+  anafSandbox             Boolean  @default(true)     // true = test, false = production
+  anafCui                 String?                     // CUI for SPV (must match company CUI)
+  anafCallbackUrl         String?                     // OAuth callback URL
+
   updatedAt       DateTime @updatedAt
 }
 
@@ -1536,16 +1581,29 @@ model Invoice {
   notes             String?
   internalNotes     String?
 
+  // e-Factura (ANAF SPV integration)
+  eFacturaStatus    String?       // pending, uploaded, validated, rejected, storno
+  eFacturaId        String?       // ID-ul din sistemul ANAF (index_incarcare)
+  eFacturaUploadId  String?       // ID upload ANAF
+  eFacturaXml       String?       @db.Text // UBL XML generat
+  eFacturaErrors    Json?         // Erori de validare ANAF
+  eFacturaSentAt    DateTime?     // Data trimiterii la ANAF
+  eFacturaValidAt   DateTime?     // Data validarii de ANAF
+
   // Metadata
   createdBy         String?       // userId who created
+  metadata          Json?         // Additional metadata
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
+
+  ngo               Ngo?          @relation(fields: [ngoId], references: [id])
 
   @@index([ngoId])
   @@index([status])
   @@index([issueDate])
   @@index([invoiceNumber])
   @@index([paymentToken])
+  @@index([eFacturaStatus])
 }
 
 enum InvoiceStatus {

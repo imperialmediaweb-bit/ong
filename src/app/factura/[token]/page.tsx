@@ -67,6 +67,13 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
   STORNO: { label: "Stornata", color: "bg-orange-100 text-orange-700", icon: AlertCircle },
 };
 
+interface PaymentMethodOption {
+  id: string;
+  label: string;
+  description: string;
+  processor: string;
+}
+
 export default function InvoicePaymentPage({ params }: { params: { token: string } }) {
   const [invoice, setInvoice] = useState<InvoiceData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,6 +85,7 @@ export default function InvoicePaymentPage({ params }: { params: { token: string
   const [uploadLoading, setUploadLoading] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [copiedIban, setCopiedIban] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethodOption[]>([]);
 
   const fetchInvoice = useCallback(async () => {
     try {
@@ -98,7 +106,14 @@ export default function InvoicePaymentPage({ params }: { params: { token: string
 
   useEffect(() => {
     fetchInvoice();
+    // Fetch available payment methods
+    fetch("/api/invoices/pay")
+      .then((r) => r.json())
+      .then((d) => setPaymentMethods(d.methods || []))
+      .catch(() => {});
   }, [fetchInvoice]);
+
+  const hasNetopia = paymentMethods.some((m) => m.id === "netopia");
 
   const handleCardPayment = async () => {
     if (!invoice) return;
@@ -120,6 +135,31 @@ export default function InvoicePaymentPage({ params }: { params: { token: string
       }
     } catch {
       setError("Eroare la procesarea platii");
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const handleNetopiaPayment = async () => {
+    if (!invoice) return;
+    setPaymentLoading(true);
+    try {
+      const res = await fetch("/api/invoices/pay", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentToken: params.token,
+          paymentMethod: "netopia",
+        }),
+      });
+      const data = await res.json();
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        setError(data.error || "Eroare la procesarea platii Netopia");
+      }
+    } catch {
+      setError("Eroare la procesarea platii Netopia");
     } finally {
       setPaymentLoading(false);
     }
@@ -408,7 +448,7 @@ export default function InvoicePaymentPage({ params }: { params: { token: string
               </Card>
             ) : canPay ? (
               <>
-                {/* Card Payment */}
+                {/* Card Payment - Stripe */}
                 <Card className="border-indigo-200">
                   <CardContent className="p-6">
                     <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -437,6 +477,39 @@ export default function InvoicePaymentPage({ params }: { params: { token: string
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Netopia Payment */}
+                {hasNetopia && (
+                  <Card className="border-emerald-200">
+                    <CardContent className="p-6">
+                      <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <CreditCard className="h-5 w-5 text-emerald-600" />
+                        Plateste cu Netopia
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-4">
+                        Plata cu cardul prin Netopia Payments. Visa, Mastercard.
+                      </p>
+                      <Button
+                        onClick={handleNetopiaPayment}
+                        disabled={paymentLoading}
+                        variant="outline"
+                        className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-50"
+                        size="lg"
+                      >
+                        {paymentLoading ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <CreditCard className="h-4 w-4 mr-2" />
+                        )}
+                        Plateste prin Netopia
+                      </Button>
+                      <div className="flex items-center gap-1.5 justify-center mt-3 text-xs text-gray-400">
+                        <Shield className="h-3 w-3" />
+                        Securizat prin Netopia Payments
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Bank Transfer */}
                 <Card>
