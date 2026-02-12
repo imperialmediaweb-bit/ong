@@ -2069,6 +2069,15 @@ export default async function MiniSitePage({ params }: Props) {
                     </a>
                   </li>
                 )}
+                <li>
+                  <a
+                    href={`/s/${ngo.slug}/termeni-si-conditii`}
+                    className="inline-flex items-center gap-2 text-sm text-white/60 transition-colors hover:text-white"
+                  >
+                    <ChevronRight className="h-3.5 w-3.5" />
+                    Termeni si Conditii
+                  </a>
+                </li>
               </ul>
             </div>
 
@@ -2193,7 +2202,10 @@ export default async function MiniSitePage({ params }: Props) {
                 Datele tale personale sunt protejate conform Regulamentului
                 General privind Protectia Datelor (GDPR). Le folosim exclusiv
                 in scopul pentru care au fost colectate si nu le transmitem
-                catre terti fara consimtamantul tau.
+                catre terti fara consimtamantul tau.{" "}
+                <a href={`/s/${ngo.slug}/termeni-si-conditii`} className="underline hover:text-white/60">
+                  Citeste Termenii si Conditiile
+                </a>
               </p>
             </div>
 

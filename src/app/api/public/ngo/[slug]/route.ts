@@ -14,6 +14,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       category: true,
       shortDescription: true,
       coverImageUrl: true,
+      legalRepresentative: true,
       verification: {
         select: {
           fiscalCode: true,
@@ -21,17 +22,19 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
           address: true,
           county: true,
           city: true,
+          representativeName: true,
         },
       },
       miniSiteConfig: {
         select: {
           formular230EmbedCode: true,
           formular230PdfUrl: true,
-          formular230Address: true,
           bankAccount: true,
           cui: true,
           contactEmail: true,
           contactPhone: true,
+          primaryColor: true,
+          accentColor: true,
         },
       },
     },
@@ -58,8 +61,10 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     city: ngo.verification?.city || null,
     formular230EmbedCode: ngo.miniSiteConfig?.formular230EmbedCode || null,
     formular230PdfUrl: ngo.miniSiteConfig?.formular230PdfUrl || null,
-    formular230Address: ngo.miniSiteConfig?.formular230Address || null,
     contactEmail: ngo.miniSiteConfig?.contactEmail || null,
     contactPhone: ngo.miniSiteConfig?.contactPhone || null,
+    primaryColor: ngo.miniSiteConfig?.primaryColor || "#6366f1",
+    accentColor: ngo.miniSiteConfig?.accentColor || "#f59e0b",
+    legalRepresentative: ngo.legalRepresentative || ngo.verification?.representativeName || null,
   });
 }

@@ -106,9 +106,9 @@ export default function FormularAnafPage({ params }: Props) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-blue-50 to-background">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-background">
         <div className="text-center space-y-3">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto" />
+          <Loader2 className="h-8 w-8 animate-spin text-gray-500 mx-auto" />
           <p className="text-sm text-muted-foreground">Se incarca formularul...</p>
         </div>
       </div>
@@ -127,24 +127,26 @@ export default function FormularAnafPage({ params }: Props) {
   const hasPdf = !!ngo.formular230PdfUrl;
   const contactEmail = ngo.contactEmail;
   const contactPhone = ngo.contactPhone;
+  const primaryColor = ngo.primaryColor || "#6366f1";
+  const accentColor = ngo.accentColor || "#f59e0b";
 
   // ─── Print view after manual form submit ───────────────────────────
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-background py-8 px-4">
+      <div className="min-h-screen py-8 px-4" style={{ background: `linear-gradient(to bottom, ${primaryColor}08, transparent)` }}>
         <div className="max-w-3xl mx-auto">
           {/* Success banner */}
-          <Card className="mb-6 border-0 shadow-lg bg-gradient-to-r from-emerald-50 to-green-50 print:hidden">
+          <Card className="mb-6 border-0 shadow-lg print:hidden" style={{ background: `linear-gradient(to right, ${primaryColor}10, ${primaryColor}18)` }}>
             <CardContent className="pt-6 pb-6">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100 flex-shrink-0">
-                  <CheckCircle2 className="h-6 w-6 text-green-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-full flex-shrink-0" style={{ backgroundColor: `${primaryColor}15` }}>
+                  <CheckCircle2 className="h-6 w-6" style={{ color: primaryColor }} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-green-900 text-lg">
+                  <h3 className="font-bold text-lg" style={{ color: primaryColor }}>
                     Formularul a fost generat cu succes!
                   </h3>
-                  <p className="text-sm text-green-700">
+                  <p className="text-sm text-muted-foreground">
                     Printeaza-l, semneaza-l si trimite-l catre {ngo.name} prin email sau WhatsApp.
                   </p>
                 </div>
@@ -154,13 +156,13 @@ export default function FormularAnafPage({ params }: Props) {
 
           {/* Action buttons - before form */}
           <div className="flex flex-wrap gap-3 justify-center mb-6 print:hidden">
-            <Button onClick={handlePrint} size="lg" className="h-12 shadow-md">
+            <Button onClick={handlePrint} size="lg" className="h-12 shadow-md text-white" style={{ backgroundColor: primaryColor }}>
               <Printer className="mr-2 h-5 w-5" />
               Printeaza / Descarca PDF
             </Button>
             {contactEmail && (
               <a href={getMailtoUrl(contactEmail, emailSubject, emailBody)}>
-                <Button size="lg" className="h-12 shadow-md bg-blue-600 hover:bg-blue-700">
+                <Button size="lg" className="h-12 shadow-md text-white" style={{ backgroundColor: primaryColor }}>
                   <Mail className="mr-2 h-5 w-5" />
                   Trimite pe Email
                 </Button>
@@ -168,7 +170,7 @@ export default function FormularAnafPage({ params }: Props) {
             )}
             {contactPhone && (
               <a href={getWhatsAppUrl(contactPhone, whatsAppMessage)} target="_blank" rel="noopener noreferrer">
-                <Button size="lg" className="h-12 shadow-md bg-green-600 hover:bg-green-700">
+                <Button size="lg" className="h-12 shadow-md bg-[#25D366] hover:bg-[#1DA851]">
                   <WhatsAppIcon className="mr-2 h-5 w-5" />
                   Trimite pe WhatsApp
                 </Button>
@@ -229,32 +231,32 @@ export default function FormularAnafPage({ params }: Props) {
           </div>
 
           {/* How to send instructions */}
-          <Card className="mt-6 border-0 shadow-lg bg-gradient-to-r from-blue-50 to-indigo-50 print:hidden">
+          <Card className="mt-6 border-0 shadow-lg print:hidden" style={{ background: `linear-gradient(to right, ${primaryColor}10, ${primaryColor}18)` }}>
             <CardContent className="pt-6 pb-6">
-              <h3 className="font-bold text-blue-900 text-base mb-4 flex items-center gap-2">
-                <Send className="h-5 w-5 text-blue-600" />
+              <h3 className="font-bold text-base mb-4 flex items-center gap-2" style={{ color: primaryColor }}>
+                <Send className="h-5 w-5" style={{ color: primaryColor }} />
                 Cum trimiti formularul completat
               </h3>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="flex gap-3 items-start">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex-shrink-0">1</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full font-bold text-sm flex-shrink-0" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>1</div>
                   <div>
-                    <p className="text-sm font-semibold text-blue-900">Printeaza</p>
-                    <p className="text-xs text-blue-600">Apasa butonul de printare sau salveaza ca PDF</p>
+                    <p className="text-sm font-semibold" style={{ color: primaryColor }}>Printeaza</p>
+                    <p className="text-xs text-muted-foreground">Apasa butonul de printare sau salveaza ca PDF</p>
                   </div>
                 </div>
                 <div className="flex gap-3 items-start">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex-shrink-0">2</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full font-bold text-sm flex-shrink-0" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>2</div>
                   <div>
-                    <p className="text-sm font-semibold text-blue-900">Semneaza</p>
-                    <p className="text-xs text-blue-600">Semneaza formularul olograf (de mana)</p>
+                    <p className="text-sm font-semibold" style={{ color: primaryColor }}>Semneaza</p>
+                    <p className="text-xs text-muted-foreground">Semneaza formularul olograf (de mana)</p>
                   </div>
                 </div>
                 <div className="flex gap-3 items-start">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-sm flex-shrink-0">3</div>
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full font-bold text-sm flex-shrink-0" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>3</div>
                   <div>
-                    <p className="text-sm font-semibold text-blue-900">Trimite</p>
-                    <p className="text-xs text-blue-600">
+                    <p className="text-sm font-semibold" style={{ color: primaryColor }}>Trimite</p>
+                    <p className="text-xs text-muted-foreground">
                       {contactEmail && contactPhone
                         ? "Trimite pe email sau WhatsApp folosind butoanele de mai sus"
                         : contactEmail
@@ -267,8 +269,8 @@ export default function FormularAnafPage({ params }: Props) {
                 </div>
               </div>
               {(contactEmail || contactPhone) && (
-                <div className="mt-4 p-3 bg-white/60 rounded-xl border border-blue-100">
-                  <p className="text-xs text-blue-700">
+                <div className="mt-4 p-3 bg-white/60 rounded-xl" style={{ border: `1px solid ${primaryColor}22` }}>
+                  <p className="text-xs text-muted-foreground">
                     <strong>Poti trimite:</strong> PDF-ul salvat, o fotografie/scan al formularului semnat,
                     sau orice alt format de imagine. Atasaza fisierul la email sau trimite-l direct pe WhatsApp.
                   </p>
@@ -296,7 +298,7 @@ export default function FormularAnafPage({ params }: Props) {
 
   // ─── Main page ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-background to-background">
+    <div className="min-h-screen" style={{ background: `linear-gradient(to bottom, ${primaryColor}08, transparent, transparent)` }}>
       {/* Header bar */}
       <div className="bg-white/80 backdrop-blur-sm border-b sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -318,7 +320,7 @@ export default function FormularAnafPage({ params }: Props) {
 
         {/* ── Hero ────────────────────────────────────────────────── */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg mx-auto">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full shadow-lg mx-auto" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` }}>
             <Heart className="h-8 w-8 text-white" />
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
@@ -348,11 +350,11 @@ export default function FormularAnafPage({ params }: Props) {
         </div>
 
         {/* ── Ce este Formularul 230 ──────────────────────────────── */}
-        <Card className="border-blue-100">
+        <Card style={{ borderColor: `${primaryColor}22` }}>
           <CardContent className="pt-6">
             <div className="flex gap-4">
-              <div className="shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <Info className="h-5 w-5 text-blue-600" />
+              <div className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${primaryColor}15` }}>
+                <Info className="h-5 w-5" style={{ color: primaryColor }} />
               </div>
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">Ce este Formularul 230?</h3>
@@ -393,7 +395,7 @@ export default function FormularAnafPage({ params }: Props) {
         {/* ══════════════════════════════════════════════════════════ */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold text-lg shadow-md flex-shrink-0">1</div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg shadow-md flex-shrink-0" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` }}>1</div>
             <div>
               <h2 className="text-xl font-bold">Completeaza online</h2>
               <p className="text-sm text-muted-foreground">Cel mai rapid - completezi, semnezi electronic si trimiti automat</p>
@@ -402,10 +404,10 @@ export default function FormularAnafPage({ params }: Props) {
 
           {/* Embed from formular230.ro (if configured by NGO) */}
           {hasEmbed ? (
-            <Card className="overflow-hidden shadow-lg border-blue-200">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b">
+            <Card className="overflow-hidden shadow-lg" style={{ borderColor: `${primaryColor}33` }}>
+              <CardHeader style={{ background: `linear-gradient(to right, ${primaryColor}10, ${primaryColor}18)` }} className="border-b">
                 <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-blue-600" />
+                  <FileText className="h-5 w-5" style={{ color: primaryColor }} />
                   Completeaza Formularul 230 Online
                 </CardTitle>
                 <CardDescription>
@@ -421,10 +423,10 @@ export default function FormularAnafPage({ params }: Props) {
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-blue-200 hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-md transition-shadow" style={{ borderColor: `${primaryColor}33` }}>
               <CardContent className="pt-6">
                 <div className="flex flex-col sm:flex-row gap-6 items-center">
-                  <div className="shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                  <div className="shrink-0 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` }}>
                     <Globe className="h-8 w-8 text-white" />
                   </div>
                   <div className="flex-1 text-center sm:text-left space-y-2">
@@ -443,7 +445,8 @@ export default function FormularAnafPage({ params }: Props) {
                     href="https://formular230.ro"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="shrink-0 inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
+                    className="shrink-0 inline-flex items-center gap-2 px-6 py-3 text-white rounded-xl font-semibold transition-all shadow-md hover:shadow-lg"
+                    style={{ background: `linear-gradient(to right, ${primaryColor}, ${primaryColor}dd)` }}
                   >
                     <ExternalLink className="h-4 w-4" />
                     Mergi la formular230.ro
@@ -469,7 +472,7 @@ export default function FormularAnafPage({ params }: Props) {
         {/* ══════════════════════════════════════════════════════════ */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-emerald-600 text-white font-bold text-lg shadow-md flex-shrink-0">2</div>
+            <div className="flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg shadow-md flex-shrink-0" style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)` }}>2</div>
             <div>
               <h2 className="text-xl font-bold">Descarca, completeaza si trimite</h2>
               <p className="text-sm text-muted-foreground">Descarci formularul PDF, il completezi pe hartie, semnezi si il trimiti la asociatie</p>
@@ -479,12 +482,12 @@ export default function FormularAnafPage({ params }: Props) {
           {/* Step-by-step cards */}
           <div className="grid gap-4 sm:grid-cols-3">
             {/* Step 1: Download */}
-            <Card className="border-green-200 hover:shadow-lg transition-all relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-emerald-500"></div>
+            <Card className="hover:shadow-lg transition-all relative overflow-hidden" style={{ borderColor: `${primaryColor}33` }}>
+              <div className="absolute top-0 left-0 right-0 h-1" style={{ background: `linear-gradient(to right, ${primaryColor}, ${primaryColor}88)` }}></div>
               <CardContent className="pt-6 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-green-100 text-green-700 font-bold text-sm">1</div>
-                  <h3 className="font-bold text-green-900">Descarca formularul</h3>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full font-bold text-sm" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>1</div>
+                  <h3 className="font-bold" style={{ color: primaryColor }}>Descarca formularul</h3>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   {hasPdf
@@ -496,7 +499,8 @@ export default function FormularAnafPage({ params }: Props) {
                     href={ngo.formular230PdfUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg text-sm w-full justify-center"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl font-semibold transition-colors shadow-md hover:shadow-lg text-sm w-full justify-center"
+                    style={{ backgroundColor: primaryColor }}
                   >
                     <Download className="h-4 w-4" />
                     Descarca PDF
@@ -506,7 +510,8 @@ export default function FormularAnafPage({ params }: Props) {
                     href="https://static.anaf.ro/static/10/Anaf/Declaratii_R/230.html"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors shadow-md hover:shadow-lg text-sm w-full justify-center"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 text-white rounded-xl font-semibold transition-colors shadow-md hover:shadow-lg text-sm w-full justify-center"
+                    style={{ backgroundColor: primaryColor }}
                   >
                     <Download className="h-4 w-4" />
                     Descarca Formular 230
@@ -516,18 +521,18 @@ export default function FormularAnafPage({ params }: Props) {
             </Card>
 
             {/* Step 2: Complete & Sign */}
-            <Card className="border-amber-200 hover:shadow-lg transition-all relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-orange-500"></div>
+            <Card className="hover:shadow-lg transition-all relative overflow-hidden" style={{ borderColor: `${accentColor}33` }}>
+              <div className="absolute top-0 left-0 right-0 h-1" style={{ background: `linear-gradient(to right, ${accentColor}, ${accentColor}88)` }}></div>
               <CardContent className="pt-6 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-amber-700 font-bold text-sm">2</div>
-                  <h3 className="font-bold text-amber-900">Completeaza si semneaza</h3>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full font-bold text-sm" style={{ backgroundColor: `${accentColor}15`, color: accentColor }}>2</div>
+                  <h3 className="font-bold" style={{ color: accentColor }}>Completeaza si semneaza</h3>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Printeaza formularul, completeaza-l cu datele tale personale si semneaza-l olograf (de mana).
                   Apoi scaneaza-l sau fotografiaza-l.
                 </p>
-                <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 text-xs rounded-lg px-3 py-2" style={{ backgroundColor: `${accentColor}10`, color: accentColor }}>
                   <FileImage className="h-3.5 w-3.5 flex-shrink-0" />
                   <span>Poti trimite scan, fotografie sau PDF - orice format este acceptat</span>
                 </div>
@@ -535,12 +540,12 @@ export default function FormularAnafPage({ params }: Props) {
             </Card>
 
             {/* Step 3: Send */}
-            <Card className="border-blue-200 hover:shadow-lg transition-all relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-indigo-500"></div>
+            <Card className="hover:shadow-lg transition-all relative overflow-hidden" style={{ borderColor: `${primaryColor}33` }}>
+              <div className="absolute top-0 left-0 right-0 h-1" style={{ background: `linear-gradient(to right, ${primaryColor}, ${accentColor})` }}></div>
               <CardContent className="pt-6 space-y-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-sm">3</div>
-                  <h3 className="font-bold text-blue-900">Trimite la asociatie</h3>
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full font-bold text-sm" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>3</div>
+                  <h3 className="font-bold" style={{ color: primaryColor }}>Trimite la asociatie</h3>
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Trimite formularul completat si semnat catre {ngo.name} prin email sau WhatsApp.
@@ -550,7 +555,8 @@ export default function FormularAnafPage({ params }: Props) {
                   {contactEmail && (
                     <a
                       href={getMailtoUrl(contactEmail, emailSubject, emailBody)}
-                      className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-md text-sm w-full justify-center"
+                      className="flex items-center gap-2 px-4 py-2.5 text-white rounded-xl font-semibold transition-colors shadow-md text-sm w-full justify-center"
+                      style={{ backgroundColor: primaryColor }}
                     >
                       <Mail className="h-4 w-4" />
                       Trimite pe Email
@@ -633,9 +639,9 @@ export default function FormularAnafPage({ params }: Props) {
 
           {(!hasEmbed || showManualForm) && (
             <Card className="mt-4 shadow-lg">
-              <CardHeader className="bg-gradient-to-r from-indigo-50 to-purple-50 border-b">
+              <CardHeader style={{ background: `linear-gradient(to right, ${primaryColor}10, ${primaryColor}18)` }} className="border-b">
                 <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-indigo-600" />
+                  <FileText className="h-5 w-5" style={{ color: primaryColor }} />
                   Completeaza Formularul 230 pe site
                 </CardTitle>
                 <CardDescription>
@@ -644,7 +650,7 @@ export default function FormularAnafPage({ params }: Props) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4 pt-6">
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="p-3 rounded-lg" style={{ backgroundColor: `${primaryColor}08`, border: `1px solid ${primaryColor}33` }}>
                   <p className="text-sm font-medium">
                     Organizatia beneficiara: <strong>{ngo.name}</strong>
                   </p>
@@ -753,7 +759,7 @@ export default function FormularAnafPage({ params }: Props) {
                   onClick={handleSubmit}
                   disabled={submitting || !form.firstName || !form.lastName || !form.city || !form.county}
                   size="lg"
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                  style={{ background: `linear-gradient(to right, ${primaryColor}, ${primaryColor}dd)` }}
                 >
                   {submitting ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

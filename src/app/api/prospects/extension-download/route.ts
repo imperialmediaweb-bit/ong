@@ -135,13 +135,8 @@ export async function GET() {
       );
     }
 
-    // Prefix all paths with folder name so unzipping creates a folder
-    const prefixedFiles = files.map((f) => ({
-      path: `binevo-chrome-extension/${f.path}`,
-      data: f.data,
-    }));
-
-    const zipBuffer = createZipBuffer(prefixedFiles);
+    // Keep files at ZIP root so Chrome Web Store can find manifest.json
+    const zipBuffer = createZipBuffer(files);
 
     return new NextResponse(new Uint8Array(zipBuffer), {
       status: 200,

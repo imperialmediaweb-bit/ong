@@ -431,6 +431,34 @@ export default function NewCampaignPage() {
   const estimatedEmailCost = audienceCount && (form.channel === "EMAIL" || form.channel === "BOTH") ? audienceCount : 0;
   const estimatedSmsCost = audienceCount && (form.channel === "SMS" || form.channel === "BOTH") ? audienceCount : 0;
 
+  // Block access if compliance is not complete
+  if (compliance && !compliance.isCompliant) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-3xl font-bold tracking-tight">Campanie noua</h1>
+        </div>
+        <Card className="border-red-200 bg-red-50/50">
+          <CardContent className="p-8 text-center space-y-4">
+            <ShieldAlert className="h-12 w-12 text-red-500 mx-auto" />
+            <h2 className="text-xl font-bold text-red-900">Conformitate incompleta</h2>
+            <p className="text-red-700 max-w-lg mx-auto">
+              Nu puteti crea campanii pana nu acceptati toate acordurile de conformitate
+              (Termeni si Conditii, GDPR si Politica Anti-Spam).
+            </p>
+            <Button onClick={() => router.push("/dashboard/campaigns?tab=compliance")} variant="destructive">
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              Mergi la Conformitate
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
