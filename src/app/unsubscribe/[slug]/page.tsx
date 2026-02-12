@@ -4,7 +4,8 @@ import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Heart } from "lucide-react";
+import { Check } from "lucide-react";
+import { BinevoLogo } from "@/components/BinevoLogo";
 
 interface Props {
   params: { slug: string };
@@ -57,7 +58,9 @@ function UnsubscribeContent({ slug }: { slug: string }) {
   return (
     <Card className="max-w-md w-full">
       <CardHeader className="text-center">
-        <Heart className="h-8 w-8 text-primary mx-auto mb-2" />
+        <div className="flex justify-center mb-2">
+          <BinevoLogo size="md" />
+        </div>
         <CardTitle>Dezabonare</CardTitle>
         <CardDescription>
           Apasa mai jos pentru a nu mai primi mesaje de la aceasta organizatie.

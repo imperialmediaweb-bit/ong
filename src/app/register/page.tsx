@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Heart } from "lucide-react";
+import { BinevoLogo } from "@/components/BinevoLogo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,7 +47,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-2">
-            <Heart className="h-8 w-8 text-primary" />
+            <BinevoLogo size="lg" />
           </div>
           <CardTitle>Inregistreaza ONG-ul</CardTitle>
           <CardDescription>Creeaza un cont pentru a gestiona donatorii si campaniile</CardDescription>

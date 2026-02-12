@@ -80,7 +80,7 @@ export function Sidebar() {
       <div className="flex items-center gap-3 px-5 py-5 border-b">
         <BinevoLogo size="sm" showText={false} />
         <div className="min-w-0">
-          <h1 className="text-base font-bold tracking-tight bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">Binevo</h1>
+          <h1 className="text-base font-bold tracking-tight bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 bg-clip-text text-transparent">Binevo</h1>
           <p className="text-[11px] text-muted-foreground truncate max-w-[150px]">
             {(session?.user as any)?.ngoName || "Platforma CRM"}
           </p>
