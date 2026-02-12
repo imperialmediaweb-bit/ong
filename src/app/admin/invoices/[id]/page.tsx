@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Receipt, ArrowLeft, Loader2, Printer, CheckCircle2,
+  Receipt, ArrowLeft, Loader2, Printer, CheckCircle2, Mail,
   Send, FileText, XCircle, Clock, AlertCircle, Trash2, Upload, RefreshCw,
 } from "lucide-react";
 import Link from "next/link";
@@ -83,6 +83,8 @@ export default function InvoiceDetailPage() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailMsg, setEmailMsg] = useState("");
   const [eFacturaLoading, setEFacturaLoading] = useState(false);
   const [eFacturaMsg, setEFacturaMsg] = useState("");
 
@@ -138,6 +140,27 @@ export default function InvoiceDetailPage() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleSendEmail = async () => {
+    setSendingEmail(true);
+    setEmailMsg("");
+    try {
+      const res = await fetch(`/api/admin/invoices/${params.id}/send-email`, {
+        method: "POST",
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEmailMsg(`Eroare: ${data.error}`);
+      } else {
+        setEmailMsg(data.message);
+        fetchInvoice();
+      }
+    } catch {
+      setEmailMsg("Eroare la trimiterea emailului");
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const handleEFactura = async (action: "generate" | "upload" | "check") => {
@@ -225,6 +248,12 @@ export default function InvoiceDetailPage() {
           <Button variant="outline" size="sm" onClick={handlePrint}>
             <Printer className="h-4 w-4 mr-2" /> Printeaza
           </Button>
+          {invoice.status !== "CANCELLED" && invoice.status !== "STORNO" && (
+            <Button size="sm" variant="outline" className="text-purple-700 border-purple-200 hover:bg-purple-50" onClick={handleSendEmail} disabled={sendingEmail}>
+              {sendingEmail ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
+              {sendingEmail ? "Se trimite..." : "Trimite pe email"}
+            </Button>
+          )}
           {invoice.status === "DRAFT" && (
             <>
               <Button size="sm" onClick={() => updateStatus("ISSUED")} disabled={updating}>
@@ -234,11 +263,6 @@ export default function InvoiceDetailPage() {
                 <Trash2 className="h-4 w-4 mr-2" /> Sterge
               </Button>
             </>
-          )}
-          {invoice.status === "ISSUED" && (
-            <Button size="sm" onClick={() => updateStatus("SENT")} disabled={updating}>
-              <Send className="h-4 w-4 mr-2" /> Marcheaza trimisa
-            </Button>
           )}
           {(invoice.status === "ISSUED" || invoice.status === "SENT" || invoice.status === "OVERDUE") && (
             <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={() => updateStatus("PAID")} disabled={updating}>
@@ -330,6 +354,11 @@ export default function InvoiceDetailPage() {
         </CardContent>
       </Card>
 
+      {emailMsg && (
+        <div className={`p-3 rounded-md text-sm print:hidden ${emailMsg.startsWith("Eroare") ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}>
+          {emailMsg}
+        </div>
+      )}
       {error && <div className="bg-red-50 text-red-700 p-3 rounded-md text-sm print:hidden">{error}</div>}
 
       {/* Invoice Document */}
