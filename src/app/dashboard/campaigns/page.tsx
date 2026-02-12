@@ -228,12 +228,13 @@ export default function CampaignsPage() {
         throw new Error(data.error || "Eroare la achizitie");
       }
       const data = await res.json();
-      setEmailCredits(data.emailCredits);
-      setSmsCredits(data.smsCredits);
-      await fetchCredits(); // Refresh transactions
+      // Redirect to invoice payment page
+      if (data.paymentUrl) {
+        window.location.href = data.paymentUrl;
+        return;
+      }
     } catch (err: any) {
       setError(err.message);
-    } finally {
       setPurchasing(null);
     }
   };
@@ -641,14 +642,19 @@ h2{font-size:16px;margin-top:30px;border-bottom:2px solid #333;padding-bottom:5p
                       size="sm"
                       variant={pkg.popular ? "default" : "outline"}
                       onClick={() => handlePurchase(pkg.id)}
-                      disabled={purchasing === pkg.id}
+                      disabled={!!purchasing}
                     >
                       {purchasing === pkg.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                          Se genereaza factura...
+                        </>
                       ) : (
-                        <CreditCard className="h-4 w-4 mr-1" />
+                        <>
+                          <CreditCard className="h-4 w-4 mr-1" />
+                          Cumpara - {pkg.price} RON
+                        </>
                       )}
-                      Achizitioneaza
                     </Button>
                   </CardContent>
                 </Card>

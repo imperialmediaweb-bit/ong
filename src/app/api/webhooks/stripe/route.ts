@@ -6,7 +6,7 @@ import {
   paymentFailedEmail,
   subscriptionExpiredEmail,
 } from "@/lib/subscription-emails";
-import { markInvoicePaid } from "@/lib/invoice-generator";
+import { markInvoicePaid, fulfillCreditPurchase } from "@/lib/invoice-generator";
 
 const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://binevo.ro";
 
@@ -38,6 +38,13 @@ export async function POST(req: NextRequest) {
             paymentMethod: "card",
             stripePaymentIntentId: session.payment_intent,
           });
+
+          // Fulfill credit purchase if this is a credit invoice
+          const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
+          const meta = typeof invoice?.metadata === "object" && invoice?.metadata !== null ? invoice.metadata as any : {};
+          if (meta.type === "credit_purchase") {
+            await fulfillCreditPurchase(invoiceId);
+          }
 
           // Save card for future recurring if customer consented
           if (session.customer && ngoId) {

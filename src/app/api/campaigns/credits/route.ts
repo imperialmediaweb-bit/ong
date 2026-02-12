@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { CREDIT_PACKAGES } from "@/lib/campaign-templates";
+import { createCreditInvoice } from "@/lib/invoice-generator";
 
 // GET - get credit balance and packages
 export async function GET() {
@@ -40,7 +41,7 @@ export async function GET() {
   }
 }
 
-// POST - purchase credit package (simulate - in production would use Stripe)
+// POST - purchase credit package (creates invoice + returns payment URL)
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -59,61 +60,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Pachet invalid" }, { status: 400 });
     }
 
-    // Get current balance
-    const ngo = await prisma.ngo.findUnique({
-      where: { id: ngoId },
-      select: { emailCredits: true, smsCredits: true },
+    // Create invoice for this credit package
+    const invoiceResult = await createCreditInvoice({
+      ngoId,
+      packageId: pkg.id,
+      packageName: pkg.name,
+      emailCredits: pkg.emailCredits,
+      smsCredits: pkg.smsCredits,
+      price: pkg.price,
     });
 
-    const currentEmail = ngo?.emailCredits ?? 0;
-    const currentSms = ngo?.smsCredits ?? 0;
-
-    // Update credits
-    const updatedNgo = await prisma.ngo.update({
-      where: { id: ngoId },
-      data: {
-        emailCredits: currentEmail + pkg.emailCredits,
-        smsCredits: currentSms + pkg.smsCredits,
-      },
-    });
-
-    // Log transactions
-    const transactions = [];
-    if (pkg.emailCredits > 0) {
-      transactions.push(
-        prisma.creditTransaction.create({
-          data: {
-            ngoId,
-            type: "PURCHASE",
-            channel: "EMAIL",
-            amount: pkg.emailCredits,
-            balance: updatedNgo.emailCredits,
-            description: `Pachet: ${pkg.name} (${pkg.emailCredits} emailuri)`,
-          },
-        })
+    if (!invoiceResult) {
+      return NextResponse.json(
+        { error: "Eroare la generarea facturii. Verificati datele de facturare ale organizatiei." },
+        { status: 500 }
       );
     }
-    if (pkg.smsCredits > 0) {
-      transactions.push(
-        prisma.creditTransaction.create({
-          data: {
-            ngoId,
-            type: "PURCHASE",
-            channel: "SMS",
-            amount: pkg.smsCredits,
-            balance: updatedNgo.smsCredits,
-            description: `Pachet: ${pkg.name} (${pkg.smsCredits} SMS-uri)`,
-          },
-        })
-      );
-    }
-
-    await Promise.all(transactions);
 
     return NextResponse.json({
-      message: "Credite adaugate cu succes!",
-      emailCredits: updatedNgo.emailCredits,
-      smsCredits: updatedNgo.smsCredits,
+      message: "Factura creata. Redirectionare catre plata...",
+      paymentUrl: invoiceResult.paymentUrl,
+      paymentToken: invoiceResult.paymentToken,
+      invoiceId: invoiceResult.invoiceId,
     });
   } catch (error: any) {
     console.error("Error purchasing credits:", error);
