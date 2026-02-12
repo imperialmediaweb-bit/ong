@@ -1,30 +1,16 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  FileText, Printer, CheckCircle2, Heart, Loader2, ArrowLeft, Shield,
-  Download, Info, Mail, ChevronDown, ChevronUp, Users, Calendar,
-  BadgeCheck, ExternalLink, Globe, MessageCircle, Phone, Send,
-  Smartphone, FileImage, ArrowRight
+  FileText, Heart, Loader2, ArrowLeft, Shield,
+  Download, Info, Mail, BadgeCheck, ExternalLink, Globe,
+  Phone, Calendar, Users, FileImage, Send
 } from "lucide-react";
 
 interface Props {
   params: { slug: string };
 }
-
-const COUNTIES = [
-  "Alba", "Arad", "Arges", "Bacau", "Bihor", "Bistrita-Nasaud", "Botosani",
-  "Braila", "Brasov", "Bucuresti", "Buzau", "Calarasi", "Caras-Severin", "Cluj",
-  "Constanta", "Covasna", "Dambovita", "Dolj", "Galati", "Giurgiu", "Gorj",
-  "Harghita", "Hunedoara", "Ialomita", "Iasi", "Ilfov", "Maramures", "Mehedinti",
-  "Mures", "Neamt", "Olt", "Prahova", "Salaj", "Satu Mare", "Sibiu", "Suceava",
-  "Teleorman", "Timis", "Tulcea", "Vaslui", "Valcea", "Vrancea",
-];
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -37,28 +23,6 @@ function WhatsAppIcon({ className }: { className?: string }) {
 export default function FormularAnafPage({ params }: Props) {
   const [ngo, setNgo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [showManualForm, setShowManualForm] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
-
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    cnp: "",
-    street: "",
-    number: "",
-    block: "",
-    staircase: "",
-    floor: "",
-    apartment: "",
-    city: "",
-    county: "",
-    postalCode: "",
-    phone: "",
-    email: "",
-    taxYear: new Date().getFullYear(),
-  });
 
   useEffect(() => {
     fetch(`/api/public/ngo/${params.slug}`)
@@ -69,27 +33,6 @@ export default function FormularAnafPage({ params }: Props) {
       })
       .catch(() => setLoading(false));
   }, [params.slug]);
-
-  const handleSubmit = async () => {
-    if (!form.firstName || !form.lastName || !form.city || !form.county) return;
-    setSubmitting(true);
-    try {
-      await fetch(`/api/public/formular-230/${params.slug}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      setSubmitted(true);
-    } catch {
-      setSubmitted(true);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
 
   const getWhatsAppUrl = (phone: string, message: string) => {
     const cleanPhone = phone.replace(/[^0-9+]/g, "").replace(/^0/, "40");
@@ -130,173 +73,6 @@ export default function FormularAnafPage({ params }: Props) {
   const primaryColor = ngo.primaryColor || "#6366f1";
   const accentColor = ngo.accentColor || "#f59e0b";
 
-  // ─── Print view after manual form submit ───────────────────────────
-  if (submitted) {
-    return (
-      <div className="min-h-screen py-8 px-4" style={{ background: `linear-gradient(to bottom, ${primaryColor}08, transparent)` }}>
-        <div className="max-w-3xl mx-auto">
-          {/* Success banner */}
-          <Card className="mb-6 border-0 shadow-lg print:hidden" style={{ background: `linear-gradient(to right, ${primaryColor}10, ${primaryColor}18)` }}>
-            <CardContent className="pt-6 pb-6">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full flex-shrink-0" style={{ backgroundColor: `${primaryColor}15` }}>
-                  <CheckCircle2 className="h-6 w-6" style={{ color: primaryColor }} />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg" style={{ color: primaryColor }}>
-                    Formularul a fost generat cu succes!
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Printeaza-l, semneaza-l si trimite-l catre {ngo.name} prin email sau WhatsApp.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Action buttons - before form */}
-          <div className="flex flex-wrap gap-3 justify-center mb-6 print:hidden">
-            <Button onClick={handlePrint} size="lg" className="h-12 shadow-md text-white" style={{ backgroundColor: primaryColor }}>
-              <Printer className="mr-2 h-5 w-5" />
-              Printeaza / Descarca PDF
-            </Button>
-            {contactEmail && (
-              <a href={getMailtoUrl(contactEmail, emailSubject, emailBody)}>
-                <Button size="lg" className="h-12 shadow-md text-white" style={{ backgroundColor: primaryColor }}>
-                  <Mail className="mr-2 h-5 w-5" />
-                  Trimite pe Email
-                </Button>
-              </a>
-            )}
-            {contactPhone && (
-              <a href={getWhatsAppUrl(contactPhone, whatsAppMessage)} target="_blank" rel="noopener noreferrer">
-                <Button size="lg" className="h-12 shadow-md bg-[#25D366] hover:bg-[#1DA851]">
-                  <WhatsAppIcon className="mr-2 h-5 w-5" />
-                  Trimite pe WhatsApp
-                </Button>
-              </a>
-            )}
-          </div>
-
-          {/* Printable form */}
-          <div ref={printRef} className="print:block">
-            <div className="border-2 border-black p-8 bg-white text-black print:border-0">
-              <div className="text-center mb-6">
-                <h1 className="text-xl font-bold">CERERE PRIVIND DESTINATIA SUMEI REPREZENTAND</h1>
-                <h2 className="text-lg font-bold">PANA LA 3,5% DIN IMPOZITUL ANUAL DATORAT</h2>
-                <p className="text-sm mt-2">Formular 230 - Anul fiscal {form.taxYear}</p>
-              </div>
-              <div className="space-y-4 text-sm">
-                <div className="border p-3">
-                  <h3 className="font-bold mb-2">I. DATE DE IDENTIFICARE ALE CONTRIBUABILULUI</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    <p><strong>Nume:</strong> {form.lastName}</p>
-                    <p><strong>Prenume:</strong> {form.firstName}</p>
-                    <p><strong>CNP:</strong> {form.cnp || "_______________"}</p>
-                    <p><strong>Telefon:</strong> {form.phone || "-"}</p>
-                  </div>
-                  <div className="mt-2">
-                    <p>
-                      <strong>Adresa:</strong> Str. {form.street || "___"} Nr. {form.number || "___"}{" "}
-                      Bl. {form.block || "___"} Sc. {form.staircase || "___"}{" "}
-                      Et. {form.floor || "___"} Ap. {form.apartment || "___"}
-                    </p>
-                    <p>
-                      <strong>Localitate:</strong> {form.city}{" "}
-                      <strong>Judet:</strong> {form.county}{" "}
-                      <strong>Cod postal:</strong> {form.postalCode || "___"}
-                    </p>
-                    <p><strong>E-mail:</strong> {form.email || "-"}</p>
-                  </div>
-                </div>
-                <div className="border p-3">
-                  <h3 className="font-bold mb-2">II. DESTINATIA SUMEI REPREZENTAND PANA LA 3,5% DIN IMPOZITUL ANUAL</h3>
-                  <p className="mb-2">Solicit directionarea sumei reprezentand <strong>3,5%</strong> din impozitul anual datorat catre:</p>
-                  <div className="grid grid-cols-2 gap-2 bg-gray-50 p-2 rounded">
-                    <p><strong>Entitate nonprofit:</strong> {ngo.name}</p>
-                    <p><strong>Cod fiscal:</strong> {ngo.cui || "________________"}</p>
-                    <p className="col-span-2"><strong>Cont bancar (IBAN):</strong> {ngo.iban || "________________________________"}</p>
-                  </div>
-                </div>
-                <div className="border p-3">
-                  <h3 className="font-bold mb-2">III. DATE PRIVIND OBLIGATIA ANUALA DE PLATA A IMPOZITULUI PE VENIT</h3>
-                  <p>Anul fiscal: <strong>{form.taxYear}</strong></p>
-                </div>
-                <div className="mt-8 flex justify-between">
-                  <p className="mb-8">Data: ___/___/______</p>
-                  <p className="mb-8">Semnatura contribuabilului:</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* How to send instructions */}
-          <Card className="mt-6 border-0 shadow-lg print:hidden" style={{ background: `linear-gradient(to right, ${primaryColor}10, ${primaryColor}18)` }}>
-            <CardContent className="pt-6 pb-6">
-              <h3 className="font-bold text-base mb-4 flex items-center gap-2" style={{ color: primaryColor }}>
-                <Send className="h-5 w-5" style={{ color: primaryColor }} />
-                Cum trimiti formularul completat
-              </h3>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="flex gap-3 items-start">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full font-bold text-sm flex-shrink-0" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>1</div>
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: primaryColor }}>Printeaza</p>
-                    <p className="text-xs text-muted-foreground">Apasa butonul de printare sau salveaza ca PDF</p>
-                  </div>
-                </div>
-                <div className="flex gap-3 items-start">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full font-bold text-sm flex-shrink-0" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>2</div>
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: primaryColor }}>Semneaza</p>
-                    <p className="text-xs text-muted-foreground">Semneaza formularul olograf (de mana)</p>
-                  </div>
-                </div>
-                <div className="flex gap-3 items-start">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full font-bold text-sm flex-shrink-0" style={{ backgroundColor: `${primaryColor}15`, color: primaryColor }}>3</div>
-                  <div>
-                    <p className="text-sm font-semibold" style={{ color: primaryColor }}>Trimite</p>
-                    <p className="text-xs text-muted-foreground">
-                      {contactEmail && contactPhone
-                        ? "Trimite pe email sau WhatsApp folosind butoanele de mai sus"
-                        : contactEmail
-                          ? "Trimite pe email folosind butonul de mai sus"
-                          : contactPhone
-                            ? "Trimite pe WhatsApp folosind butonul de mai sus"
-                            : "Trimite formularul la asociatie"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              {(contactEmail || contactPhone) && (
-                <div className="mt-4 p-3 bg-white/60 rounded-xl" style={{ border: `1px solid ${primaryColor}22` }}>
-                  <p className="text-xs text-muted-foreground">
-                    <strong>Poti trimite:</strong> PDF-ul salvat, o fotografie/scan al formularului semnat,
-                    sau orice alt format de imagine. Atasaza fisierul la email sau trimite-l direct pe WhatsApp.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Bottom buttons */}
-          <div className="mt-6 flex flex-wrap gap-3 justify-center print:hidden">
-            <Button variant="outline" onClick={() => setSubmitted(false)} size="lg" className="h-11">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Completeaza din nou
-            </Button>
-            <a href={`/s/${params.slug}`}>
-              <Button variant="outline" size="lg" className="h-11">
-                Inapoi la {ngo.name}
-              </Button>
-            </a>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ─── Main page ──────────────────────────────────────────────────────
   return (
     <div className="min-h-screen" style={{ background: `linear-gradient(to bottom, ${primaryColor}08, transparent, transparent)` }}>
       {/* Header bar */}
@@ -318,7 +94,7 @@ export default function FormularAnafPage({ params }: Props) {
 
       <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
 
-        {/* ── Hero ────────────────────────────────────────────────── */}
+        {/* Hero */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full shadow-lg mx-auto" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` }}>
             <Heart className="h-8 w-8 text-white" />
@@ -349,7 +125,7 @@ export default function FormularAnafPage({ params }: Props) {
           </div>
         </div>
 
-        {/* ── Ce este Formularul 230 ──────────────────────────────── */}
+        {/* Ce este Formularul 230 */}
         <Card style={{ borderColor: `${primaryColor}22` }}>
           <CardContent className="pt-6">
             <div className="flex gap-4">
@@ -384,15 +160,13 @@ export default function FormularAnafPage({ params }: Props) {
           </CardContent>
         </Card>
 
-        {/* ── How it works - 2 options ────────────────────────────── */}
+        {/* How it works - 2 options */}
         <div className="text-center space-y-2">
           <h2 className="text-xl font-bold">Alege cum vrei sa completezi</h2>
           <p className="text-sm text-muted-foreground">Ai doua variante simple - online sau pe hartie</p>
         </div>
 
-        {/* ══════════════════════════════════════════════════════════ */}
-        {/* ── VARIANTA 1: ONLINE ─────────────────────────────────── */}
-        {/* ══════════════════════════════════════════════════════════ */}
+        {/* VARIANTA 1: ONLINE */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg shadow-md flex-shrink-0" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)` }}>1</div>
@@ -402,7 +176,6 @@ export default function FormularAnafPage({ params }: Props) {
             </div>
           </div>
 
-          {/* Embed from formular230.ro (if configured by NGO) */}
           {hasEmbed ? (
             <Card className="overflow-hidden shadow-lg" style={{ borderColor: `${primaryColor}33` }}>
               <CardHeader style={{ background: `linear-gradient(to right, ${primaryColor}10, ${primaryColor}18)` }} className="border-b">
@@ -437,7 +210,7 @@ export default function FormularAnafPage({ params }: Props) {
                       Semnezi electronic si trimiti direct de pe telefon sau calculator.
                     </p>
                     <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 rounded-lg px-3 py-1.5 w-fit">
-                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      <BadgeCheck className="h-3.5 w-3.5" />
                       Se trimite automat la ANAF - nu mai trebuie sa faci nimic!
                     </div>
                   </div>
@@ -457,7 +230,7 @@ export default function FormularAnafPage({ params }: Props) {
           )}
         </div>
 
-        {/* ── Separator ──────────────────────────────────────────── */}
+        {/* Separator */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-200"></div>
@@ -467,9 +240,7 @@ export default function FormularAnafPage({ params }: Props) {
           </div>
         </div>
 
-        {/* ══════════════════════════════════════════════════════════ */}
-        {/* ── VARIANTA 2: DESCARCA + TRIMITE ─────────────────────── */}
-        {/* ══════════════════════════════════════════════════════════ */}
+        {/* VARIANTA 2: DESCARCA + TRIMITE */}
         <div className="space-y-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full text-white font-bold text-lg shadow-md flex-shrink-0" style={{ background: `linear-gradient(135deg, ${accentColor}, ${accentColor}dd)` }}>2</div>
@@ -607,173 +378,7 @@ export default function FormularAnafPage({ params }: Props) {
           )}
         </div>
 
-        {/* ── Manual Form (collapsible if embed exists) ───────────── */}
-        <div>
-          {hasEmbed ? (
-            <button
-              onClick={() => setShowManualForm(!showManualForm)}
-              className="w-full flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {showManualForm ? (
-                <>
-                  <ChevronUp className="h-4 w-4" />
-                  Ascunde formularul manual
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-4 w-4" />
-                  Sau completeaza formularul manual direct pe site (pentru printare)
-                </>
-              )}
-            </button>
-          ) : (
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center">
-                <span className="bg-gradient-to-b from-background to-background px-4 text-sm text-muted-foreground font-medium">sau completeaza direct pe site</span>
-              </div>
-            </div>
-          )}
-
-          {(!hasEmbed || showManualForm) && (
-            <Card className="mt-4 shadow-lg">
-              <CardHeader style={{ background: `linear-gradient(to right, ${primaryColor}10, ${primaryColor}18)` }} className="border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" style={{ color: primaryColor }} />
-                  Completeaza Formularul 230 pe site
-                </CardTitle>
-                <CardDescription>
-                  Completeaza datele tale mai jos si genereaza formularul pre-completat.
-                  Dupa generare, il poti printa, semna si trimite la {ngo.name} prin email sau WhatsApp.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 pt-6">
-                <div className="p-3 rounded-lg" style={{ backgroundColor: `${primaryColor}08`, border: `1px solid ${primaryColor}33` }}>
-                  <p className="text-sm font-medium">
-                    Organizatia beneficiara: <strong>{ngo.name}</strong>
-                  </p>
-                  {ngo.cui && <p className="text-xs text-muted-foreground">CUI/CIF: {ngo.cui}</p>}
-                  {ngo.iban && <p className="text-xs text-muted-foreground">IBAN: {ngo.iban}</p>}
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="lastName">Nume *</Label>
-                    <Input id="lastName" value={form.lastName} onChange={(e) => setForm({ ...form, lastName: e.target.value })} placeholder="Popescu" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="firstName">Prenume *</Label>
-                    <Input id="firstName" value={form.firstName} onChange={(e) => setForm({ ...form, firstName: e.target.value })} placeholder="Ion" />
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="cnp">CNP (optional)</Label>
-                  <Input id="cnp" value={form.cnp} onChange={(e) => setForm({ ...form, cnp: e.target.value })} placeholder="1234567890123" maxLength={13} />
-                  <p className="text-xs text-muted-foreground">CNP-ul este optional dar recomandat pentru procesarea mai rapida.</p>
-                </div>
-
-                <div className="border-t pt-4">
-                  <h4 className="font-medium mb-3">Adresa de domiciliu</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2 col-span-2">
-                      <Label htmlFor="street">Strada</Label>
-                      <Input id="street" value={form.street} onChange={(e) => setForm({ ...form, street: e.target.value })} placeholder="Str. Principala" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="nr">Numar</Label>
-                      <Input id="nr" value={form.number} onChange={(e) => setForm({ ...form, number: e.target.value })} placeholder="10" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="block">Bloc</Label>
-                      <Input id="block" value={form.block} onChange={(e) => setForm({ ...form, block: e.target.value })} placeholder="A1" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="staircase">Scara</Label>
-                      <Input id="staircase" value={form.staircase} onChange={(e) => setForm({ ...form, staircase: e.target.value })} placeholder="B" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="floor">Etaj</Label>
-                      <Input id="floor" value={form.floor} onChange={(e) => setForm({ ...form, floor: e.target.value })} placeholder="3" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="apartment">Apartament</Label>
-                      <Input id="apartment" value={form.apartment} onChange={(e) => setForm({ ...form, apartment: e.target.value })} placeholder="15" />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="postalCode">Cod postal</Label>
-                      <Input id="postalCode" value={form.postalCode} onChange={(e) => setForm({ ...form, postalCode: e.target.value })} placeholder="010101" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="city">Localitate *</Label>
-                    <Input id="city" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Bucuresti" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="county">Judet *</Label>
-                    <Select value={form.county || undefined} onValueChange={(v) => setForm({ ...form, county: v })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecteaza judetul" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {COUNTIES.map((c) => (
-                          <SelectItem key={c} value={c}>{c}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="phone">Telefon</Label>
-                    <Input id="phone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="07xx xxx xxx" />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="ion@exemplu.ro" />
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="taxYear">Anul fiscal</Label>
-                  <Select value={String(form.taxYear)} onValueChange={(v) => setForm({ ...form, taxYear: parseInt(v) })}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[new Date().getFullYear(), new Date().getFullYear() - 1].map((y) => (
-                        <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-              <CardFooter className="border-t pt-6 flex gap-3">
-                <Button
-                  onClick={handleSubmit}
-                  disabled={submitting || !form.firstName || !form.lastName || !form.city || !form.county}
-                  size="lg"
-                  style={{ background: `linear-gradient(to right, ${primaryColor}, ${primaryColor}dd)` }}
-                >
-                  {submitting ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <FileText className="mr-2 h-4 w-4" />
-                  )}
-                  Genereaza formularul
-                </Button>
-              </CardFooter>
-            </Card>
-          )}
-        </div>
-
-        {/* ── Trust footer ────────────────────────────────────────── */}
+        {/* Trust footer */}
         <div className="text-center space-y-3 pb-8">
           {hasEmbed && (
             <p className="text-xs text-muted-foreground">
@@ -781,8 +386,8 @@ export default function FormularAnafPage({ params }: Props) {
             </p>
           )}
           <p className="text-xs text-muted-foreground">
-            Datele tale sunt folosite exclusiv pentru completarea Formularului 230
-            si nu sunt partajate cu terti.
+            Nu colectam date personale pe acest site. Formularul se completeaza
+            direct pe formular230.ro sau pe hartie.
           </p>
           <a
             href={`/s/${params.slug}`}
