@@ -164,6 +164,18 @@ model Ngo {
   emailTemplates    EmailTemplate[]
   smsTemplates      SmsTemplate[]
 
+  // Billing details (for invoice generation)
+  billingName         String?     // Denumire pe factura
+  billingCui          String?     // CUI pe factura
+  billingRegCom       String?     // Nr. Reg. Com.
+  billingAddress      String?     // Adresa facturare
+  billingCity         String?     // Oras facturare
+  billingCounty       String?     // Judet facturare
+  billingEmail        String?     // Email facturare
+  billingPhone        String?     // Telefon facturare
+  paymentMethod       String?     @default("invoice") // "recurring_card", "invoice" (manual)
+  stripePaymentMethodId String?   // Saved card for recurring
+
   // Legal compliance
   tosAcceptedAt       DateTime?
   gdprAcceptedAt      DateTime?
@@ -1509,6 +1521,17 @@ model Invoice {
   paidAt            DateTime?
   paymentMethod     String?       // stripe, bank_transfer, cash
 
+  // Public payment link
+  paymentToken      String?       @unique  // unique token for public payment page
+  paymentProofUrl   String?       // uploaded proof of bank transfer
+  paymentProofNote  String?       // note from payer about the payment
+  stripePaymentIntentId String?   // Stripe payment intent for card payments
+
+  // Subscription link
+  subscriptionPlan  String?       // PRO, ELITE - which plan this invoice is for
+  subscriptionMonth String?       // e.g. "2026-02" - billing period
+  isRecurring       Boolean       @default(false) // part of recurring billing
+
   // Notes
   notes             String?
   internalNotes     String?
@@ -1522,6 +1545,7 @@ model Invoice {
   @@index([status])
   @@index([issueDate])
   @@index([invoiceNumber])
+  @@index([paymentToken])
 }
 
 enum InvoiceStatus {

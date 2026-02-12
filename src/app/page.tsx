@@ -37,6 +37,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BinevoLogo } from "@/components/BinevoLogo";
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("ro-RO", { style: "currency", currency: "RON" }).format(amount);
@@ -107,11 +108,8 @@ export default async function HomePage() {
       {/* ─── HEADER / NAV ────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-md">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <Heart className="h-7 w-7 text-indigo-600" />
-            <span className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Binevo
-            </span>
+          <Link href="/" className="flex items-center">
+            <BinevoLogo size="md" />
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
             <Link href="/ong" className="hover:text-indigo-600 transition-colors">ONG-uri</Link>
@@ -826,12 +824,16 @@ export default async function HomePage() {
                     ))}
                   </ul>
                 </CardContent>
-                <CardFooter>
-                  <Link href="/register" className="w-full">
+                <CardFooter className="flex-col gap-2">
+                  <Link href="/checkout?plan=PRO" className="w-full">
                     <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" size="lg">
-                      Incepe acum
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Aboneaza-te acum
                     </Button>
                   </Link>
+                  <p className="text-xs text-gray-400 text-center">
+                    Plata recurenta sau factura cu termen de plata
+                  </p>
                 </CardFooter>
               </Card>
 
@@ -868,12 +870,16 @@ export default async function HomePage() {
                     ))}
                   </ul>
                 </CardContent>
-                <CardFooter>
-                  <Link href="/register" className="w-full">
+                <CardFooter className="flex-col gap-2">
+                  <Link href="/checkout?plan=ELITE" className="w-full">
                     <Button variant="outline" className="w-full border-purple-300 text-purple-700 hover:bg-purple-50" size="lg">
-                      Incepe acum
+                      <CreditCard className="h-4 w-4 mr-2" />
+                      Aboneaza-te acum
                     </Button>
                   </Link>
+                  <p className="text-xs text-gray-400 text-center">
+                    Plata recurenta sau factura cu termen de plata
+                  </p>
                 </CardFooter>
               </Card>
             </div>
@@ -984,9 +990,8 @@ export default async function HomePage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
             {/* Col 1 - Brand */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Heart className="h-6 w-6 text-indigo-400" />
-                <span className="text-lg font-bold text-white">Binevo</span>
+              <div className="mb-4">
+                <BinevoLogo size="md" textColor="text-white" />
               </div>
               <p className="text-sm text-gray-400 mb-6 leading-relaxed">
                 Platforma completa pentru gestionarea ONG-urilor din Romania.
