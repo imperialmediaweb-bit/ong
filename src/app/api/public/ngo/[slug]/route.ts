@@ -14,6 +14,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       category: true,
       shortDescription: true,
       coverImageUrl: true,
+      legalRepresentative: true,
       verification: {
         select: {
           fiscalCode: true,
@@ -21,6 +22,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
           address: true,
           county: true,
           city: true,
+          representativeName: true,
         },
       },
       miniSiteConfig: {
@@ -63,5 +65,6 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     contactPhone: ngo.miniSiteConfig?.contactPhone || null,
     primaryColor: ngo.miniSiteConfig?.primaryColor || "#6366f1",
     accentColor: ngo.miniSiteConfig?.accentColor || "#f59e0b",
+    legalRepresentative: ngo.legalRepresentative || ngo.verification?.representativeName || null,
   });
 }

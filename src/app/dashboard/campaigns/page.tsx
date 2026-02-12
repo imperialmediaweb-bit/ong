@@ -39,6 +39,7 @@ import {
   ShieldAlert,
   AlertTriangle,
   FileText,
+  Download,
 } from "lucide-react";
 
 interface Campaign {
@@ -199,14 +200,20 @@ export default function CampaignsPage() {
     return () => clearTimeout(timeout);
   }, [fetchCampaigns]);
 
+  // Always load compliance on mount to know if we should block actions
+  useEffect(() => {
+    if (!complianceLoaded) {
+      fetchCompliance();
+    }
+  }, [complianceLoaded]);
+
   useEffect(() => {
     if (activeTab === "credits" && !creditsLoaded) {
       fetchCredits();
     }
-    if (activeTab === "compliance" && !complianceLoaded) {
-      fetchCompliance();
-    }
-  }, [activeTab, creditsLoaded, complianceLoaded]);
+  }, [activeTab, creditsLoaded]);
+
+  const isCompliant = complianceData?.isCompliant === true;
 
   const handlePurchase = async (packageId: string) => {
     setPurchasing(packageId);
@@ -270,6 +277,80 @@ export default function CampaignsPage() {
     }
   };
 
+  const handleDownloadCompliancePdf = () => {
+    if (!complianceData) return;
+    const rep = complianceForm.legalRepresentative || complianceData.legalRepresentative || "N/A";
+    const cuiVal = complianceForm.cui || complianceData.cui || "N/A";
+    const tosDate = complianceData.tosAcceptedAt ? new Date(complianceData.tosAcceptedAt).toLocaleDateString("ro-RO") : "Neacceptat";
+    const gdprDate = complianceData.gdprAcceptedAt ? new Date(complianceData.gdprAcceptedAt).toLocaleDateString("ro-RO") : "Neacceptat";
+    const antiSpamDate = complianceData.antiSpamAcceptedAt ? new Date(complianceData.antiSpamAcceptedAt).toLocaleDateString("ro-RO") : "Neacceptat";
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Conformitate - Acorduri Acceptate</title>
+<style>body{font-family:Arial,sans-serif;max-width:800px;margin:0 auto;padding:40px;color:#1a1a1a;font-size:14px}
+h1{text-align:center;font-size:22px;margin-bottom:5px}
+h2{font-size:16px;margin-top:30px;border-bottom:2px solid #333;padding-bottom:5px}
+.subtitle{text-align:center;color:#666;font-size:13px;margin-bottom:30px}
+.info-box{background:#f5f5f5;padding:15px;border-radius:8px;margin-bottom:20px}
+.info-box p{margin:4px 0}
+.terms p{margin:6px 0;line-height:1.5}
+.status{margin-top:30px;padding:15px;border:2px solid #333;border-radius:8px}
+.status p{margin:4px 0}
+.accepted{color:#16a34a;font-weight:bold}
+.pending{color:#dc2626;font-weight:bold}
+.footer{margin-top:40px;text-align:center;color:#888;font-size:11px;border-top:1px solid #ddd;padding-top:15px}
+@media print{body{padding:20px}}</style></head><body>
+<h1>Acorduri de Conformitate</h1>
+<p class="subtitle">Platforma Binevo - Document generat la ${new Date().toLocaleDateString("ro-RO")}</p>
+<div class="info-box">
+<p><strong>Reprezentant legal:</strong> ${rep}</p>
+<p><strong>CUI/CIF:</strong> ${cuiVal}</p>
+</div>
+<h2>1. Termeni si Conditii de Utilizare</h2>
+<div class="terms">
+<p><strong>1.</strong> Platforma Binevo ofera servicii tehnice de trimitere email si SMS. Expeditorul mesajelor este exclusiv organizatia (ONG-ul) care utilizeaza platforma.</p>
+<p><strong>2.</strong> ONG-ul este singurul responsabil pentru continutul mesajelor, obtinerea consimtamantului destinatarilor si respectarea legislatiei GDPR, ePrivacy si anti-spam aplicabile.</p>
+<p><strong>3.</strong> Binevo nu raspunde pentru mesajele trimise de ONG, inclusiv reclamatii, spam reports sau sanctiuni legale rezultate din utilizarea platformei.</p>
+<p><strong>4.</strong> ONG-ul garanteaza ca detine consimtamantul explicit al tuturor destinatarilor inaintea trimiterii fiecarei campanii.</p>
+<p><strong>5.</strong> Binevo isi rezerva dreptul de a suspenda accesul ONG-urilor care incalca acesti termeni sau care genereaza rate ridicate de reclamatii/bounce.</p>
+</div>
+<h2>2. Acord de Prelucrare Date (GDPR / DPA)</h2>
+<div class="terms">
+<p><strong>1.</strong> Binevo prelucreaza datele personale (email, telefon) ale donatorilor exclusiv in calitate de operator imputernicit, la instructiunea ONG-ului.</p>
+<p><strong>2.</strong> ONG-ul ramane operatorul de date si este responsabil pentru informarea persoanelor vizate si obtinerea consimtamantului.</p>
+<p><strong>3.</strong> Datele sunt criptate (AES-256-GCM) in repaus si in tranzit. Accesul este restrictionat prin roluri si permisiuni.</p>
+<p><strong>4.</strong> Binevo nu cedeaza, vinde sau partajeaza datele cu terti, cu exceptia furnizorilor de servicii necesare (SendGrid pentru email, Twilio pentru SMS).</p>
+<p><strong>5.</strong> ONG-ul poate solicita stergerea tuturor datelor in conformitate cu dreptul la uitare (Art. 17 GDPR). Anonimizarea este disponibila in platforma.</p>
+</div>
+<h2>3. Politica Anti-Spam</h2>
+<div class="terms">
+<p><strong>1.</strong> ONG-ul se obliga sa trimita mesaje doar catre destinatari care au acordat consimtamantul explicit (opt-in).</p>
+<p><strong>2.</strong> Fiecare mesaj trebuie sa contina un mecanism clar de dezabonare (unsubscribe). Platforma adauga automat link-ul de dezabonare.</p>
+<p><strong>3.</strong> ONG-ul nu va trimite mesaje nesolicitate, continut inselator sau oferte comerciale deghizate in comunicari ale organizatiei.</p>
+<p><strong>4.</strong> Exista limite zilnice de trimitere care cresc gradual pe masura ce organizatia demonstreaza bune practici.</p>
+<p><strong>5.</strong> Incalcarea politicii anti-spam poate duce la suspendarea contului si pierderea creditelor ramase.</p>
+</div>
+<div class="status">
+<h2 style="margin-top:0;border:none;padding:0">Status Acceptare</h2>
+<p>Termeni si Conditii: <span class="${complianceData.tosAcceptedAt ? "accepted" : "pending"}">${tosDate}</span></p>
+<p>GDPR / DPA: <span class="${complianceData.gdprAcceptedAt ? "accepted" : "pending"}">${gdprDate}</span></p>
+<p>Anti-Spam: <span class="${complianceData.antiSpamAcceptedAt ? "accepted" : "pending"}">${antiSpamDate}</span></p>
+</div>
+<div class="footer">
+<p>Document generat automat de platforma Binevo. Acest document atesta acordurile acceptate de reprezentantul legal al organizatiei.</p>
+</div>
+</body></html>`;
+
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const printWindow = window.open(url, "_blank");
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+        URL.revokeObjectURL(url);
+      };
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -288,12 +369,19 @@ export default function CampaignsPage() {
               <span className="text-sm font-medium text-green-700">{smsCredits}</span>
             </div>
           </div>
-          <Link href="/dashboard/campaigns/new">
-            <Button>
+          {isCompliant ? (
+            <Link href="/dashboard/campaigns/new">
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Campanie noua
+              </Button>
+            </Link>
+          ) : (
+            <Button disabled variant="outline" title="Acceptati conformitatea pentru a crea campanii">
               <Plus className="mr-2 h-4 w-4" />
               Campanie noua
             </Button>
-          </Link>
+          )}
         </div>
       </div>
 
@@ -315,6 +403,25 @@ export default function CampaignsPage() {
 
         {/* ═══ Campaigns Tab ═══ */}
         <TabsContent value="campaigns" className="space-y-4 mt-4">
+          {complianceLoaded && !isCompliant && (
+            <Card className="border-red-200 bg-red-50/50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <ShieldAlert className="h-6 w-6 text-red-600 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-red-900">Conformitate incompleta</h3>
+                    <p className="text-sm text-red-700">
+                      Nu puteti crea sau trimite campanii pana nu acceptati toate acordurile de conformitate.
+                    </p>
+                  </div>
+                  <Button size="sm" variant="destructive" onClick={() => setActiveTab("compliance")}>
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    Completeaza conformitatea
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardContent className="pt-6">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -599,7 +706,7 @@ export default function CampaignsPage() {
                   ) : (
                     <ShieldAlert className="h-6 w-6 text-red-600" />
                   )}
-                  <div>
+                  <div className="flex-1">
                     <h3 className={`font-semibold ${complianceData.isCompliant ? "text-green-900" : "text-red-900"}`}>
                       {complianceData.isCompliant ? "Organizatia este conforma" : "Conformitate incompleta"}
                     </h3>
@@ -609,6 +716,12 @@ export default function CampaignsPage() {
                         : "Acceptati toate acordurile de mai jos pentru a putea trimite campanii."}
                     </p>
                   </div>
+                  {complianceData.isCompliant && (
+                    <Button variant="outline" size="sm" onClick={handleDownloadCompliancePdf}>
+                      <Download className="mr-2 h-4 w-4" />
+                      Descarca PDF
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
