@@ -65,9 +65,12 @@ interface EmailSettings {
 }
 
 interface SmsSettings {
+  activeProvider: string;
   twilioSid: string;
   twilioAuthToken: string;
   twilioPhoneNumber: string;
+  telnyxApiKey: string;
+  telnyxPhoneNumber: string;
   smsSenderId: string;
 }
 
@@ -135,9 +138,12 @@ export default function SettingsPage() {
 
   // SMS
   const [sms, setSms] = useState<SmsSettings>({
+    activeProvider: "twilio",
     twilioSid: "",
     twilioAuthToken: "",
     twilioPhoneNumber: "",
+    telnyxApiKey: "",
+    telnyxPhoneNumber: "",
     smsSenderId: "",
   });
   const [smsLoading, setSmsLoading] = useState(true);
@@ -146,6 +152,8 @@ export default function SettingsPage() {
   const [editingTwilio, setEditingTwilio] = useState(false);
   const [newTwilioSid, setNewTwilioSid] = useState("");
   const [newTwilioToken, setNewTwilioToken] = useState("");
+  const [editingTelnyx, setEditingTelnyx] = useState(false);
+  const [newTelnyxApiKey, setNewTelnyxApiKey] = useState("");
 
   // Team
   const [team, setTeam] = useState<TeamMember[]>([]);
@@ -246,9 +254,12 @@ export default function SettingsPage() {
       if (!res.ok) throw new Error("Failed to fetch SMS settings");
       const data = await res.json();
       setSms({
+        activeProvider: data.activeProvider || "twilio",
         twilioSid: data.twilioSid || "",
         twilioAuthToken: data.twilioAuthToken || "",
         twilioPhoneNumber: data.twilioPhoneNumber || "",
+        telnyxApiKey: data.telnyxApiKey || "",
+        telnyxPhoneNumber: data.telnyxPhoneNumber || "",
         smsSenderId: data.smsSenderId || "",
       });
     } catch (err: any) {
@@ -439,11 +450,15 @@ export default function SettingsPage() {
     try {
       const payload: any = {
         twilioPhoneNumber: sms.twilioPhoneNumber,
+        telnyxPhoneNumber: sms.telnyxPhoneNumber,
         smsSenderId: sms.smsSenderId,
       };
       if (editingTwilio) {
         if (newTwilioSid) payload.twilioSid = newTwilioSid;
         if (newTwilioToken) payload.twilioAuthToken = newTwilioToken;
+      }
+      if (editingTelnyx) {
+        if (newTelnyxApiKey) payload.telnyxApiKey = newTelnyxApiKey;
       }
       const res = await fetch("/api/settings/sms", {
         method: "PUT",
@@ -455,6 +470,8 @@ export default function SettingsPage() {
       setEditingTwilio(false);
       setNewTwilioSid("");
       setNewTwilioToken("");
+      setEditingTelnyx(false);
+      setNewTelnyxApiKey("");
       fetchSms();
     } catch (err: any) {
       setError(err.message);
@@ -864,87 +881,160 @@ export default function SettingsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MessageSquare className="h-5 w-5" />
-                Configurare Twilio
+                Configurare SMS
               </CardTitle>
               <CardDescription>
-                Configureaza integrarea Twilio pentru trimiterea campaniilor SMS.
+                Provider activ: <span className="font-semibold uppercase">{sms.activeProvider}</span>
+                {" "}(setat prin variabila de mediu SMS_PROVIDER)
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               {smsLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 </div>
               ) : (
                 <>
-                  {!editingTwilio ? (
-                    <div className="space-y-3">
-                      <div className="grid gap-2">
-                        <Label>Twilio Account SID</Label>
-                        <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
-                          <Key className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-mono">
-                            {sms.twilioSid ? maskKey(sms.twilioSid) : "Neconfigurat"}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="grid gap-2">
-                        <Label>Auth Token</Label>
-                        <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
-                          <Key className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-mono">
-                            {sms.twilioAuthToken ? maskKey(sms.twilioAuthToken) : "Neconfigurat"}
-                          </span>
-                        </div>
-                      </div>
-                      <Button variant="outline" onClick={() => setEditingTwilio(true)}>
-                        Actualizeaza credentialele
-                      </Button>
+                  {/* Twilio Section */}
+                  <div className={`space-y-3 p-4 border rounded-lg ${sms.activeProvider === "twilio" ? "border-primary bg-primary/5" : "border-muted"}`}>
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Twilio</h4>
+                      {sms.activeProvider === "twilio" && (
+                        <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">Activ</span>
+                      )}
                     </div>
-                  ) : (
-                    <div className="space-y-3 p-4 border rounded-lg bg-muted/20">
-                      <div className="grid gap-2">
-                        <Label>Noul Twilio Account SID</Label>
+                    {!editingTwilio ? (
+                      <div className="space-y-3">
+                        <div className="grid gap-2">
+                          <Label>Account SID</Label>
+                          <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
+                            <Key className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-mono">
+                              {sms.twilioSid ? maskKey(sms.twilioSid) : "Neconfigurat"}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="grid gap-2">
+                          <Label>Auth Token</Label>
+                          <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
+                            <Key className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-mono">
+                              {sms.twilioAuthToken ? maskKey(sms.twilioAuthToken) : "Neconfigurat"}
+                            </span>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => setEditingTwilio(true)}>
+                          Actualizeaza credentialele
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 p-3 border rounded-lg bg-muted/20">
+                        <div className="grid gap-2">
+                          <Label>Noul Account SID</Label>
+                          <Input
+                            type="password"
+                            placeholder="ACxxxxx..."
+                            value={newTwilioSid}
+                            onChange={(e) => setNewTwilioSid(e.target.value)}
+                          />
+                        </div>
+                        <div className="grid gap-2">
+                          <Label>Noul Auth Token</Label>
+                          <Input
+                            type="password"
+                            placeholder="Auth token..."
+                            value={newTwilioToken}
+                            onChange={(e) => setNewTwilioToken(e.target.value)}
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingTwilio(false);
+                            setNewTwilioSid("");
+                            setNewTwilioToken("");
+                          }}
+                        >
+                          Anuleaza
+                        </Button>
+                      </div>
+                    )}
+                    <div className="grid gap-2">
+                      <Label htmlFor="twilioPhone">Numar telefon Twilio</Label>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
                         <Input
-                          type="password"
-                          placeholder="ACxxxxx..."
-                          value={newTwilioSid}
-                          onChange={(e) => setNewTwilioSid(e.target.value)}
+                          id="twilioPhone"
+                          placeholder="+1234567890"
+                          value={sms.twilioPhoneNumber}
+                          onChange={(e) => setSms({ ...sms, twilioPhoneNumber: e.target.value })}
                         />
                       </div>
-                      <div className="grid gap-2">
-                        <Label>Noul Auth Token</Label>
-                        <Input
-                          type="password"
-                          placeholder="Auth token..."
-                          value={newTwilioToken}
-                          onChange={(e) => setNewTwilioToken(e.target.value)}
-                        />
-                      </div>
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          setEditingTwilio(false);
-                          setNewTwilioSid("");
-                          setNewTwilioToken("");
-                        }}
-                      >
-                        Anuleaza
-                      </Button>
-                    </div>
-                  )}
-                  <div className="grid gap-2">
-                    <Label htmlFor="twilioPhone">Numar telefon Twilio</Label>
-                    <div className="flex items-center gap-2">
-                      <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <Input
-                        id="twilioPhone"
-                        placeholder="+1234567890"
-                        value={sms.twilioPhoneNumber}
-                        onChange={(e) => setSms({ ...sms, twilioPhoneNumber: e.target.value })}
-                      />
                     </div>
                   </div>
+
+                  {/* Telnyx Section */}
+                  <div className={`space-y-3 p-4 border rounded-lg ${sms.activeProvider === "telnyx" ? "border-primary bg-primary/5" : "border-muted"}`}>
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium">Telnyx</h4>
+                      {sms.activeProvider === "telnyx" && (
+                        <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">Activ</span>
+                      )}
+                    </div>
+                    {!editingTelnyx ? (
+                      <div className="space-y-3">
+                        <div className="grid gap-2">
+                          <Label>API Key</Label>
+                          <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
+                            <Key className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-mono">
+                              {sms.telnyxApiKey ? maskKey(sms.telnyxApiKey) : "Neconfigurat"}
+                            </span>
+                          </div>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => setEditingTelnyx(true)}>
+                          Actualizeaza API Key
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3 p-3 border rounded-lg bg-muted/20">
+                        <div className="grid gap-2">
+                          <Label>Noul API Key</Label>
+                          <Input
+                            type="password"
+                            placeholder="KEY..."
+                            value={newTelnyxApiKey}
+                            onChange={(e) => setNewTelnyxApiKey(e.target.value)}
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setEditingTelnyx(false);
+                            setNewTelnyxApiKey("");
+                          }}
+                        >
+                          Anuleaza
+                        </Button>
+                      </div>
+                    )}
+                    <div className="grid gap-2">
+                      <Label htmlFor="telnyxPhone">Numar telefon Telnyx</Label>
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <Input
+                          id="telnyxPhone"
+                          placeholder="+1234567890"
+                          value={sms.telnyxPhoneNumber}
+                          onChange={(e) => setSms({ ...sms, telnyxPhoneNumber: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Common Settings */}
                   <div className="grid gap-2">
                     <Label htmlFor="smsSenderId">ID expeditor SMS</Label>
                     <Input

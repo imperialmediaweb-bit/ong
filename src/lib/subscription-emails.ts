@@ -365,6 +365,59 @@ function getPlanFeaturesHtml(plan: string): string {
     .join("")}</ul>`;
 }
 
+// ─── Credit Purchase Confirmation ─────────────────────────────────
+
+export function creditPurchaseEmail(params: {
+  ngoName: string;
+  packageName: string;
+  emailCredits: number;
+  smsCredits: number;
+  totalAmount: number;
+  currency: string;
+  invoiceNumber: string;
+  paymentUrl: string;
+  dashboardUrl: string;
+}): { subject: string; html: string } {
+  const creditParts: string[] = [];
+  if (params.emailCredits > 0) creditParts.push(`<strong>${params.emailCredits.toLocaleString("ro-RO")}</strong> credite email`);
+  if (params.smsCredits > 0) creditParts.push(`<strong>${params.smsCredits.toLocaleString("ro-RO")}</strong> credite SMS`);
+  const creditsText = creditParts.join(" si ");
+
+  return {
+    subject: `Credite adaugate - ${params.packageName} | ${params.ngoName}`,
+    html: wrapTemplate(`
+      <div style="${headerStyle.replace('#6366f1', '#059669').replace('#8b5cf6', '#10b981')}">
+        <h1 style="margin:0;font-size:24px;">Credite Activate!</h1>
+        <p style="margin:8px 0 0;opacity:0.9;">Pachetul ${params.packageName} a fost activat</p>
+      </div>
+      <div style="${bodyStyle}">
+        <p>Buna ziua,</p>
+        <p>Plata pentru pachetul de credite <strong>${params.packageName}</strong> al organizatiei <strong>${params.ngoName}</strong> a fost confirmata cu succes.</p>
+
+        <div style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:8px;padding:20px;margin:20px 0;text-align:center;">
+          <p style="margin:0 0 12px;color:#065f46;font-weight:600;font-size:16px;">Credite adaugate:</p>
+          <p style="margin:0;font-size:18px;color:#047857;">${creditsText}</p>
+        </div>
+
+        <div style="background:#f9fafb;border-radius:8px;padding:16px;margin:16px 0;">
+          <table style="width:100%;font-size:14px;color:#374151;">
+            <tr><td style="padding:4px 0;"><strong>Pachet:</strong></td><td style="text-align:right;">${params.packageName}</td></tr>
+            <tr><td style="padding:4px 0;"><strong>Total platit:</strong></td><td style="text-align:right;">${params.totalAmount.toLocaleString("ro-RO", {minimumFractionDigits: 2})} ${params.currency}</td></tr>
+            <tr><td style="padding:4px 0;"><strong>Factura:</strong></td><td style="text-align:right;">${params.invoiceNumber}</td></tr>
+          </table>
+        </div>
+
+        <p style="font-size:14px;color:#6b7280;">Puteti vizualiza si descarca factura accesand link-ul de mai jos:</p>
+
+        <div style="text-align:center;margin:24px 0;">
+          <a href="${params.paymentUrl}" style="${buttonStyle.replace('#6366f1', '#6b7280').replace('#8b5cf6', '#9ca3af')};margin-right:8px;font-size:14px;padding:10px 20px;">Vezi factura</a>
+          <a href="${params.dashboardUrl}" style="${buttonStyle.replace('#6366f1', '#059669').replace('#8b5cf6', '#10b981')}">Trimite campanii</a>
+        </div>
+      </div>
+    `),
+  };
+}
+
 // ─── Helper: Downgrade warning HTML ──────────────────────────────
 
 function getDowngradeWarningHtml(fromPlan: string): string {

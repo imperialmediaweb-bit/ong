@@ -153,6 +153,8 @@ async function executeAction(
             accountSid: ngo.twilioAccountSid || undefined,
             authToken: ngo.twilioAuthToken || undefined,
             phoneNumber: ngo.twilioPhoneNumber || undefined,
+            telnyxApiKey: ngo.telnyxApiKey || undefined,
+            telnyxPhoneNumber: ngo.telnyxPhoneNumber || undefined,
           }
         );
       }

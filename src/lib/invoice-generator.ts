@@ -1,12 +1,14 @@
 /**
  * Invoice Generator
- * Auto-generates invoices for subscription payments,
+ * Auto-generates invoices for subscription payments and credit packages,
  * handles payment tokens, and invoice HTML rendering
  */
 
 import prisma from "@/lib/db";
 import { randomBytes } from "crypto";
 import { getBinevoLogoHtml } from "@/components/BinevoLogo";
+import { sendEmail } from "@/lib/email";
+import { creditPurchaseEmail } from "@/lib/subscription-emails";
 
 const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://binevo.ro";
 
@@ -332,6 +334,12 @@ export async function markInvoicePaid(params: {
     });
   }
 
+  // If this is a credit purchase invoice, fulfill credits
+  const meta = typeof invoice.metadata === "object" && invoice.metadata !== null ? invoice.metadata as any : {};
+  if (meta.type === "credit_purchase") {
+    await fulfillCreditPurchase(params.invoiceId);
+  }
+
   return true;
 }
 
@@ -395,6 +403,293 @@ export async function checkOverdueInvoices(): Promise<{
   }
 
   return results;
+}
+
+// ─── Create Credit Package Invoice ──────────────────────────────
+
+export async function createCreditInvoice(params: {
+  ngoId: string;
+  packageId: string;
+  packageName: string;
+  emailCredits: number;
+  smsCredits: number;
+  price: number;
+}): Promise<{ invoiceId: string; paymentToken: string; paymentUrl: string } | null> {
+  const ngo = await prisma.ngo.findUnique({
+    where: { id: params.ngoId },
+    include: {
+      users: {
+        where: { role: "NGO_ADMIN" },
+        select: { email: true, name: true, id: true },
+      },
+    },
+  });
+
+  if (!ngo) return null;
+
+  // Get billing config
+  let billing = await prisma.platformBilling.findUnique({
+    where: { id: "billing" },
+  });
+
+  if (!billing) {
+    billing = await prisma.platformBilling.create({
+      data: { id: "billing" },
+    });
+  }
+
+  const price = params.price;
+  if (price <= 0) return null;
+
+  // Generate invoice number
+  const prefix = billing.invoicePrefix || "BNV";
+  const series = billing.invoiceSeries || "";
+  const nextNum = billing.invoiceNextNumber || 1;
+  const invoiceNumber = series
+    ? `${series}-${String(nextNum).padStart(4, "0")}`
+    : `${prefix}-${String(nextNum).padStart(4, "0")}`;
+
+  // Calculate VAT
+  const isVatPayer = billing.companyVatPayer;
+  const vatRate = isVatPayer ? (billing.invoiceVatRate || 19) : 0;
+  const subtotal = price;
+  const vatAmount = isVatPayer ? subtotal * (vatRate / 100) : 0;
+  const totalAmount = subtotal + vatAmount;
+
+  // Payment terms - immediate for credit packages
+  const paymentTerms = 7;
+  const dueDate = new Date(Date.now() + paymentTerms * 24 * 60 * 60 * 1000);
+
+  // Generate unique payment token
+  const paymentToken = generatePaymentToken();
+
+  // Build item description
+  const parts: string[] = [];
+  if (params.emailCredits > 0) parts.push(`${params.emailCredits.toLocaleString("ro-RO")} emailuri`);
+  if (params.smsCredits > 0) parts.push(`${params.smsCredits.toLocaleString("ro-RO")} SMS-uri`);
+  const creditsDescription = parts.join(" + ");
+
+  const items = [
+    {
+      description: `Pachet credite: ${params.packageName} (${creditsDescription})`,
+      quantity: 1,
+      unit: "pachet",
+      unitPrice: price,
+      vatRate,
+      totalNet: subtotal,
+      totalVat: vatAmount,
+      totalGross: totalAmount,
+    },
+  ];
+
+  // Create invoice
+  const invoice = await prisma.invoice.create({
+    data: {
+      invoiceNumber,
+      invoiceSeries: series || null,
+
+      // Seller (Platform)
+      sellerName: billing.companyName || "Binevo SRL",
+      sellerCui: billing.companyCui,
+      sellerRegCom: billing.companyRegCom,
+      sellerAddress: billing.companyAddress,
+      sellerCity: billing.companyCity,
+      sellerCounty: billing.companyCounty,
+      sellerEmail: billing.companyEmail,
+      sellerPhone: billing.companyPhone,
+      sellerIban: billing.companyIban,
+      sellerBankName: billing.companyBankName,
+      sellerVatPayer: isVatPayer,
+
+      // Buyer (NGO)
+      buyerName: ngo.billingName || ngo.name,
+      buyerCui: ngo.billingCui || ngo.cui,
+      buyerAddress: ngo.billingAddress,
+      buyerCity: ngo.billingCity,
+      buyerCounty: ngo.billingCounty,
+      buyerEmail: ngo.billingEmail || ngo.users[0]?.email,
+      buyerPhone: ngo.billingPhone,
+
+      ngoId: ngo.id,
+
+      // Dates
+      issueDate: new Date(),
+      dueDate,
+      status: "ISSUED",
+
+      // Items and totals
+      items: items as any,
+      subtotal,
+      vatAmount,
+      totalAmount,
+      currency: billing.invoiceCurrency || "RON",
+
+      // Payment token for public page
+      paymentToken,
+
+      // No subscription link - this is a credit purchase
+      subscriptionPlan: null,
+      subscriptionMonth: null,
+      isRecurring: false,
+
+      // Metadata for credit package
+      metadata: {
+        type: "credit_purchase",
+        packageId: params.packageId,
+        packageName: params.packageName,
+        emailCredits: params.emailCredits,
+        smsCredits: params.smsCredits,
+      } as any,
+
+      notes: `Pachet credite campanii: ${params.packageName}. Termen de plata: ${paymentTerms} zile.`,
+    },
+  });
+
+  // Increment invoice number
+  await prisma.platformBilling.update({
+    where: { id: "billing" },
+    data: { invoiceNextNumber: nextNum + 1 },
+  });
+
+  return {
+    invoiceId: invoice.id,
+    paymentToken,
+    paymentUrl: `${APP_URL}/factura/${paymentToken}`,
+  };
+}
+
+// ─── Fulfill Credit Purchase (after payment) ───────────────────
+
+export async function fulfillCreditPurchase(invoiceId: string): Promise<boolean> {
+  const invoice = await prisma.invoice.findUnique({
+    where: { id: invoiceId },
+  });
+
+  if (!invoice || !invoice.ngoId || !invoice.metadata) return false;
+
+  const meta = invoice.metadata as any;
+  if (meta.type !== "credit_purchase" || meta.fulfilled) return false;
+
+  const emailCredits = meta.emailCredits || 0;
+  const smsCredits = meta.smsCredits || 0;
+  const packageName = meta.packageName || "Pachet credite";
+
+  // Get current balance
+  const ngo = await prisma.ngo.findUnique({
+    where: { id: invoice.ngoId },
+    select: { emailCredits: true, smsCredits: true },
+  });
+
+  if (!ngo) return false;
+
+  const currentEmail = ngo.emailCredits ?? 0;
+  const currentSms = ngo.smsCredits ?? 0;
+
+  // Update credits
+  const updatedNgo = await prisma.ngo.update({
+    where: { id: invoice.ngoId },
+    data: {
+      emailCredits: currentEmail + emailCredits,
+      smsCredits: currentSms + smsCredits,
+    },
+  });
+
+  // Log transactions
+  const transactions = [];
+  if (emailCredits > 0) {
+    transactions.push(
+      prisma.creditTransaction.create({
+        data: {
+          ngoId: invoice.ngoId,
+          type: "PURCHASE",
+          channel: "EMAIL",
+          amount: emailCredits,
+          balance: updatedNgo.emailCredits,
+          description: `Pachet: ${packageName} (${emailCredits} emailuri) - Factura ${invoice.invoiceNumber}`,
+        },
+      })
+    );
+  }
+  if (smsCredits > 0) {
+    transactions.push(
+      prisma.creditTransaction.create({
+        data: {
+          ngoId: invoice.ngoId,
+          type: "PURCHASE",
+          channel: "SMS",
+          amount: smsCredits,
+          balance: updatedNgo.smsCredits,
+          description: `Pachet: ${packageName} (${smsCredits} SMS-uri) - Factura ${invoice.invoiceNumber}`,
+        },
+      })
+    );
+  }
+
+  await Promise.all(transactions);
+
+  // Mark as fulfilled in metadata to prevent double-fulfillment
+  await prisma.invoice.update({
+    where: { id: invoiceId },
+    data: {
+      metadata: {
+        ...meta,
+        fulfilled: true,
+        fulfilledAt: new Date().toISOString(),
+      } as any,
+    },
+  });
+
+  // Create notification
+  await prisma.notification.create({
+    data: {
+      ngoId: invoice.ngoId,
+      type: "PAYMENT_RECEIVED" as any,
+      title: "Credite adaugate cu succes",
+      message: `Pachetul ${packageName} a fost activat. ${emailCredits > 0 ? `+${emailCredits} emailuri` : ""}${emailCredits > 0 && smsCredits > 0 ? " si " : ""}${smsCredits > 0 ? `+${smsCredits} SMS-uri` : ""}.`,
+      actionUrl: "/dashboard/campaigns",
+    },
+  });
+
+  // Send confirmation email with invoice to NGO admins
+  try {
+    const ngo = await prisma.ngo.findUnique({
+      where: { id: invoice.ngoId },
+      include: {
+        users: {
+          where: { role: "NGO_ADMIN" },
+          select: { email: true },
+        },
+      },
+    });
+
+    if (ngo) {
+      const emailData = creditPurchaseEmail({
+        ngoName: ngo.name,
+        packageName,
+        emailCredits,
+        smsCredits,
+        totalAmount: invoice.totalAmount,
+        currency: invoice.currency,
+        invoiceNumber: invoice.invoiceNumber,
+        paymentUrl: `${APP_URL}/factura/${invoice.paymentToken}`,
+        dashboardUrl: `${APP_URL}/dashboard/campaigns`,
+      });
+
+      for (const admin of ngo.users) {
+        await sendEmail({
+          to: admin.email,
+          subject: emailData.subject,
+          html: emailData.html,
+          from: "noreply@binevo.ro",
+          fromName: "Binevo",
+        }).catch(console.error);
+      }
+    }
+  } catch (emailErr) {
+    console.error("Failed to send credit purchase email:", emailErr);
+  }
+
+  return true;
 }
 
 // ─── Generate Invoice HTML ──────────────────────────────────────

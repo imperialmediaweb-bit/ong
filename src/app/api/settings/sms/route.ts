@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { hasPermission } from "@/lib/permissions";
 import { createAuditLog } from "@/lib/audit";
+import { getActiveProvider } from "@/lib/sms";
 
 export async function GET() {
   try {
@@ -23,6 +24,8 @@ export async function GET() {
         twilioAccountSid: true,
         twilioAuthToken: true,
         twilioPhoneNumber: true,
+        telnyxApiKey: true,
+        telnyxPhoneNumber: true,
         smsSenderId: true,
       },
     });
@@ -32,9 +35,12 @@ export async function GET() {
     }
 
     return NextResponse.json({
+      activeProvider: getActiveProvider(),
       twilioSid: ngo.twilioAccountSid ? "••••••" + ngo.twilioAccountSid.slice(-4) : "",
       twilioAuthToken: ngo.twilioAuthToken ? "••••••••" : "",
       twilioPhoneNumber: ngo.twilioPhoneNumber || "",
+      telnyxApiKey: ngo.telnyxApiKey ? "••••••" + ngo.telnyxApiKey.slice(-4) : "",
+      telnyxPhoneNumber: ngo.telnyxPhoneNumber || "",
       smsSenderId: ngo.smsSenderId || "",
     });
   } catch (error) {
@@ -57,16 +63,24 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { twilioSid, twilioAuthToken, twilioPhoneNumber, smsSenderId } = body;
+    const {
+      twilioSid, twilioAuthToken, twilioPhoneNumber,
+      telnyxApiKey, telnyxPhoneNumber,
+      smsSenderId,
+    } = body;
 
     const updateData: any = {};
     if (twilioPhoneNumber !== undefined) updateData.twilioPhoneNumber = twilioPhoneNumber;
+    if (telnyxPhoneNumber !== undefined) updateData.telnyxPhoneNumber = telnyxPhoneNumber;
     if (smsSenderId !== undefined) updateData.smsSenderId = smsSenderId;
     if (twilioSid && !twilioSid.startsWith("••")) {
       updateData.twilioAccountSid = twilioSid;
     }
     if (twilioAuthToken && !twilioAuthToken.startsWith("••")) {
       updateData.twilioAuthToken = twilioAuthToken;
+    }
+    if (telnyxApiKey && !telnyxApiKey.startsWith("••")) {
+      updateData.telnyxApiKey = telnyxApiKey;
     }
 
     await prisma.ngo.update({

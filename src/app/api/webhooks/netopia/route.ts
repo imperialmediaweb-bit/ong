@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { isNetopiaPaymentSuccessful, getNetopiaStatusLabel, NETOPIA_STATUS } from "@/lib/netopia";
+import { fulfillCreditPurchase } from "@/lib/invoice-generator";
 
 export async function POST(request: NextRequest) {
   try {
@@ -85,6 +86,13 @@ export async function POST(request: NextRequest) {
             actionUrl: "/dashboard/billing",
           },
         });
+      }
+
+      // Fulfill credit purchase if this is a credit invoice
+      const meta = typeof invoice.metadata === "object" && invoice.metadata !== null ? invoice.metadata as any : {};
+      if (meta.type === "credit_purchase") {
+        await fulfillCreditPurchase(invoice.id);
+        console.log(`[Netopia IPN] Credit package fulfilled for invoice ${orderId}`);
       }
     } else if (paymentStatus === NETOPIA_STATUS.DECLINED || paymentStatus === NETOPIA_STATUS.REJECTED) {
       console.log(`[Netopia IPN] Invoice ${orderId} payment declined/rejected`);

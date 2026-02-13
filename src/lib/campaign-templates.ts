@@ -32,7 +32,23 @@ export interface CreditPackage {
 
 // ─── Credit Packages ────────────────────────────────────────────
 
+// ─── Cost Breakdown (per unit, fara TVA) ────────────────────────
+//
+// SendGrid (Email):
+//   Essentials: $19.95/luna = ~92 RON / 50.000 emails = ~0.005 RON/email
+//   Overages: $0.00133/email = ~0.006 RON/email
+//   Cost mediu cu overhead: ~0.005 RON/email
+//
+// Twilio (SMS Romania):
+//   $0.0737/SMS = ~0.34 RON/SMS
+//   Alternative mai ieftine: Infobip $0.06 (~0.28 RON), Telnyx $0.004 (~0.02 RON)
+//
+// Preturile includ marja platforma (35-90%) + TVA se adauga la facturare
+// ────────────────────────────────────────────────────────────────
+
 export const CREDIT_PACKAGES: CreditPackage[] = [
+  // ── Email Packages ──────────────────────────────────────────
+  // Cost: ~0.005 RON/email
   {
     id: "email-starter",
     name: "Email Starter",
@@ -40,6 +56,7 @@ export const CREDIT_PACKAGES: CreditPackage[] = [
     emailCredits: 500,
     smsCredits: 0,
     price: 29,
+    // Cost: 2.5 RON | Marja: 91% | ~5.8 bani/email
     description: "500 emailuri - ideal pentru ONG-uri mici",
   },
   {
@@ -48,9 +65,10 @@ export const CREDIT_PACKAGES: CreditPackage[] = [
     channel: "EMAIL",
     emailCredits: 2000,
     smsCredits: 0,
-    price: 79,
+    price: 59,
     popular: true,
-    description: "2000 emailuri - cel mai popular pachet",
+    // Cost: 10 RON | Marja: 83% | ~2.95 bani/email
+    description: "2.000 emailuri - cel mai popular pachet",
   },
   {
     id: "email-enterprise",
@@ -58,46 +76,54 @@ export const CREDIT_PACKAGES: CreditPackage[] = [
     channel: "EMAIL",
     emailCredits: 10000,
     smsCredits: 0,
-    price: 249,
+    price: 179,
+    // Cost: 50 RON | Marja: 72% | ~1.79 bani/email
     description: "10.000 emailuri - pentru campanii mari",
   },
+  // ── SMS Packages ────────────────────────────────────────────
+  // Cost: ~0.34 RON/SMS (Twilio Romania)
   {
     id: "sms-starter",
     name: "SMS Starter",
     channel: "SMS",
     emailCredits: 0,
-    smsCredits: 200,
-    price: 39,
-    description: "200 SMS-uri - pentru notificari rapide",
+    smsCredits: 100,
+    price: 69,
+    // Cost: 34 RON | Marja: 51% | 0.69 RON/SMS
+    description: "100 SMS-uri - pentru notificari rapide",
   },
   {
     id: "sms-pro",
     name: "SMS Pro",
     channel: "SMS",
     emailCredits: 0,
-    smsCredits: 1000,
-    price: 149,
+    smsCredits: 500,
+    price: 279,
     popular: true,
-    description: "1000 SMS-uri - campanii SMS complete",
+    // Cost: 170 RON | Marja: 39% | 0.558 RON/SMS
+    description: "500 SMS-uri - campanii SMS complete",
   },
+  // ── Combo Packages ──────────────────────────────────────────
   {
     id: "combo-start",
     name: "Pachet Complet Start",
     channel: "BOTH",
     emailCredits: 1000,
-    smsCredits: 200,
-    price: 89,
-    description: "1000 emailuri + 200 SMS-uri",
+    smsCredits: 100,
+    price: 79,
+    // Cost: 5 + 34 = 39 RON | Marja: 51%
+    description: "1.000 emailuri + 100 SMS-uri",
   },
   {
     id: "combo-pro",
     name: "Pachet Complet Pro",
     channel: "BOTH",
     emailCredits: 5000,
-    smsCredits: 1000,
+    smsCredits: 500,
     price: 299,
     popular: true,
-    description: "5000 emailuri + 1000 SMS-uri - cel mai bun raport",
+    // Cost: 25 + 170 = 195 RON | Marja: 35%
+    description: "5.000 emailuri + 500 SMS-uri - cel mai bun raport",
   },
 ];
 
