@@ -7,7 +7,7 @@ import {
   Users, Mail, Zap, BarChart3,
   Shield, Settings, Home, Heart, LogOut, Menu, X, FileText,
   Globe, Briefcase, Share2, Sparkles, ChevronRight, CircleDollarSign,
-  Banknote, Receipt,
+  Banknote, Receipt, Building2, ShieldCheck, CreditCard,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
@@ -15,7 +15,27 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BinevoLogo } from "@/components/BinevoLogo";
 
-const navGroups = [
+const superAdminNavGroups = [
+  {
+    label: "Acasa",
+    items: [
+      { name: "Panou principal", href: "/dashboard", icon: Home },
+    ],
+  },
+  {
+    label: "Administrare Platforma",
+    items: [
+      { name: "Gestionare ONG-uri", href: "/admin/ngos", icon: Building2 },
+      { name: "Utilizatori", href: "/admin/users", icon: Users },
+      { name: "Verificari", href: "/admin/verifications", icon: ShieldCheck },
+      { name: "Abonamente", href: "/admin/subscriptions", icon: CreditCard },
+      { name: "Blog", href: "/admin/blog", icon: FileText },
+      { name: "Setari platforma", href: "/admin", icon: Settings },
+    ],
+  },
+];
+
+const ngoNavGroups = [
   {
     label: "Acasa",
     items: [
@@ -66,7 +86,10 @@ export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const userRole = (session?.user as any)?.role;
+  const isSuperAdmin = userRole === "SUPER_ADMIN";
   const plan = (session?.user as any)?.plan || "BASIC";
+  const navGroups = isSuperAdmin ? superAdminNavGroups : ngoNavGroups;
 
   const planColor = plan === "ELITE"
     ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0"
@@ -96,9 +119,10 @@ export function Sidebar() {
             </p>
             <div className="space-y-0.5">
               {group.items.map((item) => {
-                const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname?.startsWith(item.href + "/"));
-                const isExactDashboard = item.href === "/dashboard" && pathname === "/dashboard";
-                const active = isActive || isExactDashboard;
+                const exactMatchPaths = ["/dashboard", "/admin"];
+                const isExactMatch = exactMatchPaths.includes(item.href) && pathname === item.href;
+                const isPrefixMatch = !exactMatchPaths.includes(item.href) && (pathname === item.href || pathname?.startsWith(item.href + "/"));
+                const active = isExactMatch || isPrefixMatch;
                 return (
                   <Link
                     key={item.name}
@@ -124,31 +148,35 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* Settings link */}
-      <div className="px-3 pb-2">
-        <Link
-          href="/dashboard/settings"
-          onClick={() => setMobileOpen(false)}
-          className={cn(
-            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
-            pathname === "/dashboard/settings"
-              ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-sm"
-              : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-          )}
-        >
-          <Settings className="h-4 w-4" />
-          <span>Setari</span>
-        </Link>
-      </div>
+      {/* Settings link - only for NGO users */}
+      {!isSuperAdmin && (
+        <div className="px-3 pb-2">
+          <Link
+            href="/dashboard/settings"
+            onClick={() => setMobileOpen(false)}
+            className={cn(
+              "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+              pathname === "/dashboard/settings"
+                ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-sm"
+                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+            )}
+          >
+            <Settings className="h-4 w-4" />
+            <span>Setari</span>
+          </Link>
+        </div>
+      )}
 
       {/* Footer - User & Plan */}
       <div className="border-t p-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Plan activ</span>
-          <Badge className={cn("text-[10px] font-semibold", planColor)}>
-            {plan}
-          </Badge>
-        </div>
+        {!isSuperAdmin && (
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Plan activ</span>
+            <Badge className={cn("text-[10px] font-semibold", planColor)}>
+              {plan}
+            </Badge>
+          </div>
+        )}
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 text-white text-xs font-semibold flex-shrink-0">
             {session?.user?.name
