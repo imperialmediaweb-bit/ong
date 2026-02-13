@@ -160,6 +160,8 @@ model Ngo {
   twilioAccountSid  String?
   twilioAuthToken   String?
   twilioPhoneNumber String?
+  telnyxApiKey      String?
+  telnyxPhoneNumber String?
   senderEmail       String?
   senderName        String?
   smsSenderId       String?

@@ -129,6 +129,8 @@ export async function sendCampaign(campaignId: string): Promise<SendCampaignResu
             accountSid: campaign.ngo.twilioAccountSid || undefined,
             authToken: campaign.ngo.twilioAuthToken || undefined,
             phoneNumber: campaign.ngo.twilioPhoneNumber || undefined,
+            telnyxApiKey: campaign.ngo.telnyxApiKey || undefined,
+            telnyxPhoneNumber: campaign.ngo.telnyxPhoneNumber || undefined,
           }
         );
 

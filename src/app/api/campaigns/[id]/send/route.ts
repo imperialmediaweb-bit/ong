@@ -311,6 +311,8 @@ export async function POST(
               accountSid: ngo.twilioAccountSid ? decrypt(ngo.twilioAccountSid) : undefined,
               authToken: ngo.twilioAuthToken ? decrypt(ngo.twilioAuthToken) : undefined,
               phoneNumber: ngo.twilioPhoneNumber || undefined,
+              telnyxApiKey: ngo.telnyxApiKey ? decrypt(ngo.telnyxApiKey) : undefined,
+              telnyxPhoneNumber: ngo.telnyxPhoneNumber || undefined,
             }
           );
 
