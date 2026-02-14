@@ -42,6 +42,7 @@ export async function GET(request: NextRequest) {
     const dateTo = searchParams.get("dateTo") || "";
     const minDonation = searchParams.get("minDonation") || "";
     const maxDonation = searchParams.get("maxDonation") || "";
+    const donorType = searchParams.get("donorType") || "";
 
     // Build the where clause
     const where: any = {
@@ -49,12 +50,24 @@ export async function GET(request: NextRequest) {
       isAnonymized: false,
     };
 
+    if (donorType) {
+      where.donorType = donorType;
+    }
+
     if (search) {
-      where.OR = [
+      const searchConditions: any[] = [
         { name: { contains: search, mode: "insensitive" } },
         { email: { contains: search, mode: "insensitive" } },
         { phone: { contains: search } },
       ];
+      if (donorType === "COMPANY") {
+        searchConditions.push(
+          { companyName: { contains: search, mode: "insensitive" } },
+          { companyCui: { contains: search, mode: "insensitive" } },
+          { contactPerson: { contains: search, mode: "insensitive" } },
+        );
+      }
+      where.OR = searchConditions;
     }
 
     if (status) {
@@ -177,6 +190,13 @@ export async function POST(request: NextRequest) {
 
     const { email, phone, name, preferredChannel, notes, tags } = parsed.data;
 
+    // Accept extra company fields from raw body
+    const donorType = body.donorType || "INDIVIDUAL";
+    const companyName = body.companyName || null;
+    const companyCui = body.companyCui || null;
+    const companyAddress = body.companyAddress || null;
+    const contactPerson = body.contactPerson || null;
+
     // Check for duplicate email within the same NGO
     if (email) {
       const existing = await prisma.donor.findUnique({
@@ -204,6 +224,11 @@ export async function POST(request: NextRequest) {
         name: name || null,
         preferredChannel,
         notes: notes || null,
+        donorType,
+        companyName,
+        companyCui,
+        companyAddress,
+        contactPerson,
         tags: tags && tags.length > 0
           ? {
               create: tags.map((tagId) => ({

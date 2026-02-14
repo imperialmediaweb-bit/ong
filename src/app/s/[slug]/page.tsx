@@ -760,6 +760,29 @@ export default async function MiniSitePage({ params }: Props) {
                           </div>
                         )}
 
+                        {/* Campaign updates timeline */}
+                        {Array.isArray(camp.updates) && camp.updates.length > 0 && (
+                          <div className="mt-4 space-y-2 border-t pt-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Actualizari</p>
+                            <div className="space-y-1.5">
+                              {[...camp.updates]
+                                .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                                .slice(0, 3)
+                                .map((update: any, uIdx: number) => (
+                                <div key={uIdx} className="flex items-start gap-2">
+                                  <div className="mt-1.5 h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: primaryColor }} />
+                                  <div className="min-w-0">
+                                    <span className="text-[11px] font-semibold" style={{ color: primaryColor }}>
+                                      {new Date(update.date).toLocaleDateString("ro-RO", { day: "numeric", month: "short", year: "numeric" })}
+                                    </span>
+                                    <p className="text-xs text-gray-600 leading-snug">{update.text}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         <a
                           href={`/donate/${ngo.slug}`}
                           className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
