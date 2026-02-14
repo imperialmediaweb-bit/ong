@@ -1123,7 +1123,7 @@ export default async function HomePage() {
         </div>
         <div className="border-t border-gray-800">
           <div className="container mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
-            <p>&copy; {new Date().getFullYear()} LEGIO WEB DEVELOPMENT TOOLS S.R.L. - Binevo. Toate drepturile rezervate.</p>
+            <p>&copy; {new Date().getFullYear()} Binevo. Toate drepturile rezervate.</p>
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5">
                 <Shield className="h-3.5 w-3.5" />
