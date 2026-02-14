@@ -1,21 +1,37 @@
 /**
  * Stripe Connect Integration - Donatiile merg direct in contul ONG-ului
  * Platforma ia un comision prin application_fee_amount bazat pe planul ONG-ului
+ *
+ * Keys are resolved from env vars first, then PlatformSettings DB as fallback.
  */
 
 import Stripe from "stripe";
+import { getStripeKeys } from "@/lib/stripe-keys";
 
 let _stripe: Stripe | null = null;
+let _stripeKeyUsed: string | null = null;
 
-function getStripe(): Stripe {
-  if (!_stripe) {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error("STRIPE_SECRET_KEY nu este configurat");
-    }
-    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2024-06-20" as any,
-    });
+async function getStripe(): Promise<Stripe> {
+  const keys = await getStripeKeys();
+
+  if (!keys.secretKey) {
+    throw new Error("STRIPE_SECRET_KEY nu este configurat (nici in env, nici in PlatformSettings)");
   }
+
+  if (!keys.enabled) {
+    throw new Error("Stripe este dezactivat din setarile platformei");
+  }
+
+  // Re-create instance if key changed
+  if (_stripe && _stripeKeyUsed === keys.secretKey) {
+    return _stripe;
+  }
+
+  _stripe = new Stripe(keys.secretKey, {
+    apiVersion: "2024-06-20" as any,
+  });
+  _stripeKeyUsed = keys.secretKey;
+
   return _stripe;
 }
 
@@ -30,7 +46,7 @@ export async function createConnectAccount(
   email: string,
   ngoName: string
 ): Promise<string> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
 
   const account = await stripe.accounts.create({
     type: "express",
@@ -63,7 +79,7 @@ export async function createOnboardingLink(
   returnUrl: string,
   refreshUrl: string
 ): Promise<string> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
 
   const accountLink = await stripe.accountLinks.create({
     account: accountId,
@@ -91,7 +107,7 @@ export interface ConnectAccountStatus {
  * Verifica statusul contului Connect - daca poate primi plati si transferuri
  */
 export async function getAccountStatus(accountId: string): Promise<ConnectAccountStatus> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
 
   const account = await stripe.accounts.retrieve(accountId);
 
@@ -148,7 +164,7 @@ export async function syncAccountStatus(accountId: string): Promise<{
  * Creeaza un link catre dashboard-ul Express pentru ca ONG-ul sa isi gestioneze platile
  */
 export async function createDashboardLink(accountId: string): Promise<string> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
 
   const loginLink = await stripe.accounts.createLoginLink(accountId);
 
@@ -172,7 +188,7 @@ export async function createDonationCheckout(params: {
   applicationFeeAmount?: number;  // fee in minor units (bani), pre-calculated
   metadata?: Record<string, string>;
 }): Promise<Stripe.Checkout.Session> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
@@ -211,18 +227,18 @@ export async function createDonationCheckout(params: {
 /**
  * Verifica semnatura webhook-ului Stripe Connect
  */
-export function constructConnectWebhookEvent(
+export async function constructConnectWebhookEvent(
   body: string,
   signature: string
-): Stripe.Event {
-  const stripe = getStripe();
-  const webhookSecret = process.env.STRIPE_CONNECT_WEBHOOK_SECRET;
+): Promise<Stripe.Event> {
+  const stripe = await getStripe();
+  const keys = await getStripeKeys();
 
-  if (!webhookSecret) {
-    throw new Error("STRIPE_CONNECT_WEBHOOK_SECRET nu este configurat");
+  if (!keys.connectWebhookSecret) {
+    throw new Error("STRIPE_CONNECT_WEBHOOK_SECRET nu este configurat (nici in env, nici in PlatformSettings)");
   }
 
-  return stripe.webhooks.constructEvent(body, signature, webhookSecret);
+  return stripe.webhooks.constructEvent(body, signature, keys.connectWebhookSecret);
 }
 
 // ─── Retrieve Checkout Session ──────────────────────────────────
@@ -233,7 +249,7 @@ export function constructConnectWebhookEvent(
 export async function retrieveCheckoutSession(
   sessionId: string
 ): Promise<Stripe.Checkout.Session> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
 
   return stripe.checkout.sessions.retrieve(sessionId, {
     expand: ["payment_intent"],

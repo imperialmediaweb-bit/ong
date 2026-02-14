@@ -7,6 +7,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { invalidateStripeKeysCache } from "@/lib/stripe-keys";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -135,6 +136,11 @@ export async function PATCH(request: NextRequest) {
       create: { id: "platform", ...data },
       update: data,
     });
+
+    // Invalidate cached Stripe keys so new values take effect immediately
+    if (data.stripeSecretKey || data.stripePublishableKey || data.stripeWebhookSecret || data.stripeConnectWebhookSecret || data.stripeEnabled !== undefined) {
+      invalidateStripeKeysCache();
+    }
 
     return NextResponse.json({
       message: "Setarile procesoarelor de plati au fost actualizate",
