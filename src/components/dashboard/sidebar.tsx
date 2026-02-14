@@ -15,26 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BinevoLogo } from "@/components/BinevoLogo";
 
-const superAdminNavGroups = [
-  {
-    label: "Acasa",
-    items: [
-      { name: "Panou principal", href: "/dashboard", icon: Home },
-    ],
-  },
-  {
-    label: "Administrare Platforma",
-    items: [
-      { name: "Gestionare ONG-uri", href: "/admin/ngos", icon: Building2 },
-      { name: "Utilizatori", href: "/admin/users", icon: Users },
-      { name: "Verificari", href: "/admin/verifications", icon: ShieldCheck },
-      { name: "Abonamente", href: "/admin/subscriptions", icon: CreditCard },
-      { name: "Blog", href: "/admin/blog", icon: FileText },
-      { name: "Setari platforma", href: "/admin", icon: Settings },
-    ],
-  },
-];
-
 const ngoNavGroups = [
   {
     label: "Acasa",
@@ -78,6 +58,16 @@ const ngoNavGroups = [
     label: "Abonament",
     items: [
       { name: "Facturare", href: "/dashboard/billing", icon: Receipt },
+    ],
+  },
+];
+
+const superAdminNavGroups = [
+  ...ngoNavGroups,
+  {
+    label: "Administrare",
+    items: [
+      { name: "Panou Admin", href: "/admin", icon: ShieldCheck },
     ],
   },
 ];
