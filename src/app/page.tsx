@@ -176,7 +176,7 @@ export default async function HomePage() {
                   </Button>
                 </Link>
                 <Link href="/ong">
-                  <Button size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10 font-semibold text-base px-8 py-6 h-auto">
+                  <Button size="lg" className="bg-transparent border border-white/40 text-white hover:bg-white/10 font-semibold text-base px-8 py-6 h-auto">
                     Descopera ONG-uri
                     <ExternalLink className="ml-2 h-5 w-5" />
                   </Button>
@@ -1007,7 +1007,7 @@ export default async function HomePage() {
                   </Button>
                 </Link>
                 <a href="mailto:contact@binevo.ro">
-                  <Button size="lg" variant="outline" className="border-white/40 text-white hover:bg-white/10 font-semibold text-base px-8 py-6 h-auto">
+                  <Button size="lg" className="bg-transparent border border-white/40 text-white hover:bg-white/10 font-semibold text-base px-8 py-6 h-auto">
                     <Mail className="mr-2 h-5 w-5" />
                     Contacteaza-ne
                   </Button>
