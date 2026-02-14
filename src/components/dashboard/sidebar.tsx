@@ -82,6 +82,7 @@ export function Sidebar() {
   const userRole = (session?.user as any)?.role;
   const isSuperAdmin = userRole === "SUPER_ADMIN";
   const plan = (session?.user as any)?.plan || "BASIC";
+  const ngoLogoUrl = (session?.user as any)?.ngoLogoUrl;
   const navGroups = isSuperAdmin ? superAdminNavGroups : ngoNavGroups;
 
   const planColor = plan === "ELITE"
@@ -94,11 +95,21 @@ export function Sidebar() {
     <div className="flex h-full flex-col">
       {/* Logo Header */}
       <div className="flex items-center gap-3 px-5 py-5 border-b">
-        <BinevoLogo size="sm" showText={false} />
+        {ngoLogoUrl ? (
+          <img
+            src={ngoLogoUrl}
+            alt={(session?.user as any)?.ngoName || "ONG"}
+            className="h-10 w-10 rounded-lg object-cover border shadow-sm flex-shrink-0"
+          />
+        ) : (
+          <BinevoLogo size="sm" showText={false} />
+        )}
         <div className="min-w-0">
-          <h1 className="text-base font-bold tracking-tight bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 bg-clip-text text-transparent">Binevo</h1>
+          <h1 className="text-base font-bold tracking-tight truncate max-w-[150px]">
+            {(session?.user as any)?.ngoName || "Binevo"}
+          </h1>
           <p className="text-[11px] text-muted-foreground truncate max-w-[150px]">
-            {(session?.user as any)?.ngoName || "Platforma CRM"}
+            Powered by Binevo
           </p>
         </div>
       </div>

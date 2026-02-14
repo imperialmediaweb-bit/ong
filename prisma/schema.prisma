@@ -931,6 +931,8 @@ model PlatformSettings {
   twilioSid       String?
   twilioToken     String?
   twilioPhone     String?
+  telnyxApiKey    String?
+  telnyxPhone     String?
 
   // ─── SMTP / Email Sender Configuration ─────────────────
   emailProvider       String   @default("smtp")    // smtp, sendgrid, mailgun

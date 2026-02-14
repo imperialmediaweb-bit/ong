@@ -98,6 +98,8 @@ export async function PATCH(request: NextRequest) {
       "twilioSid",
       "twilioToken",
       "twilioPhone",
+      "telnyxApiKey",
+      "telnyxPhone",
     ];
 
     const data: any = {};
@@ -121,7 +123,7 @@ export async function PATCH(request: NextRequest) {
     });
 
     // Invalidate cached API keys if any key fields were updated
-    const apiKeyFields = ["openaiApiKey", "anthropicApiKey", "googleAiApiKey", "sendgridApiKey", "twilioSid", "twilioToken", "twilioPhone"];
+    const apiKeyFields = ["openaiApiKey", "anthropicApiKey", "googleAiApiKey", "sendgridApiKey", "twilioSid", "twilioToken", "twilioPhone", "telnyxApiKey", "telnyxPhone"];
     if (apiKeyFields.some(f => data[f] !== undefined)) {
       invalidateApiKeysCache();
     }

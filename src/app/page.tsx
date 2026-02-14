@@ -630,16 +630,16 @@ export default async function HomePage() {
                   color: "text-blue-600 bg-blue-50",
                 },
                 {
-                  icon: Mail,
-                  title: "Campanii Email",
-                  desc: "Creeaza si trimite campanii de email personalizate cu generator AI",
+                  icon: Megaphone,
+                  title: "Mentiuni in Presa",
+                  desc: "Monitorizare si publicare mentiuni in presa pentru vizibilitate ONG",
                   plan: "PRO",
                   color: "text-indigo-600 bg-indigo-50",
                 },
                 {
-                  icon: Smartphone,
-                  title: "Campanii SMS",
-                  desc: "Notificari SMS catre donatori cu Twilio",
+                  icon: TrendingUp,
+                  title: "Scor Vizibilitate Media",
+                  desc: "Analiza completa a mentiunilor din presa si scor de reputatie",
                   plan: "ELITE",
                   color: "text-purple-600 bg-purple-50",
                 },
@@ -745,7 +745,7 @@ export default async function HomePage() {
                 Alege planul potrivit
               </h2>
               <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
-                Incepe gratuit si upgradeaza pe masura ce cresti
+                Platesti doar un comision mic per donatie. Fara abonament lunar, fara costuri ascunse.
               </p>
             </div>
             <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
@@ -757,10 +757,11 @@ export default async function HomePage() {
                   <CardDescription>Perfect pentru ONG-uri la inceput de drum</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">
-                  <div className="text-center mb-6">
-                    <span className="text-5xl font-extrabold text-gray-900">0</span>
-                    <span className="text-xl text-gray-500 ml-1">RON</span>
+                  <div className="text-center mb-2">
+                    <span className="text-5xl font-extrabold text-gray-900">5%</span>
+                    <span className="text-lg text-gray-500 ml-1">per donatie</span>
                   </div>
+                  <p className="text-center text-xs text-gray-400 mb-6">Fara abonament lunar</p>
                   <ul className="space-y-3">
                     {[
                       "100 donatori",
@@ -801,17 +802,19 @@ export default async function HomePage() {
                   <CardDescription>Pentru ONG-uri care vor sa creasca</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">
-                  <div className="text-center mb-6">
-                    <span className="text-5xl font-extrabold text-gray-900">149</span>
-                    <span className="text-xl text-gray-500 ml-1">RON/luna</span>
+                  <div className="text-center mb-2">
+                    <span className="text-5xl font-extrabold text-gray-900">3%</span>
+                    <span className="text-lg text-gray-500 ml-1">per donatie</span>
                   </div>
+                  <p className="text-center text-xs text-gray-400 mb-6">Fara abonament lunar</p>
                   <ul className="space-y-3">
                     {[
                       "1.000 donatori",
-                      "Campanii email nelimitate",
                       "Generator continut AI",
                       "Automatizari de baza",
                       "Analitica si rapoarte",
+                      "1 mentiune in presa / luna",
+                      "Scor vizibilitate media",
                       "Export CSV",
                       "5 utilizatori",
                       "Suport prioritar",
@@ -828,11 +831,11 @@ export default async function HomePage() {
                   <Link href="/checkout?plan=PRO" className="w-full">
                     <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" size="lg">
                       <CreditCard className="h-4 w-4 mr-2" />
-                      Aboneaza-te acum
+                      Activeaza PRO
                     </Button>
                   </Link>
                   <p className="text-xs text-gray-400 text-center">
-                    Plata recurenta sau factura cu termen de plata
+                    Comision dedus automat din fiecare donatie
                   </p>
                 </CardFooter>
               </Card>
@@ -845,17 +848,20 @@ export default async function HomePage() {
                   <CardDescription>Pentru ONG-uri cu impact maxim</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">
-                  <div className="text-center mb-6">
-                    <span className="text-5xl font-extrabold text-gray-900">349</span>
-                    <span className="text-xl text-gray-500 ml-1">RON/luna</span>
+                  <div className="text-center mb-2">
+                    <span className="text-5xl font-extrabold text-gray-900">1.5%</span>
+                    <span className="text-lg text-gray-500 ml-1">per donatie</span>
                   </div>
+                  <p className="text-center text-xs text-gray-400 mb-6">Cel mai mic comision</p>
                   <ul className="space-y-3">
                     {[
                       "Donatori nelimitati",
-                      "Email + SMS campanii",
                       "Automatizari avansate",
                       "A/B Testing",
                       "Super Agent AI (OpenAI, Gemini, Claude)",
+                      "Mentiuni nelimitate in presa",
+                      "Analiza completa vizibilitate media",
+                      "Scor reputatie bazat pe mentiuni",
                       "Optimizare AI continut",
                       "Verificare prioritara",
                       "Utilizatori nelimitati",
@@ -874,11 +880,11 @@ export default async function HomePage() {
                   <Link href="/checkout?plan=ELITE" className="w-full">
                     <Button variant="outline" className="w-full border-purple-300 text-purple-700 hover:bg-purple-50" size="lg">
                       <CreditCard className="h-4 w-4 mr-2" />
-                      Aboneaza-te acum
+                      Activeaza ELITE
                     </Button>
                   </Link>
                   <p className="text-xs text-gray-400 text-center">
-                    Plata recurenta sau factura cu termen de plata
+                    Comision dedus automat din fiecare donatie
                   </p>
                 </CardFooter>
               </Card>
