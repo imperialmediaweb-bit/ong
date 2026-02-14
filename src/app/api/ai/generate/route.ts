@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { generateCampaignContent } from "@/lib/ai";
 import { aiGenerateSchema } from "@/lib/validations";
 import { createAuditLog } from "@/lib/audit";
-import { hasFeature, hasPermission } from "@/lib/permissions";
+import { hasFeature, hasPermission, fetchEffectivePlan } from "@/lib/permissions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,9 +23,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
-    const plan = (session.user as any).plan;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
     if (!hasFeature(plan, "ai_generator")) {
-      return NextResponse.json({ error: "AI content generation is not available on your plan" }, { status: 403 });
+      return NextResponse.json({ error: "Generarea AI nu este disponibila pe planul tau. Fa upgrade la PRO." }, { status: 403 });
     }
 
     const body = await request.json();

@@ -231,10 +231,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "NGO negasit" }, { status: 400 });
   }
 
-  // Check ELITE plan requirement
-  const plan = (session.user as any).plan;
+  // Check ELITE plan requirement (with expiration check)
   const role = (session.user as any).role;
-  if (role !== "SUPER_ADMIN" && plan !== "ELITE") {
+  const { fetchEffectivePlan, hasFeature } = await import("@/lib/permissions");
+  const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+  if (!hasFeature(plan, "mentions_monitor", role)) {
     return NextResponse.json({ error: "Aceasta functie este disponibila doar in pachetul ELITE.", requiresElite: true }, { status: 403 });
   }
 
@@ -320,10 +321,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "NGO negasit" }, { status: 400 });
   }
 
-  // Check ELITE plan requirement
-  const plan = (session.user as any).plan;
+  // Check ELITE plan requirement (with expiration check)
   const role = (session.user as any).role;
-  if (role !== "SUPER_ADMIN" && plan !== "ELITE") {
+  const { fetchEffectivePlan: fetchPlan, hasFeature: checkFeature } = await import("@/lib/permissions");
+  const plan = await fetchPlan(ngoId, (session.user as any).plan, role);
+  if (!checkFeature(plan, "mentions_monitor", role)) {
     return NextResponse.json({ error: "Aceasta functie este disponibila doar in pachetul ELITE.", requiresElite: true }, { status: 403 });
   }
 
