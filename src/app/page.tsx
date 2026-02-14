@@ -136,19 +136,38 @@ export default async function HomePage() {
             <div className="max-w-4xl mx-auto text-center">
               <Badge className="mb-6 bg-white/20 text-white border-white/30 hover:bg-white/30 text-sm px-4 py-1.5">
                 <Sparkles className="h-4 w-4 mr-2" />
-                Platforma #1 pentru ONG-uri din Romania
+                Site + Donatii + CRM + Marketing - totul la cheie
               </Badge>
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight mb-6 leading-tight">
-                Platforma #1 pentru{" "}
+                Site-ul ONG-ului tau{" "}
                 <span className="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent">
-                  ONG-uri
-                </span>{" "}
-                din Romania
+                  in 5 minute
+                </span>
               </h1>
-              <p className="text-lg sm:text-xl text-indigo-100 mb-10 max-w-3xl mx-auto leading-relaxed">
-                Gestioneaza donatorii, accepta donatii online, creeaza campanii inteligente cu AI
-                si automatizeaza comunicarea. Totul intr-un singur loc.
+              <p className="text-lg sm:text-xl text-indigo-100 mb-4 max-w-3xl mx-auto leading-relaxed">
+                Creeaza o pagina completa cu donatii online, formular 230, voluntariat si newsletter.
+                Adauga CRM, campanii email/SMS, automatizari si AI. Totul intr-un singur loc.
               </p>
+              <div className="flex flex-wrap justify-center gap-3 mb-10 text-sm text-indigo-200">
+                <span className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1">
+                  <Globe className="h-3.5 w-3.5" /> Mini-site complet
+                </span>
+                <span className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1">
+                  <CreditCard className="h-3.5 w-3.5" /> Donatii online
+                </span>
+                <span className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1">
+                  <Users className="h-3.5 w-3.5" /> CRM donatori
+                </span>
+                <span className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1">
+                  <Mail className="h-3.5 w-3.5" /> Email &amp; SMS
+                </span>
+                <span className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1">
+                  <Bot className="h-3.5 w-3.5" /> AI integrat
+                </span>
+                <span className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1">
+                  <Zap className="h-3.5 w-3.5" /> Automatizari
+                </span>
+              </div>
               <div className="flex gap-4 justify-center flex-wrap">
                 <Link href="/register">
                   <Button size="lg" className="bg-white text-indigo-700 hover:bg-gray-100 font-semibold text-base px-8 py-6 h-auto">
@@ -181,8 +200,12 @@ export default async function HomePage() {
                   <p className="text-indigo-200 mt-1 text-sm font-medium">Donatori</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center border border-white/10">
-                  <p className="text-3xl md:text-4xl font-bold text-white">
-                    {formatCurrency(totalRaised)}
+                  <p className="text-2xl md:text-3xl font-bold text-white">
+                    {totalRaised >= 1000000
+                      ? `${(totalRaised / 1000000).toFixed(1)}M RON`
+                      : totalRaised >= 1000
+                      ? `${(totalRaised / 1000).toFixed(0)}K RON`
+                      : `${totalRaised.toLocaleString("ro-RO")} RON`}
                   </p>
                   <p className="text-indigo-200 mt-1 text-sm font-medium">Donatii stranse</p>
                 </div>
@@ -190,7 +213,7 @@ export default async function HomePage() {
                   <p className="text-3xl md:text-4xl font-bold text-white">
                     {totalDonations.toLocaleString("ro-RO")}
                   </p>
-                  <p className="text-indigo-200 mt-1 text-sm font-medium">Campanii</p>
+                  <p className="text-indigo-200 mt-1 text-sm font-medium">Donatii procesate</p>
                 </div>
               </div>
             </div>
@@ -623,91 +646,92 @@ export default async function HomePage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
               {[
                 {
+                  icon: Globe,
+                  title: "Mini-Site Complet",
+                  desc: "Pagina web cu donatii, newsletter, voluntariat, echipa, FAQ, testimoniale si multe altele",
+                  plan: "GRATUIT",
+                  color: "text-cyan-600 bg-cyan-50",
+                },
+                {
+                  icon: CreditCard,
+                  title: "Donatii Online",
+                  desc: "Stripe, PayPal, Netopia, transfer bancar si Revolut - toate intr-un loc",
+                  plan: "GRATUIT",
+                  color: "text-green-600 bg-green-50",
+                },
+                {
                   icon: Users,
                   title: "CRM Donatori",
-                  desc: "Gestioneaza baza de donatori cu criptare AES-256 si conformitate GDPR",
-                  plan: "BASIC",
+                  desc: "Gestioneaza donatori cu tag-uri, segmentare, import/export si criptare AES-256",
+                  plan: "GRATUIT",
                   color: "text-blue-600 bg-blue-50",
                 },
                 {
-                  icon: Megaphone,
-                  title: "Mentiuni in Presa",
-                  desc: "Monitorizare si publicare mentiuni in presa pentru vizibilitate ONG",
+                  icon: FileText,
+                  title: "Formular 230",
+                  desc: "Redirectionare 3.5% din impozit cu generare PDF automata",
+                  plan: "GRATUIT",
+                  color: "text-orange-600 bg-orange-50",
+                },
+                {
+                  icon: Mail,
+                  title: "Email Marketing",
+                  desc: "Campanii email cu 6 template-uri, A/B testing, tracking open/click si programare",
                   plan: "PRO",
                   color: "text-indigo-600 bg-indigo-50",
                 },
                 {
-                  icon: TrendingUp,
-                  title: "Scor Vizibilitate Media",
-                  desc: "Analiza completa a mentiunilor din presa si scor de reputatie",
-                  plan: "ELITE",
-                  color: "text-purple-600 bg-purple-50",
+                  icon: Smartphone,
+                  title: "SMS Marketing",
+                  desc: "Campanii SMS cu 5 template-uri, compliance automata si tracking livrare",
+                  plan: "PRO",
+                  color: "text-pink-600 bg-pink-50",
                 },
                 {
                   icon: Zap,
                   title: "Automatizari",
-                  desc: "Fluxuri automate - multumire, re-engagement, follow-up",
+                  desc: "Fluxuri automate: multumire donatie, re-engagement, follow-up, notificari",
                   plan: "PRO",
                   color: "text-amber-600 bg-amber-50",
                 },
                 {
                   icon: Bot,
-                  title: "Super Agent AI",
-                  desc: "Agent inteligent cu OpenAI, Gemini si Claude pentru strategii",
-                  plan: "ELITE",
+                  title: "AI Integrat",
+                  desc: "12 capabilitati AI: generare campanii, analiza donatori, strategii fundraising",
+                  plan: "PRO",
                   color: "text-emerald-600 bg-emerald-50",
                 },
                 {
-                  icon: CreditCard,
-                  title: "Plati Online",
-                  desc: "Donatii cu cardul direct in contul ONG-ului via Stripe Connect",
-                  plan: "BASIC",
-                  color: "text-green-600 bg-green-50",
+                  icon: Megaphone,
+                  title: "Sponsor CRM",
+                  desc: "Gestioneaza companii sponsor cu AI matching si tracking interactiuni",
+                  plan: "ELITE",
+                  color: "text-purple-600 bg-purple-50",
                 },
                 {
-                  icon: Globe,
-                  title: "Mini-Site",
-                  desc: "Pagina personalizabila de donatii si newsletter",
-                  plan: "BASIC",
-                  color: "text-cyan-600 bg-cyan-50",
-                },
-                {
-                  icon: BarChart3,
-                  title: "Analitica",
-                  desc: "Dashboarduri si rapoarte detaliate de performanta",
-                  plan: "PRO",
-                  color: "text-pink-600 bg-pink-50",
+                  icon: TrendingUp,
+                  title: "Monitorizare Mentiuni",
+                  desc: "AI sentiment analysis pe Google News, RSS, social media in timp real",
+                  plan: "ELITE",
+                  color: "text-rose-600 bg-rose-50",
                 },
                 {
                   icon: Shield,
                   title: "GDPR Complet",
-                  desc: "Consimtamant, export date, anonimizare, audit log",
-                  plan: "BASIC",
+                  desc: "Consimtamant, export date, anonimizare, audit log - totul automat",
+                  plan: "GRATUIT",
                   color: "text-teal-600 bg-teal-50",
                 },
                 {
-                  icon: BadgeCheck,
-                  title: "Verificare ONG",
-                  desc: "Sistem inteligent de verificare cu AI a asociatiilor",
-                  plan: "BASIC",
-                  color: "text-orange-600 bg-orange-50",
-                },
-                {
-                  icon: FileText,
-                  title: "Blog",
-                  desc: "Publica articole si tine comunitatea informata",
+                  icon: BarChart3,
+                  title: "Analitica Avansata",
+                  desc: "Dashboard cu metrici donatori, campanii, email/SMS, tendinte si ROI",
                   plan: "PRO",
-                  color: "text-rose-600 bg-rose-50",
-                },
-                {
-                  icon: Bell,
-                  title: "Notificari",
-                  desc: "Alerte pentru donatii, abonamente si evenimente importante",
-                  plan: "BASIC",
                   color: "text-violet-600 bg-violet-50",
                 },
               ].map((feature) => {
                 const planColors: Record<string, string> = {
+                  GRATUIT: "bg-green-100 text-green-700",
                   BASIC: "bg-gray-100 text-gray-700",
                   PRO: "bg-indigo-100 text-indigo-700",
                   ELITE: "bg-purple-100 text-purple-700",
@@ -745,32 +769,33 @@ export default async function HomePage() {
                 Alege planul potrivit
               </h2>
               <p className="text-gray-500 mt-3 max-w-2xl mx-auto">
-                Platesti doar un comision mic per donatie. Fara abonament lunar, fara costuri ascunse.
+                Incepe gratuit cu site complet si donatii. Fa upgrade cand ai nevoie de email, SMS si AI.
               </p>
             </div>
             <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
-              {/* BASIC */}
+              {/* GRATUIT */}
               <Card className="flex flex-col hover:shadow-lg transition-all duration-300">
                 <CardHeader className="text-center pb-2">
-                  <Badge variant="secondary" className="w-fit mx-auto mb-3">BASIC</Badge>
+                  <Badge className="w-fit mx-auto mb-3 bg-green-100 text-green-700 border-green-200">GRATUIT</Badge>
                   <CardTitle className="text-2xl">Gratuit</CardTitle>
-                  <CardDescription>Perfect pentru ONG-uri la inceput de drum</CardDescription>
+                  <CardDescription>Site complet cu donatii - fara costuri</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">
                   <div className="text-center mb-2">
-                    <span className="text-5xl font-extrabold text-gray-900">5%</span>
-                    <span className="text-lg text-gray-500 ml-1">per donatie</span>
+                    <span className="text-5xl font-extrabold text-gray-900">0</span>
+                    <span className="text-lg text-gray-500 ml-1">RON/luna</span>
                   </div>
-                  <p className="text-center text-xs text-gray-400 mb-6">Fara abonament lunar</p>
+                  <p className="text-center text-xs text-gray-400 mb-6">5% comision per donatie</p>
                   <ul className="space-y-3">
                     {[
-                      "100 donatori",
-                      "Mini-site donatii",
-                      "GDPR tools de baza",
-                      "Vizualizare donatori",
-                      "Plati online Stripe Connect",
-                      "1 utilizator",
-                      "Suport email",
+                      "Mini-site complet (9 sectiuni)",
+                      "Donatii: Stripe + transfer bancar",
+                      "Pana la 50 donatori",
+                      "Formular 230 cu PDF",
+                      "Contract sponsorizare",
+                      "CRM basic (adauga, editeaza)",
+                      "GDPR si conformitate",
+                      "1 admin",
                     ].map((f) => (
                       <li key={f} className="flex items-start gap-2.5 text-sm text-gray-600">
                         <CheckCircle className="h-4.5 w-4.5 text-green-500 flex-shrink-0 mt-0.5" />
@@ -782,13 +807,14 @@ export default async function HomePage() {
                 <CardFooter>
                   <Link href="/register" className="w-full">
                     <Button variant="outline" className="w-full" size="lg">
-                      Incepe acum
+                      Creeaza site gratuit
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                 </CardFooter>
               </Card>
 
-              {/* PRO */}
+              {/* PROFESIONAL */}
               <Card className="flex flex-col hover:shadow-xl transition-all duration-300 border-indigo-300 ring-2 ring-indigo-200 relative scale-[1.02]">
                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
                   <Badge className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-0 px-4 py-1 text-sm shadow-lg">
@@ -797,46 +823,49 @@ export default async function HomePage() {
                   </Badge>
                 </div>
                 <CardHeader className="text-center pb-2 pt-8">
-                  <Badge className="w-fit mx-auto mb-3 bg-indigo-100 text-indigo-700 border-indigo-200">PRO</Badge>
-                  <CardTitle className="text-2xl">Pro</CardTitle>
-                  <CardDescription>Pentru ONG-uri care vor sa creasca</CardDescription>
+                  <Badge className="w-fit mx-auto mb-3 bg-indigo-100 text-indigo-700 border-indigo-200">PROFESIONAL</Badge>
+                  <CardTitle className="text-2xl">Profesional</CardTitle>
+                  <CardDescription>Email, SMS, AI si automatizari</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">
                   <div className="text-center mb-2">
-                    <span className="text-5xl font-extrabold text-gray-900">3%</span>
-                    <span className="text-lg text-gray-500 ml-1">per donatie</span>
+                    <span className="text-5xl font-extrabold text-gray-900">149</span>
+                    <span className="text-lg text-gray-500 ml-1">RON/luna</span>
                   </div>
-                  <p className="text-center text-xs text-gray-400 mb-6">Fara abonament lunar</p>
+                  <p className="text-center text-xs text-gray-400 mb-6">2% comision per donatie</p>
                   <ul className="space-y-3">
                     {[
-                      "1.000 donatori",
-                      "Generator continut AI",
-                      "Automatizari de baza",
-                      "Analitica si rapoarte",
-                      "1 mentiune in presa / luna",
-                      "Scor vizibilitate media",
-                      "Export CSV",
-                      "5 utilizatori",
-                      "Suport prioritar",
-                      "Blog ONG",
-                    ].map((f) => (
-                      <li key={f} className="flex items-start gap-2.5 text-sm text-gray-600">
+                      "Tot din Gratuit +",
+                      "Mini-site complet (toate sectiunile)",
+                      "Toate procesatorii de plata",
+                      "Pana la 3.000 donatori",
+                      "Email marketing + 6 template-uri",
+                      "SMS marketing + 5 template-uri",
+                      "A/B Testing campanii",
+                      "5 AI capabilitati",
+                      "5 automatizari active",
+                      "CRM: tag-uri, segmentare, import/export",
+                      "Analitica completa",
+                      "Custom CSS pe mini-site",
+                      "5 membri echipa",
+                    ].map((f, i) => (
+                      <li key={f} className={`flex items-start gap-2.5 text-sm ${i === 0 ? "font-semibold text-indigo-700" : "text-gray-600"}`}>
                         <CheckCircle className="h-4.5 w-4.5 text-indigo-500 flex-shrink-0 mt-0.5" />
                         {f}
                       </li>
                     ))}
                   </ul>
+                  <p className="text-xs text-gray-400 mt-4 text-center italic">
+                    Creditele email si SMS se cumpara separat
+                  </p>
                 </CardContent>
                 <CardFooter className="flex-col gap-2">
                   <Link href="/checkout?plan=PRO" className="w-full">
                     <Button className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700" size="lg">
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Activeaza PRO
+                      Activeaza Profesional
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
-                  <p className="text-xs text-gray-400 text-center">
-                    Comision dedus automat din fiecare donatie
-                  </p>
                 </CardFooter>
               </Card>
 
@@ -845,47 +874,46 @@ export default async function HomePage() {
                 <CardHeader className="text-center pb-2">
                   <Badge className="w-fit mx-auto mb-3 bg-purple-100 text-purple-700 border-purple-200">ELITE</Badge>
                   <CardTitle className="text-2xl">Elite</CardTitle>
-                  <CardDescription>Pentru ONG-uri cu impact maxim</CardDescription>
+                  <CardDescription>Totul, fara limite</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1">
                   <div className="text-center mb-2">
-                    <span className="text-5xl font-extrabold text-gray-900">1.5%</span>
-                    <span className="text-lg text-gray-500 ml-1">per donatie</span>
+                    <span className="text-5xl font-extrabold text-gray-900">349</span>
+                    <span className="text-lg text-gray-500 ml-1">RON/luna</span>
                   </div>
-                  <p className="text-center text-xs text-gray-400 mb-6">Cel mai mic comision</p>
+                  <p className="text-center text-xs text-gray-400 mb-6">0% comision per donatie</p>
                   <ul className="space-y-3">
                     {[
+                      "Tot din Profesional +",
                       "Donatori nelimitati",
-                      "Automatizari avansate",
-                      "A/B Testing",
-                      "Super Agent AI (OpenAI, Gemini, Claude)",
-                      "Mentiuni nelimitate in presa",
-                      "Analiza completa vizibilitate media",
-                      "Scor reputatie bazat pe mentiuni",
-                      "Optimizare AI continut",
-                      "Verificare prioritara",
-                      "Utilizatori nelimitati",
-                      "Suport dedicat",
-                      "Blog + pagini custom",
-                      "ONG promovat pe homepage",
-                    ].map((f) => (
-                      <li key={f} className="flex items-start gap-2.5 text-sm text-gray-600">
+                      "Automatizari nelimitate",
+                      "12 AI capabilitati complete",
+                      "Sponsor CRM + AI Matching",
+                      "LinkedIn Prospecting + Chrome Extension",
+                      "Presa si Media + comunicate",
+                      "Monitorizare mentiuni AI",
+                      "Social Media AI",
+                      "Echipa nelimitata",
+                      "Audit log nelimitat",
+                      "Suport prioritar dedicat",
+                    ].map((f, i) => (
+                      <li key={f} className={`flex items-start gap-2.5 text-sm ${i === 0 ? "font-semibold text-purple-700" : "text-gray-600"}`}>
                         <CheckCircle className="h-4.5 w-4.5 text-purple-500 flex-shrink-0 mt-0.5" />
                         {f}
                       </li>
                     ))}
                   </ul>
+                  <p className="text-xs text-gray-400 mt-4 text-center italic">
+                    Creditele email si SMS se cumpara separat
+                  </p>
                 </CardContent>
                 <CardFooter className="flex-col gap-2">
                   <Link href="/checkout?plan=ELITE" className="w-full">
                     <Button variant="outline" className="w-full border-purple-300 text-purple-700 hover:bg-purple-50" size="lg">
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Activeaza ELITE
+                      Activeaza Elite
+                      <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
-                  <p className="text-xs text-gray-400 text-center">
-                    Comision dedus automat din fiecare donatie
-                  </p>
                 </CardFooter>
               </Card>
             </div>
@@ -1065,6 +1093,11 @@ export default async function HomePage() {
                     GDPR
                   </Link>
                 </li>
+                <li>
+                  <Link href="/anti-spam-policy" className="text-gray-400 hover:text-white transition-colors">
+                    Politica Anti-Spam
+                  </Link>
+                </li>
               </ul>
             </div>
 
@@ -1090,7 +1123,7 @@ export default async function HomePage() {
         </div>
         <div className="border-t border-gray-800">
           <div className="container mx-auto px-4 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-500">
-            <p>&copy; 2024 Binevo. Toate drepturile rezervate.</p>
+            <p>&copy; {new Date().getFullYear()} LEGIO WEB DEVELOPMENT TOOLS S.R.L. - Binevo. Toate drepturile rezervate.</p>
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-1.5">
                 <Shield className="h-3.5 w-3.5" />
