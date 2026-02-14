@@ -26,6 +26,7 @@ export async function GET() {
             heroTitle: true,
             heroDescription: true,
             primaryColor: true,
+            accentColor: true,
             showNewsletter: true,
             showDonation: true,
             showUpdates: true,
@@ -43,6 +44,7 @@ export async function GET() {
       heroTitle: "",
       heroDescription: "",
       primaryColor: "#6366f1",
+      accentColor: "#f59e0b",
       showNewsletter: true,
       showDonation: true,
       showUpdates: true,
@@ -74,6 +76,7 @@ export async function PUT(request: NextRequest) {
       heroTitle,
       heroDescription,
       primaryColor,
+      accentColor,
       showNewsletter,
       showDonation,
       showUpdates,
@@ -84,6 +87,7 @@ export async function PUT(request: NextRequest) {
     if (heroTitle !== undefined) updateData.heroTitle = heroTitle;
     if (heroDescription !== undefined) updateData.heroDescription = heroDescription;
     if (primaryColor !== undefined) updateData.primaryColor = primaryColor;
+    if (accentColor !== undefined) updateData.accentColor = accentColor;
     if (showNewsletter !== undefined) updateData.showNewsletter = showNewsletter;
     if (showDonation !== undefined) updateData.showDonation = showDonation;
     if (showUpdates !== undefined) updateData.showUpdates = showUpdates;
@@ -113,6 +117,7 @@ export async function PUT(request: NextRequest) {
         heroTitle: miniSiteConfig.heroTitle,
         heroDescription: miniSiteConfig.heroDescription,
         primaryColor: miniSiteConfig.primaryColor,
+        accentColor: miniSiteConfig.accentColor,
         showNewsletter: miniSiteConfig.showNewsletter,
         showDonation: miniSiteConfig.showDonation,
         showUpdates: miniSiteConfig.showUpdates,
