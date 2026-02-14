@@ -15,9 +15,8 @@ import {
   generateMonthlyRecurringInvoices,
   checkOverdueInvoices,
 } from "@/lib/invoice-generator";
-import { sendEmail } from "@/lib/email";
 import prisma from "@/lib/db";
-import { getBinevoLogoHtml } from "@/components/BinevoLogo";
+import { notifyPaymentReminder } from "@/lib/platform-notifications";
 
 const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://binevo.ro";
 
@@ -60,52 +59,21 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const logo = getBinevoLogoHtml(140);
-
     for (const invoice of dueSoonInvoices) {
       try {
-        if (invoice.buyerEmail && invoice.paymentToken) {
-          const daysLeft = Math.ceil(
-            (invoice.dueDate!.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-          );
-          const paymentUrl = `${APP_URL}/factura/${invoice.paymentToken}`;
+        if (invoice.ngoId) {
+          const paymentUrl = invoice.paymentToken
+            ? `${APP_URL}/factura/${invoice.paymentToken}`
+            : `${APP_URL}/dashboard/billing`;
 
-          await sendEmail({
-            to: invoice.buyerEmail,
-            subject: `Reminder: Factura ${invoice.invoiceNumber} scadenta in ${daysLeft} zile`,
-            html: `
-              <div style="max-width:600px;margin:0 auto;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-                <div style="padding:24px;text-align:center;border-bottom:3px solid #6366f1;">
-                  ${logo}
-                </div>
-                <div style="padding:24px;">
-                  <h2 style="color:#1a1a2e;">Reminder plata factura</h2>
-                  <p style="color:#4b5563;line-height:1.6;">
-                    Factura <strong>${invoice.invoiceNumber}</strong> in valoare de
-                    <strong>${invoice.totalAmount.toLocaleString("ro-RO", { minimumFractionDigits: 2 })} ${invoice.currency}</strong>
-                    este scadenta in <strong>${daysLeft} zile</strong>.
-                  </p>
-                  ${invoice.subscriptionPlan ? `
-                  <p style="color:#4b5563;line-height:1.6;">
-                    Aceasta factura este pentru abonamentul <strong>${invoice.subscriptionPlan}</strong> Binevo.
-                    Daca nu este platita la timp, serviciile vor fi suspendate.
-                  </p>` : ""}
-                  <div style="margin:24px 0;text-align:center;">
-                    <a href="${paymentUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#6366f1,#a855f7);color:white;text-decoration:none;border-radius:8px;font-weight:600;font-size:16px;">
-                      Plateste acum
-                    </a>
-                  </div>
-                  <p style="color:#9ca3af;font-size:13px;text-align:center;">
-                    Puteti plati cu cardul sau prin transfer bancar.
-                  </p>
-                </div>
-                <div style="padding:16px;background:#f9fafb;border-top:1px solid #e5e7eb;text-align:center;font-size:12px;color:#9ca3af;">
-                  Binevo - Platforma pentru ONG-uri din Romania
-                </div>
-              </div>
-            `,
-            from: "noreply@binevo.ro",
-            fromName: "Binevo",
+          await notifyPaymentReminder({
+            ngoName: invoice.buyerName || "ONG",
+            ngoId: invoice.ngoId,
+            plan: invoice.subscriptionPlan || "abonament",
+            amount: invoice.totalAmount,
+            currency: invoice.currency,
+            dueDate: invoice.dueDate!,
+            paymentUrl,
           });
 
           results.reminders.sent++;
