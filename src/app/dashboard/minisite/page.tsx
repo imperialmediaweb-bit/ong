@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { PageHelp } from "@/components/ui/page-help";
 import {
   Card,
   CardContent,
@@ -1561,6 +1562,17 @@ export default function MiniSiteBuilderPage() {
           </div>
         </div>
       </div>
+
+      <PageHelp items={[
+        { title: "Ce este mini-site-ul", description: "Pagina publica a ONG-ului tau unde donatorii pot dona, vedea misiunea si informatiile de contact." },
+        { title: "Informatii de baza", description: "Seteaza numele, slug-ul (URL), logo-ul si descrierea organizatiei." },
+        { title: "Hero", description: "Sectiunea principala cu titlu, descriere, buton CTA si imagine de fundal." },
+        { title: "Despre / Misiune / Impact", description: "Texte care prezinta organizatia, misiunea si impactul social." },
+        { title: "Retele sociale", description: "Link-uri catre Facebook, Instagram, LinkedIn, YouTube, TikTok, Twitter." },
+        { title: "Tema si culori", description: "Personalizeaza culorile principale si de accent ale mini-site-ului." },
+        { title: "Date bancare", description: "Informatii bancare afisate pe pagina de donatie (IBAN, banca, titular)." },
+        { title: "Previzualizeaza", description: "Click pe Previzualizeaza pentru a vedea cum arata pagina publica." },
+      ]} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PageHelp } from "@/components/ui/page-help";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -617,6 +618,13 @@ export default function SocialAiPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      <PageHelp items={[
+        { title: "Generator postari", description: "Genereaza postari pentru Facebook, Instagram, LinkedIn sau Twitter. Alege tonul, include hashtag-uri si emoji-uri." },
+        { title: "Trainer Fundraising", description: "Intreaba AI-ul despre strategii de fundraising, bune practici si sfaturi pentru ONG-uri." },
+        { title: "Strategie campanie", description: "Descrie obiectivul, audienta, bugetul si perioada — AI-ul genereaza o strategie completa." },
+        { title: "Optimizare postari", description: "Lipeste o postare existenta si primesti sugestii de imbunatatire de la AI." },
+      ]} chatHint="Fiecare tab foloseste AI — scrie in limba romana si vei primi raspunsuri personalizate." />
     </div>
   );
 }

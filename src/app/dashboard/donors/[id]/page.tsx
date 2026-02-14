@@ -17,6 +17,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency, formatDate, formatDateTime, getInitials } from "@/lib/utils";
+import { PageHelp } from "@/components/ui/page-help";
 import {
   ArrowLeft, Edit2, Save, X, Trash2, Download, Shield, Tag, Plus, Mail,
   Phone, Heart, Clock, MessageSquare, FileText, AlertTriangle, Loader2,
@@ -551,6 +552,15 @@ export default function DonorDetailPage() {
           </Tabs>
         </div>
       </div>
+
+      <PageHelp items={[
+        { title: "Profil", description: "Editeaza numele, emailul, telefonul si canalul preferat de comunicare al donatorului." },
+        { title: "Donatii", description: "Istoric complet al donatiilor cu suma, campania si statusul fiecarei tranzactii." },
+        { title: "Consimtaminte", description: "Vezi si gestioneaza consimtamintele GDPR (email, SMS, procesare date)." },
+        { title: "Mesaje", description: "Toate mesajele trimise catre acest donator si statusul lor (livrat, deschis, click)." },
+        { title: "Tag-uri", description: "Adauga sau sterge tag-uri pentru segmentare." },
+        { title: "Anonimizare / Stergere", description: "Sterge datele personale ale donatorului conform GDPR (actiune ireversibila)." },
+      ]} />
     </div>
   );
 }

@@ -13,7 +13,11 @@ import {
   subscriptionRenewedEmail,
   paymentFailedEmail,
 } from "@/lib/subscription-emails";
-import { notifySubscriptionChange } from "@/lib/platform-notifications";
+import {
+  notifySubscriptionChange,
+  notifySubscriptionExpiring,
+  notifySubscriptionExpired,
+} from "@/lib/platform-notifications";
 
 const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://binevo.ro";
 
@@ -145,30 +149,40 @@ export async function assignSubscription(params: {
 }
 
 // ─── Check Expiring Subscriptions ─────────────────────────────────
+// Flow (non-recurring):
+// 1. 3 days before expiry → first warning email + in-app (include payment link)
+// 2. Expired + 5 days → second warning with cancel/downgrade option
+// 3. Expired + 5 days no action → downgrade to BASIC (free)
+// Flow (recurring):
+// Stripe webhook handles renewal automatically
 
 export async function checkExpiringSubscriptions(): Promise<{
   expiring: number;
   expired: number;
+  warned: number;
   renewed: number;
+  suspended: number;
   errors: string[];
 }> {
   const results = {
     expiring: 0,
     expired: 0,
+    warned: 0,
     renewed: 0,
+    suspended: 0,
     errors: [] as string[],
   };
 
   const now = new Date();
 
-  // 1. Find subscriptions expiring in next 7 days (send warning)
-  const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  // 1. Find subscriptions expiring in next 3 days (send warning)
+  const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
   const expiringNgos = await prisma.ngo.findMany({
     where: {
       subscriptionExpiresAt: {
         gt: now,
-        lte: sevenDaysFromNow,
+        lte: threeDaysFromNow,
       },
       subscriptionPlan: { not: "BASIC" },
       subscriptionStatus: "active",
@@ -178,16 +192,16 @@ export async function checkExpiringSubscriptions(): Promise<{
         { lastExpirationNotice: { lt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000) } },
       ],
     },
-    include: {
-      users: {
-        where: { role: "NGO_ADMIN" },
-        select: { email: true, name: true },
-      },
-    },
   });
 
   for (const ngo of expiringNgos) {
     try {
+      // Skip if auto-renew - Stripe handles it
+      if (ngo.autoRenew && ngo.stripeSubscriptionId) {
+        results.renewed++;
+        continue;
+      }
+
       const daysLeft = Math.ceil(
         (ngo.subscriptionExpiresAt!.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
       );
@@ -198,37 +212,14 @@ export async function checkExpiringSubscriptions(): Promise<{
         data: { lastExpirationNotice: now },
       });
 
-      // Create in-app notification
-      await prisma.notification.create({
-        data: {
-          ngoId: ngo.id,
-          type: "SUBSCRIPTION_EXPIRING",
-          title: `Abonamentul expira in ${daysLeft} zile`,
-          message: `Planul ${ngo.subscriptionPlan} expira pe ${ngo.subscriptionExpiresAt!.toLocaleDateString("ro-RO")}. Reinnoiti pentru a pastra accesul la functiile avansate.`,
-          actionUrl: "/dashboard/settings",
-        },
+      // Send warning via notification provider (email + in-app + super admin)
+      await notifySubscriptionExpiring({
+        ngoName: ngo.name,
+        ngoId: ngo.id,
+        plan: ngo.subscriptionPlan,
+        expiresAt: ngo.subscriptionExpiresAt!,
+        daysLeft,
       });
-
-      // Send email to all NGO admins
-      for (const admin of ngo.users) {
-        const emailData = subscriptionExpiringEmail({
-          ngoName: ngo.name,
-          plan: ngo.subscriptionPlan,
-          expiresAt: ngo.subscriptionExpiresAt!,
-          daysLeft,
-          dashboardUrl: `${APP_URL}/dashboard/settings`,
-        });
-
-        await sendEmail({
-          to: admin.email,
-          subject: emailData.subject,
-          html: emailData.html,
-          from: "noreply@binevo.ro",
-          fromName: "Binevo",
-        }).catch((err) => {
-          results.errors.push(`Email failed for ${admin.email}: ${err}`);
-        });
-      }
 
       results.expiring++;
     } catch (err: any) {
@@ -236,10 +227,15 @@ export async function checkExpiringSubscriptions(): Promise<{
     }
   }
 
-  // 2. Find expired subscriptions - downgrade to BASIC
-  const expiredNgos = await prisma.ngo.findMany({
+  // 2. Find expired subscriptions (0-5 days past expiry) → send second warning with cancel option
+  const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
+
+  const recentlyExpiredNgos = await prisma.ngo.findMany({
     where: {
-      subscriptionExpiresAt: { lt: now },
+      subscriptionExpiresAt: {
+        lt: now,
+        gte: fiveDaysAgo,
+      },
       subscriptionPlan: { not: "BASIC" },
       subscriptionStatus: "active",
     },
@@ -251,19 +247,116 @@ export async function checkExpiringSubscriptions(): Promise<{
     },
   });
 
-  for (const ngo of expiredNgos) {
+  for (const ngo of recentlyExpiredNgos) {
     try {
-      const previousPlan = ngo.subscriptionPlan;
-
-      // Check if auto-renew is enabled
+      // Skip if auto-renew
       if (ngo.autoRenew && ngo.stripeSubscriptionId) {
-        // Auto-renew via Stripe - skip downgrade
-        // The Stripe webhook will handle renewal
         results.renewed++;
         continue;
       }
 
-      // Downgrade to BASIC
+      const daysPastExpiry = Math.floor(
+        (now.getTime() - ngo.subscriptionExpiresAt!.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      // Send second warning with cancel/downgrade option (only once, around day 3-5)
+      if (daysPastExpiry >= 3) {
+        const alreadyWarned = ngo.lastExpirationNotice &&
+          (now.getTime() - ngo.lastExpirationNotice.getTime()) < 2 * 24 * 60 * 60 * 1000;
+
+        if (!alreadyWarned) {
+          await prisma.ngo.update({
+            where: { id: ngo.id },
+            data: { lastExpirationNotice: now },
+          });
+
+          // In-app notification with cancel option
+          await prisma.notification.create({
+            data: {
+              ngoId: ngo.id,
+              type: "SUBSCRIPTION_EXPIRED",
+              title: `Ultima avertizare: abonamentul ${ngo.subscriptionPlan} a expirat`,
+              message: `Planul ${ngo.subscriptionPlan} a expirat acum ${daysPastExpiry} zile. Reinnoiti sau contul va fi trecut pe BASIC (gratuit) in 2 zile.`,
+              actionUrl: "/dashboard/settings",
+            },
+          });
+
+          // Send second warning email with cancel/downgrade option
+          const { sendPlatformEmail } = await import("@/lib/email-sender");
+          const cancelUrl = `${APP_URL}/dashboard/settings`;
+          const renewUrl = `${APP_URL}/dashboard/settings`;
+
+          const warningHtml = `
+            <!DOCTYPE html>
+            <html><head><meta charset="utf-8"></head>
+            <body style="margin:0;padding:20px;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+              <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.07);">
+                <div style="background:linear-gradient(135deg,#dc2626,#ef4444);padding:28px 24px;text-align:center;color:white;">
+                  <h1 style="margin:0;font-size:22px;">Ultima Avertizare - Abonament Expirat</h1>
+                </div>
+                <div style="padding:28px 24px;color:#374151;line-height:1.6;">
+                  <p>Buna ziua,</p>
+                  <p>Abonamentul <strong>${ngo.subscriptionPlan}</strong> pentru <strong>${ngo.name}</strong> a expirat acum <strong>${daysPastExpiry} zile</strong>.</p>
+                  <div style="background:#fef2f2;border:2px solid #fca5a5;border-radius:8px;padding:20px;margin:20px 0;">
+                    <p style="margin:0;color:#991b1b;font-weight:600;">Daca nu reinnoiti in 2 zile:</p>
+                    <ul style="color:#991b1b;font-size:14px;margin:8px 0 0;padding-left:20px;">
+                      <li>Contul va fi retrogradat la planul BASIC (gratuit)</li>
+                      <li>Campanii email/SMS, automatizari si AI vor fi dezactivate</li>
+                      <li>Datele dumneavoastra raman in siguranta</li>
+                    </ul>
+                  </div>
+                  <div style="text-align:center;margin:24px 0;">
+                    <a href="${renewUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:white;text-decoration:none;border-radius:8px;font-weight:600;font-size:16px;">Reinnoieste Abonamentul</a>
+                  </div>
+                  <div style="text-align:center;margin:16px 0;padding-top:16px;border-top:1px solid #e5e7eb;">
+                    <p style="color:#6b7280;font-size:14px;margin:0 0 8px;">Nu mai doriti acest abonament?</p>
+                    <a href="${cancelUrl}" style="display:inline-block;padding:10px 24px;background:#f3f4f6;color:#4b5563;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;border:1px solid #d1d5db;">Treci la planul BASIC (gratuit)</a>
+                  </div>
+                </div>
+                <div style="padding:16px 24px;background:#f9fafb;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #e5e7eb;">
+                  Binevo - Platforma pentru ONG-uri din Romania
+                </div>
+              </div>
+            </body></html>`;
+
+          for (const admin of ngo.users) {
+            await sendPlatformEmail({
+              to: admin.email,
+              subject: `ULTIMA AVERTIZARE: Abonamentul ${ngo.subscriptionPlan} a expirat - ${ngo.name}`,
+              html: warningHtml,
+            }).catch(console.error);
+          }
+
+          results.warned++;
+        }
+      }
+
+      results.expired++;
+    } catch (err: any) {
+      results.errors.push(`Error processing expired ngo ${ngo.id}: ${err.message}`);
+    }
+  }
+
+  // 3. Find subscriptions expired > 5 days → downgrade to BASIC (free)
+  const expiredLongNgos = await prisma.ngo.findMany({
+    where: {
+      subscriptionExpiresAt: { lt: fiveDaysAgo },
+      subscriptionPlan: { not: "BASIC" },
+      subscriptionStatus: "active",
+    },
+  });
+
+  for (const ngo of expiredLongNgos) {
+    try {
+      // Skip if auto-renew
+      if (ngo.autoRenew && ngo.stripeSubscriptionId) {
+        results.renewed++;
+        continue;
+      }
+
+      const previousPlan = ngo.subscriptionPlan;
+
+      // Downgrade to BASIC (free)
       await prisma.ngo.update({
         where: { id: ngo.id },
         data: {
@@ -283,52 +376,21 @@ export async function checkExpiringSubscriptions(): Promise<{
           entityId: ngo.id,
           details: {
             previousPlan,
-            reason: "Abonament expirat - retrogradare automata la BASIC",
+            reason: "Abonament expirat + 5 zile gratie - retrogradare automata la BASIC (gratuit)",
           } as any,
         },
       });
 
-      // Create notification
-      await prisma.notification.create({
-        data: {
-          ngoId: ngo.id,
-          type: "SUBSCRIPTION_EXPIRED",
-          title: "Abonament expirat",
-          message: `Planul ${previousPlan} a expirat. Contul a fost trecut pe planul BASIC.`,
-          actionUrl: "/dashboard/settings",
-        },
+      // Send expired notification via provider (email + in-app + super admin)
+      await notifySubscriptionExpired({
+        ngoName: ngo.name,
+        ngoId: ngo.id,
+        previousPlan,
       });
 
-      // Send email
-      for (const admin of ngo.users) {
-        const emailData = subscriptionExpiredEmail({
-          ngoName: ngo.name,
-          previousPlan,
-          dashboardUrl: `${APP_URL}/dashboard/settings`,
-        });
-
-        await sendEmail({
-          to: admin.email,
-          subject: emailData.subject,
-          html: emailData.html,
-          from: "noreply@binevo.ro",
-          fromName: "Binevo",
-        }).catch((err) => {
-          results.errors.push(`Email failed for ${admin.email}: ${err}`);
-        });
-      }
-
-      // Alert super admin about expired subscription
-      notifySubscriptionChange({
-        ngoName: ngo.name,
-        event: "expired",
-        plan: "BASIC",
-        previousPlan,
-      }).catch(() => {});
-
-      results.expired++;
+      results.suspended++;
     } catch (err: any) {
-      results.errors.push(`Error processing expired ngo ${ngo.id}: ${err.message}`);
+      results.errors.push(`Error processing long-expired ngo ${ngo.id}: ${err.message}`);
     }
   }
 

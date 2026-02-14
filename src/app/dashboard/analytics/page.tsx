@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { PageHelp } from "@/components/ui/page-help";
 import {
   Send,
   Eye,
@@ -942,6 +943,15 @@ export default function AnalyticsPage() {
           )}
         </CardContent>
       </Card>
+
+      <PageHelp items={[
+        { title: "Performanta campanii", description: "Grafice cu ratele de deschidere, click si bounce pentru fiecare campanie trimisa." },
+        { title: "Trimiteri in timp", description: "Evolutia numarului de mesaje trimise pe zile/saptamani." },
+        { title: "Donatii pe campanie", description: "Cat a generat fiecare campanie in donatii." },
+        { title: "Crestere donatori", description: "Grafic cu evolutia numarului de donatori noi in timp." },
+        { title: "Agent AI", description: "Intreaba AI-ul despre datele tale — ex: care campanie a performat cel mai bine?" },
+        { title: "Filtre", description: "Filtreaza datele dupa interval de timp sau campanie specifica." },
+      ]} chatHint="Foloseste Agent-ul AI din aceasta pagina pentru intrebari despre analitice." />
     </div>
   );
 }

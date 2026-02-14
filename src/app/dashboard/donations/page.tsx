@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
+import { PageHelp } from "@/components/ui/page-help";
 import {
   Search,
   Filter,
@@ -405,6 +406,14 @@ export default function DonationsPage() {
           )}
         </CardContent>
       </Card>
+
+      <PageHelp items={[
+        { title: "Lista donatii", description: "Toate donatiile primite, cu donator, suma, campanie si metoda de plata." },
+        { title: "Filtre", description: "Filtreaza dupa status (Completat, In asteptare, Esuat, Rambursat), campanie sau interval de date." },
+        { title: "Status donatii", description: "COMPLETED = plata confirmata, PENDING = in procesare, FAILED = esuat, REFUNDED = rambursata." },
+        { title: "Export", description: "Descarca lista donatiilor in format CSV pentru contabilitate." },
+        { title: "Verificare plati", description: "Acceseaza sectiunea Verificare plati (Pledges) pentru donatii declarate care necesita confirmare manuala." },
+      ]} />
     </div>
   );
 }

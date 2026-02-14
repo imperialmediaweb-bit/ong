@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { PageHelp } from "@/components/ui/page-help";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1367,6 +1368,15 @@ export default function NewCampaignPage() {
           </div>
         </div>
       </div>
+
+      <PageHelp items={[
+        { title: "Pas 1 - Sablon", description: "Alege un sablon predefinit sau incepe de la zero. Sabloanele au deja text si design optimizat." },
+        { title: "Pas 2 - Detalii", description: "Completeaza numele campaniei, subiectul emailului si continutul mesajului. Poti genera text cu AI." },
+        { title: "Pas 3 - Audienta", description: "Selecteaza cui trimiti: toti donatorii, doar cei cu anumite tag-uri, sau filtreaza dupa status/donatie minima." },
+        { title: "Pas 4 - Programare", description: "Trimite acum sau programeaza pentru o data si ora viitoare." },
+        { title: "Pas 5 - Obiectiv", description: "Optional: seteaza un obiectiv de fundraising pentru a urmari progresul campaniei." },
+        { title: "Conformitate", description: "Accepta termenii anti-spam si GDPR inainte de trimitere." },
+      ]} />
     </div>
   );
 }

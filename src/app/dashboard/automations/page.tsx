@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { PageHelp } from "@/components/ui/page-help";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -364,6 +365,14 @@ export default function AutomationsPage() {
           ))}
         </div>
       )}
+
+      <PageHelp items={[
+        { title: "Ce sunt automatizarile", description: "Actiuni care se executa automat cand se intampla un eveniment (ex: donatie noua, abonat nou)." },
+        { title: "Trigger (declansator)", description: "Evenimentul care porneste automatizarea: donatie noua, obiectiv atins, lipsa donatii, abonat nou, campanie terminata." },
+        { title: "Play / Pauza", description: "Activeaza sau dezactiveaza o automatizare fara a o sterge." },
+        { title: "Executii", description: "Numarul de ori cand automatizarea a fost declansata." },
+        { title: "Automatizare noua", description: "Click pe + Automatizare noua pentru a configura trigger-ul si pasii (email, SMS, asteptare, tag-uri)." },
+      ]} />
     </div>
   );
 }

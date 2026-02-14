@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { PageHelp } from "@/components/ui/page-help";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -656,6 +657,15 @@ export default function NewAutomationPage() {
           </Button>
         </CardFooter>
       </Card>
+
+      <PageHelp items={[
+        { title: "Trigger", description: "Alege evenimentul care porneste automatizarea: donatie noua, abonat, obiectiv atins, lipsa donatii, etc." },
+        { title: "Pasi (Steps)", description: "Adauga actiunile care se executa in ordine: trimite email, trimite SMS, asteapta X zile, adauga/sterge tag." },
+        { title: "SEND_EMAIL", description: "Trimite un email automat cu subiect si continut personalizat." },
+        { title: "SEND_SMS", description: "Trimite un SMS automat catre donator." },
+        { title: "WAIT / DELAY", description: "Asteapta un interval (minute, ore, zile, saptamani) inainte de pasul urmator." },
+        { title: "ADD_TAG / REMOVE_TAG", description: "Adauga sau sterge un tag de la donator pentru segmentare." },
+      ]} />
     </div>
   );
 }

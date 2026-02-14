@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency, formatDate, formatDateTime, percentage, getInitials } from "@/lib/utils";
+import { PageHelp } from "@/components/ui/page-help";
 import {
   ArrowLeft,
   Send,
@@ -606,6 +607,14 @@ export default function CampaignDetailPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <PageHelp items={[
+        { title: "Metrici", description: "Trimise, livrate, deschise, click-uri, bounce-uri si dezabonari — toate intr-o singura privire." },
+        { title: "Grafice", description: "Distributia statusurilor de livrare (pie chart) si metrici de engagement (bar chart)." },
+        { title: "Destinatari", description: "Lista completa a destinatarilor cu statusul individual de livrare." },
+        { title: "Pauza / Reluare", description: "Poti opri temporar o campanie in trimitere si o relua mai tarziu." },
+        { title: "Copiaza campanie", description: "Creeaza o copie a campaniei pentru a o retrimite cu modificari." },
+      ]} />
     </div>
   );
 }

@@ -899,6 +899,557 @@ async function main() {
     },
   });
 
+  // ─── Platform Billing (company details) ──────────────────────
+  await prisma.platformBilling.upsert({
+    where: { id: "billing" },
+    update: {},
+    create: {
+      id: "billing",
+      companyName: "Binevo SRL",
+      companyCui: "RO49123456",
+      companyRegCom: "J40/12345/2024",
+      companyAddress: "Str. Inovatiei nr. 42, Sector 1",
+      companyCity: "Bucuresti",
+      companyCounty: "Bucuresti",
+      companyPostalCode: "010101",
+      companyCountry: "Romania",
+      companyEmail: "billing@binevo.ro",
+      companyPhone: "+40 21 123 4567",
+      companyIban: "RO49AAAA1B31007593840000",
+      companyBankName: "Banca Transilvania",
+      companyVatPayer: true,
+      companyCapital: "10.000 RON",
+      invoicePrefix: "BNV",
+      invoiceNextNumber: 8,
+      invoiceSeries: "BNV",
+      invoiceCurrency: "RON",
+      invoiceVatRate: 19,
+      invoiceNotes: "Plata se face in termen de 30 de zile de la emitere.",
+      invoicePaymentTerms: 30,
+    },
+  });
+  console.log("Platform Billing config creat");
+
+  // ─── Sample Invoices ───────────────────────────────────────────
+
+  // Invoice 1: Subscription PRO - paid
+  await prisma.invoice.upsert({
+    where: { invoiceNumber: "BNV-0001" },
+    update: {},
+    create: {
+      invoiceNumber: "BNV-0001",
+      invoiceSeries: "BNV",
+      sellerName: "Binevo SRL",
+      sellerCui: "RO49123456",
+      sellerRegCom: "J40/12345/2024",
+      sellerAddress: "Str. Inovatiei nr. 42, Sector 1",
+      sellerCity: "Bucuresti",
+      sellerCounty: "Bucuresti",
+      sellerEmail: "billing@binevo.ro",
+      sellerIban: "RO49AAAA1B31007593840000",
+      sellerBankName: "Banca Transilvania",
+      sellerVatPayer: true,
+      buyerName: "Asociatia Demo ONG",
+      buyerCui: "12345678",
+      buyerAddress: "Str. Exemplu nr. 1",
+      buyerCity: "Bucuresti",
+      buyerCounty: "Bucuresti",
+      buyerEmail: "admin@demo-ngo.org",
+      ngoId: ngo.id,
+      issueDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      status: "PAID",
+      items: [
+        {
+          description: "Abonament ELITE - Decembrie 2025",
+          quantity: 1,
+          unitPrice: 293.28,
+          vatRate: 19,
+          totalNet: 293.28,
+          totalVat: 55.72,
+          totalGross: 349,
+        },
+      ] as any,
+      subtotal: 293.28,
+      vatAmount: 55.72,
+      totalAmount: 349,
+      currency: "RON",
+      paidAt: new Date(Date.now() - 58 * 24 * 60 * 60 * 1000),
+      paymentMethod: "stripe",
+      subscriptionPlan: "ELITE",
+      subscriptionMonth: "2025-12",
+      isRecurring: true,
+      notes: "Factura pentru abonamentul ELITE - luna decembrie 2025.",
+    },
+  });
+
+  // Invoice 2: Subscription ELITE - paid
+  await prisma.invoice.upsert({
+    where: { invoiceNumber: "BNV-0002" },
+    update: {},
+    create: {
+      invoiceNumber: "BNV-0002",
+      invoiceSeries: "BNV",
+      sellerName: "Binevo SRL",
+      sellerCui: "RO49123456",
+      sellerAddress: "Str. Inovatiei nr. 42, Sector 1",
+      sellerCity: "Bucuresti",
+      sellerEmail: "billing@binevo.ro",
+      sellerIban: "RO49AAAA1B31007593840000",
+      sellerBankName: "Banca Transilvania",
+      sellerVatPayer: true,
+      buyerName: "Asociatia Demo ONG",
+      buyerCui: "12345678",
+      buyerAddress: "Str. Exemplu nr. 1",
+      buyerCity: "Bucuresti",
+      buyerEmail: "admin@demo-ngo.org",
+      ngoId: ngo.id,
+      issueDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(Date.now()),
+      status: "PAID",
+      items: [
+        {
+          description: "Abonament ELITE - Ianuarie 2026",
+          quantity: 1,
+          unitPrice: 293.28,
+          vatRate: 19,
+          totalNet: 293.28,
+          totalVat: 55.72,
+          totalGross: 349,
+        },
+      ] as any,
+      subtotal: 293.28,
+      vatAmount: 55.72,
+      totalAmount: 349,
+      currency: "RON",
+      paidAt: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000),
+      paymentMethod: "stripe",
+      subscriptionPlan: "ELITE",
+      subscriptionMonth: "2026-01",
+      isRecurring: true,
+    },
+  });
+
+  // Invoice 3: Credit package purchase - paid
+  await prisma.invoice.upsert({
+    where: { invoiceNumber: "BNV-0003" },
+    update: {},
+    create: {
+      invoiceNumber: "BNV-0003",
+      invoiceSeries: "BNV",
+      sellerName: "Binevo SRL",
+      sellerCui: "RO49123456",
+      sellerAddress: "Str. Inovatiei nr. 42, Sector 1",
+      sellerCity: "Bucuresti",
+      sellerEmail: "billing@binevo.ro",
+      sellerIban: "RO49AAAA1B31007593840000",
+      sellerBankName: "Banca Transilvania",
+      sellerVatPayer: true,
+      buyerName: "Asociatia Demo ONG",
+      buyerCui: "12345678",
+      buyerAddress: "Str. Exemplu nr. 1",
+      buyerCity: "Bucuresti",
+      buyerEmail: "admin@demo-ngo.org",
+      ngoId: ngo.id,
+      issueDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      status: "PAID",
+      items: [
+        {
+          description: "Pachet Complet Pro - 5.000 emailuri + 500 SMS-uri",
+          quantity: 1,
+          unitPrice: 251.26,
+          vatRate: 19,
+          totalNet: 251.26,
+          totalVat: 47.74,
+          totalGross: 299,
+        },
+      ] as any,
+      subtotal: 251.26,
+      vatAmount: 47.74,
+      totalAmount: 299,
+      currency: "RON",
+      paidAt: new Date(Date.now() - 19 * 24 * 60 * 60 * 1000),
+      paymentMethod: "stripe",
+      notes: "Pachet credite email + SMS",
+    },
+  });
+
+  // Invoice 4: Current month subscription - issued (not yet paid)
+  await prisma.invoice.upsert({
+    where: { invoiceNumber: "BNV-0004" },
+    update: {},
+    create: {
+      invoiceNumber: "BNV-0004",
+      invoiceSeries: "BNV",
+      sellerName: "Binevo SRL",
+      sellerCui: "RO49123456",
+      sellerAddress: "Str. Inovatiei nr. 42, Sector 1",
+      sellerCity: "Bucuresti",
+      sellerEmail: "billing@binevo.ro",
+      sellerIban: "RO49AAAA1B31007593840000",
+      sellerBankName: "Banca Transilvania",
+      sellerVatPayer: true,
+      buyerName: "Asociatia Demo ONG",
+      buyerCui: "12345678",
+      buyerAddress: "Str. Exemplu nr. 1",
+      buyerCity: "Bucuresti",
+      buyerEmail: "admin@demo-ngo.org",
+      ngoId: ngo.id,
+      issueDate: new Date(),
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      status: "ISSUED",
+      items: [
+        {
+          description: "Abonament ELITE - Februarie 2026",
+          quantity: 1,
+          unitPrice: 293.28,
+          vatRate: 19,
+          totalNet: 293.28,
+          totalVat: 55.72,
+          totalGross: 349,
+        },
+      ] as any,
+      subtotal: 293.28,
+      vatAmount: 55.72,
+      totalAmount: 349,
+      currency: "RON",
+      subscriptionPlan: "ELITE",
+      subscriptionMonth: "2026-02",
+      isRecurring: true,
+      paymentToken: "pay-demo-0004",
+    },
+  });
+
+  // Invoice 5: PRO subscription for Fundatia Sperantei - paid
+  await prisma.invoice.upsert({
+    where: { invoiceNumber: "BNV-0005" },
+    update: {},
+    create: {
+      invoiceNumber: "BNV-0005",
+      invoiceSeries: "BNV",
+      sellerName: "Binevo SRL",
+      sellerCui: "RO49123456",
+      sellerAddress: "Str. Inovatiei nr. 42, Sector 1",
+      sellerCity: "Bucuresti",
+      sellerEmail: "billing@binevo.ro",
+      sellerIban: "RO49AAAA1B31007593840000",
+      sellerBankName: "Banca Transilvania",
+      sellerVatPayer: true,
+      buyerName: "Fundatia Sperantei",
+      buyerCui: "87654321",
+      buyerAddress: "Bd. Unirii nr. 10",
+      buyerCity: "Cluj-Napoca",
+      buyerCounty: "Cluj",
+      buyerEmail: "admin@fundatia-sperantei.ro",
+      ngoId: ngo2.id,
+      issueDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+      status: "PAID",
+      items: [
+        {
+          description: "Abonament PRO - Februarie 2026",
+          quantity: 1,
+          unitPrice: 125.21,
+          vatRate: 19,
+          totalNet: 125.21,
+          totalVat: 23.79,
+          totalGross: 149,
+        },
+      ] as any,
+      subtotal: 125.21,
+      vatAmount: 23.79,
+      totalAmount: 149,
+      currency: "RON",
+      paidAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000),
+      paymentMethod: "bank_transfer",
+      subscriptionPlan: "PRO",
+      subscriptionMonth: "2026-02",
+      isRecurring: true,
+    },
+  });
+
+  // Invoice 6: Email credits for Fundatia Sperantei
+  await prisma.invoice.upsert({
+    where: { invoiceNumber: "BNV-0006" },
+    update: {},
+    create: {
+      invoiceNumber: "BNV-0006",
+      invoiceSeries: "BNV",
+      sellerName: "Binevo SRL",
+      sellerCui: "RO49123456",
+      sellerAddress: "Str. Inovatiei nr. 42, Sector 1",
+      sellerCity: "Bucuresti",
+      sellerEmail: "billing@binevo.ro",
+      sellerIban: "RO49AAAA1B31007593840000",
+      sellerBankName: "Banca Transilvania",
+      sellerVatPayer: true,
+      buyerName: "Fundatia Sperantei",
+      buyerCui: "87654321",
+      buyerAddress: "Bd. Unirii nr. 10",
+      buyerCity: "Cluj-Napoca",
+      buyerEmail: "admin@fundatia-sperantei.ro",
+      ngoId: ngo2.id,
+      issueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      status: "PAID",
+      items: [
+        {
+          description: "Email Pro - 2.000 emailuri",
+          quantity: 1,
+          unitPrice: 49.58,
+          vatRate: 19,
+          totalNet: 49.58,
+          totalVat: 9.42,
+          totalGross: 59,
+        },
+      ] as any,
+      subtotal: 49.58,
+      vatAmount: 9.42,
+      totalAmount: 59,
+      currency: "RON",
+      paidAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+      paymentMethod: "stripe",
+      notes: "Pachet credite email",
+    },
+  });
+
+  // Invoice 7: Overdue invoice for ONG Verde
+  await prisma.invoice.upsert({
+    where: { invoiceNumber: "BNV-0007" },
+    update: {},
+    create: {
+      invoiceNumber: "BNV-0007",
+      invoiceSeries: "BNV",
+      sellerName: "Binevo SRL",
+      sellerCui: "RO49123456",
+      sellerAddress: "Str. Inovatiei nr. 42, Sector 1",
+      sellerCity: "Bucuresti",
+      sellerEmail: "billing@binevo.ro",
+      sellerIban: "RO49AAAA1B31007593840000",
+      sellerBankName: "Banca Transilvania",
+      sellerVatPayer: true,
+      buyerName: "ONG Verde",
+      buyerAddress: "Adresa ONG Verde",
+      buyerCity: "Bucuresti",
+      buyerEmail: "admin@ong-verde.ro",
+      ngoId: ngo3.id,
+      issueDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
+      dueDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+      status: "OVERDUE",
+      items: [
+        {
+          description: "SMS Starter - 100 SMS-uri",
+          quantity: 1,
+          unitPrice: 57.98,
+          vatRate: 19,
+          totalNet: 57.98,
+          totalVat: 11.02,
+          totalGross: 69,
+        },
+      ] as any,
+      subtotal: 57.98,
+      vatAmount: 11.02,
+      totalAmount: 69,
+      currency: "RON",
+      paymentToken: "pay-demo-0007",
+      notes: "Factura restanta - pachet SMS",
+    },
+  });
+
+  console.log("7 facturi demo create");
+
+  // ─── Credit Transactions ──────────────────────────────────────
+
+  // Demo NGO - email credits purchased
+  await prisma.creditTransaction.create({
+    data: {
+      ngoId: ngo.id,
+      type: "PURCHASE",
+      channel: "EMAIL",
+      amount: 5000,
+      balance: 5000,
+      description: "Achizitie Pachet Complet Pro - 5.000 emailuri",
+    },
+  });
+
+  // Demo NGO - SMS credits purchased
+  await prisma.creditTransaction.create({
+    data: {
+      ngoId: ngo.id,
+      type: "PURCHASE",
+      channel: "SMS",
+      amount: 500,
+      balance: 500,
+      description: "Achizitie Pachet Complet Pro - 500 SMS-uri",
+    },
+  });
+
+  // Demo NGO - email credits used for campaigns
+  await prisma.creditTransaction.create({
+    data: {
+      ngoId: ngo.id,
+      type: "USAGE",
+      channel: "EMAIL",
+      amount: -177,
+      balance: 4823,
+      description: "Campanii email trimise (5 campanii, 177 emailuri)",
+    },
+  });
+
+  // Demo NGO - SMS credits used
+  await prisma.creditTransaction.create({
+    data: {
+      ngoId: ngo.id,
+      type: "USAGE",
+      channel: "SMS",
+      amount: -120,
+      balance: 380,
+      description: "Campanie SMS - Apel urgent Iarna 2026",
+    },
+  });
+
+  // Demo NGO - bonus credits
+  await prisma.creditTransaction.create({
+    data: {
+      ngoId: ngo.id,
+      type: "BONUS",
+      channel: "EMAIL",
+      amount: 200,
+      balance: 5023,
+      description: "Bonus de bun venit - plan ELITE",
+    },
+  });
+
+  // Update Demo NGO credit balances
+  await prisma.ngo.update({
+    where: { id: ngo.id },
+    data: {
+      emailCredits: 5023,
+      smsCredits: 380,
+    },
+  });
+
+  // Fundatia Sperantei - email credits
+  await prisma.creditTransaction.create({
+    data: {
+      ngoId: ngo2.id,
+      type: "PURCHASE",
+      channel: "EMAIL",
+      amount: 2000,
+      balance: 2000,
+      description: "Achizitie Email Pro - 2.000 emailuri",
+    },
+  });
+
+  await prisma.creditTransaction.create({
+    data: {
+      ngoId: ngo2.id,
+      type: "USAGE",
+      channel: "EMAIL",
+      amount: -350,
+      balance: 1650,
+      description: "Campanii email trimise",
+    },
+  });
+
+  await prisma.ngo.update({
+    where: { id: ngo2.id },
+    data: {
+      emailCredits: 1650,
+      smsCredits: 50,
+    },
+  });
+
+  console.log("Tranzactii credite create + balante actualizate");
+
+  // ─── Extended Notifications (all types) ────────────────────────
+
+  // Invoice notification
+  await prisma.notification.create({
+    data: {
+      ngoId: ngo.id,
+      type: "SYSTEM",
+      title: "Factura BNV-0004 generata",
+      message: "Factura de 349 RON pentru planul ELITE (Februarie 2026) a fost emisa. Scadenta: peste 30 zile.",
+      isRead: false,
+      actionUrl: "/dashboard/billing",
+    },
+  });
+
+  // Credit purchase notification
+  await prisma.notification.create({
+    data: {
+      ngoId: ngo.id,
+      type: "SYSTEM",
+      title: "Credite achizitionate: Pachet Complet Pro",
+      message: "5.000 email + 500 SMS credite au fost adaugate in contul dumneavoastra.",
+      isRead: true,
+      actionUrl: "/dashboard/campaigns",
+    },
+  });
+
+  // Payment confirmed notification
+  await prisma.notification.create({
+    data: {
+      ngoId: ngo.id,
+      type: "SYSTEM",
+      title: "Plata confirmata - BNV-0002",
+      message: "Plata de 349 RON pentru factura BNV-0002 a fost confirmata cu succes via Stripe.",
+      isRead: true,
+      actionUrl: "/dashboard/billing",
+    },
+  });
+
+  // Subscription expiring notification (for Fundatia Sperantei)
+  await prisma.notification.create({
+    data: {
+      ngoId: ngo2.id,
+      type: "SUBSCRIPTION_EXPIRING",
+      title: "Abonamentul PRO expira in 7 zile",
+      message: "Planul PRO expira curand. Reinnoiti pentru a pastra accesul la campanii email si automatizari.",
+      isRead: false,
+      actionUrl: "/dashboard/settings",
+    },
+  });
+
+  // Campaign completed notification
+  await prisma.notification.create({
+    data: {
+      ngoId: ngo.id,
+      type: "CAMPAIGN_COMPLETED",
+      title: "Campanie finalizata: Newsletter Ianuarie 2026",
+      message: "45 mesaje trimise (93% livrate) prin EMAIL.",
+      isRead: true,
+      actionUrl: "/dashboard/campaigns",
+    },
+  });
+
+  // Payment failed notification for ONG Verde
+  await prisma.notification.create({
+    data: {
+      ngoId: ngo3.id,
+      type: "PAYMENT_FAILED",
+      title: "Plata esuata - factura SMS",
+      message: "Plata pentru factura BNV-0007 (69 RON) a esuat. Va rugam sa actualizati metoda de plata.",
+      isRead: false,
+      actionUrl: "/dashboard/billing",
+    },
+  });
+
+  // Subscription renewed notification
+  await prisma.notification.create({
+    data: {
+      ngoId: ngo.id,
+      type: "SUBSCRIPTION_RENEWED",
+      title: "Abonament ELITE reinnoit",
+      message: "Planul ELITE a fost reinnoit automat pana la 14 februarie 2027. Toate functiile raman active.",
+      isRead: true,
+      actionUrl: "/dashboard/settings",
+    },
+  });
+
+  console.log("Notificari extinse create (facturi, credite, campanii, plati)");
+
   console.log("\n" + "=".repeat(60));
   console.log("SEEDING COMPLET!");
   console.log("=".repeat(60));
@@ -929,6 +1480,8 @@ async function main() {
   console.log("VIEWER:     viewer@demo-ngo.org / password123");
   console.log("─".repeat(60));
   console.log("\n9 ONG-uri demo + 15 donatori + 5 campanii + 3 automatizari");
+  console.log("7 facturi demo + tranzactii credite + billing config");
+  console.log("Notificari: facturi, credite, campanii, abonamente, plati");
   console.log("Mini-site: /s/demo-ngo");
   console.log("Blog:      /blog");
   console.log("Donatii:   /donate/demo-ngo");

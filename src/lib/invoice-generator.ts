@@ -9,6 +9,15 @@ import { randomBytes } from "crypto";
 import { getBinevoLogoHtml } from "@/components/BinevoLogo";
 import { sendEmail } from "@/lib/email";
 import { creditPurchaseEmail } from "@/lib/subscription-emails";
+import {
+  notifyInvoiceCreated,
+  notifyInvoicePaid,
+  notifyCreditPurchase,
+  notifySubscriptionRenewed,
+  notifySubscriptionExpired,
+  notifyPaymentFailed,
+  notifyPaymentReminder,
+} from "@/lib/platform-notifications";
 
 const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://binevo.ro";
 
@@ -162,6 +171,19 @@ export async function createSubscriptionInvoice(params: {
     data: { invoiceNextNumber: nextNum + 1 },
   });
 
+  // Send invoice notification (email + in-app + super admin)
+  notifyInvoiceCreated({
+    ngoName: ngo.billingName || ngo.name,
+    ngoId: ngo.id,
+    invoiceNumber,
+    amount: totalAmount,
+    currency: billing.invoiceCurrency || "RON",
+    plan: params.plan,
+    period: periodLabel,
+    dueDate,
+    invoiceUrl: `${APP_URL}/factura/${paymentToken}`,
+  }).catch(console.error);
+
   return {
     invoiceId: invoice.id,
     paymentToken,
@@ -281,6 +303,24 @@ async function chargeRecurringPayment(ngoId: string, invoiceId: string): Promise
         subscriptionExpiresAt: newExpiry,
       },
     });
+
+    // Send paid invoice notification (email + in-app)
+    notifyInvoicePaid({
+      ngoName: ngo.name,
+      ngoId,
+      invoiceNumber: invoice.invoiceNumber,
+      amount: invoice.totalAmount,
+      currency: invoice.currency,
+      paymentMethod: "Stripe (recurenta)",
+    }).catch(console.error);
+
+    // Send subscription renewed notification
+    notifySubscriptionRenewed({
+      ngoName: ngo.name,
+      ngoId,
+      plan: invoice.subscriptionPlan || ngo.subscriptionPlan,
+      nextExpiresAt: newExpiry,
+    }).catch(console.error);
   }
 }
 
@@ -307,6 +347,24 @@ export async function markInvoicePaid(params: {
     },
   });
 
+  // Get NGO name for notifications
+  const ngo = invoice.ngoId ? await prisma.ngo.findUnique({
+    where: { id: invoice.ngoId },
+    select: { name: true },
+  }) : null;
+
+  // Send paid notification (email + in-app + super admin)
+  if (invoice.ngoId && ngo) {
+    notifyInvoicePaid({
+      ngoName: ngo.name,
+      ngoId: invoice.ngoId,
+      invoiceNumber: invoice.invoiceNumber,
+      amount: invoice.totalAmount,
+      currency: invoice.currency,
+      paymentMethod: params.paymentMethod,
+    }).catch(console.error);
+  }
+
   // If this is a subscription invoice, activate the plan
   if (invoice.ngoId && invoice.subscriptionPlan) {
     const newExpiry = new Date();
@@ -322,16 +380,15 @@ export async function markInvoicePaid(params: {
       },
     });
 
-    // Create notification
-    await prisma.notification.create({
-      data: {
+    // Send subscription renewed notification
+    if (ngo) {
+      notifySubscriptionRenewed({
+        ngoName: ngo.name,
         ngoId: invoice.ngoId,
-        type: "SUBSCRIPTION_RENEWED",
-        title: `Plata confirmata - Plan ${invoice.subscriptionPlan}`,
-        message: `Factura ${invoice.invoiceNumber} a fost platita. Planul ${invoice.subscriptionPlan} este activ.`,
-        actionUrl: "/dashboard/settings",
-      },
-    });
+        plan: invoice.subscriptionPlan,
+        nextExpiresAt: newExpiry,
+      }).catch(console.error);
+    }
   }
 
   // If this is a credit purchase invoice, fulfill credits
@@ -344,55 +401,204 @@ export async function markInvoicePaid(params: {
 }
 
 // ─── Check Overdue Invoices & Suspend Services ──────────────────
+// Flow:
+// 1. Due date passed → mark OVERDUE + first warning email with payment link
+// 2. +5 days overdue → second warning with cancel/downgrade option
+// 3. +5 more days (10 total) → suspend services, downgrade to BASIC (free)
 
 export async function checkOverdueInvoices(): Promise<{
   overdue: number;
+  warned: number;
   suspended: number;
   errors: string[];
 }> {
-  const results = { overdue: 0, suspended: 0, errors: [] as string[] };
+  const results = { overdue: 0, warned: 0, suspended: 0, errors: [] as string[] };
   const now = new Date();
 
   // Find invoices past due date that aren't paid
-  const overdueInvoices = await prisma.invoice.findMany({
+  const unpaidInvoices = await prisma.invoice.findMany({
     where: {
-      status: { in: ["ISSUED", "SENT"] },
+      status: { in: ["ISSUED", "SENT", "OVERDUE"] },
       dueDate: { lt: now },
     },
   });
 
-  for (const invoice of overdueInvoices) {
+  for (const invoice of unpaidInvoices) {
     try {
-      // Mark as overdue
-      await prisma.invoice.update({
-        where: { id: invoice.id },
-        data: { status: "OVERDUE" },
-      });
-      results.overdue++;
+      const daysPastDue = Math.floor(
+        (now.getTime() - invoice.dueDate!.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
-      // If subscription invoice, check grace period (7 days after due date)
-      if (invoice.ngoId && invoice.subscriptionPlan) {
-        const gracePeriodEnd = new Date(invoice.dueDate!.getTime() + 7 * 24 * 60 * 60 * 1000);
+      // Get NGO info for notifications
+      let ngoName = invoice.buyerName || "ONG";
+      if (invoice.ngoId) {
+        const ngoData = await prisma.ngo.findUnique({
+          where: { id: invoice.ngoId },
+          select: { name: true, subscriptionPlan: true },
+        });
+        if (ngoData) ngoName = ngoData.name;
+      }
 
-        if (now > gracePeriodEnd) {
-          // Suspend/downgrade
+      const paymentUrl = invoice.paymentToken
+        ? `${APP_URL}/factura/${invoice.paymentToken}`
+        : `${APP_URL}/dashboard/billing`;
+
+      // Step 1: Just became overdue (0-5 days) → mark OVERDUE + first warning
+      if (invoice.status !== "OVERDUE") {
+        await prisma.invoice.update({
+          where: { id: invoice.id },
+          data: { status: "OVERDUE" },
+        });
+        results.overdue++;
+
+        // First warning: factura + payment link
+        if (invoice.ngoId) {
+          notifyPaymentReminder({
+            ngoName,
+            ngoId: invoice.ngoId,
+            plan: invoice.subscriptionPlan || "abonament",
+            amount: invoice.totalAmount,
+            currency: invoice.currency,
+            dueDate: invoice.dueDate!,
+            paymentUrl,
+          }).catch(console.error);
+        }
+      }
+
+      // Step 2: 5 days overdue → second warning with cancel/downgrade option
+      if (daysPastDue >= 5 && daysPastDue < 10 && invoice.ngoId && invoice.subscriptionPlan) {
+        // Check if we already sent second warning (using metadata)
+        const meta = (typeof invoice.metadata === "object" && invoice.metadata !== null ? invoice.metadata : {}) as any;
+        if (!meta.secondWarningAt) {
+          await prisma.invoice.update({
+            where: { id: invoice.id },
+            data: {
+              metadata: {
+                ...meta,
+                secondWarningAt: now.toISOString(),
+              } as any,
+            },
+          });
+
+          // Second warning: payment link + cancel/downgrade option
+          const cancelUrl = `${APP_URL}/dashboard/settings`;
+          await prisma.notification.create({
+            data: {
+              ngoId: invoice.ngoId,
+              type: "PAYMENT_FAILED",
+              title: `Ultima avertizare: factura ${invoice.invoiceNumber} restanta`,
+              message: `Factura de ${invoice.totalAmount} ${invoice.currency} este restanta de ${daysPastDue} zile. Platiti acum sau planul va fi retrogradat la BASIC (gratuit) in 5 zile.`,
+              actionUrl: paymentUrl,
+            },
+          });
+
+          // Send second warning email with cancel option
+          if (invoice.buyerEmail || invoice.ngoId) {
+            const { default: prismaDb } = await import("@/lib/db");
+            const ngoUsers = await prismaDb.user.findMany({
+              where: { ngoId: invoice.ngoId, role: "NGO_ADMIN", isActive: true },
+              select: { email: true },
+            });
+
+            const { sendPlatformEmail } = await import("@/lib/email-sender");
+            const warningHtml = `
+              <!DOCTYPE html>
+              <html><head><meta charset="utf-8"></head>
+              <body style="margin:0;padding:20px;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+                <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,0.07);">
+                  <div style="background:linear-gradient(135deg,#dc2626,#ef4444);padding:28px 24px;text-align:center;color:white;">
+                    <h1 style="margin:0;font-size:22px;">Ultima Avertizare - Factura Restanta</h1>
+                  </div>
+                  <div style="padding:28px 24px;color:#374151;line-height:1.6;">
+                    <p>Buna ziua,</p>
+                    <p>Factura <strong>${invoice.invoiceNumber}</strong> in valoare de <strong>${invoice.totalAmount} ${invoice.currency}</strong> pentru planul <strong>${invoice.subscriptionPlan}</strong> este restanta de <strong>${daysPastDue} zile</strong>.</p>
+                    <div style="background:#fef2f2;border:2px solid #fca5a5;border-radius:8px;padding:20px;margin:20px 0;">
+                      <p style="margin:0;color:#991b1b;font-weight:600;">Ce se intampla daca nu platiti:</p>
+                      <ul style="color:#991b1b;font-size:14px;margin:8px 0 0;padding-left:20px;">
+                        <li>Planul ${invoice.subscriptionPlan} va fi dezactivat</li>
+                        <li>Contul va fi retrogradat la BASIC (gratuit)</li>
+                        <li>Functiile avansate vor fi dezactivate</li>
+                      </ul>
+                    </div>
+                    <div style="text-align:center;margin:24px 0;">
+                      <a href="${paymentUrl}" style="display:inline-block;padding:14px 32px;background:linear-gradient(135deg,#dc2626,#ef4444);color:white;text-decoration:none;border-radius:8px;font-weight:600;font-size:16px;">Plateste acum</a>
+                    </div>
+                    <div style="text-align:center;margin:16px 0;padding-top:16px;border-top:1px solid #e5e7eb;">
+                      <p style="color:#6b7280;font-size:14px;margin:0 0 8px;">Nu mai doriti acest abonament?</p>
+                      <a href="${cancelUrl}" style="display:inline-block;padding:10px 24px;background:#f3f4f6;color:#4b5563;text-decoration:none;border-radius:8px;font-weight:600;font-size:14px;border:1px solid #d1d5db;">Anuleaza abonamentul (treci la BASIC)</a>
+                    </div>
+                  </div>
+                  <div style="padding:16px 24px;background:#f9fafb;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #e5e7eb;">
+                    Binevo - Platforma pentru ONG-uri din Romania
+                  </div>
+                </div>
+              </body></html>`;
+
+            const recipients = [invoice.buyerEmail, ...ngoUsers.map(u => u.email)].filter(Boolean) as string[];
+            const uniqueRecipients = Array.from(new Set(recipients));
+            for (const email of uniqueRecipients) {
+              await sendPlatformEmail({
+                to: email!,
+                subject: `ULTIMA AVERTIZARE: Factura ${invoice.invoiceNumber} restanta de ${daysPastDue} zile`,
+                html: warningHtml,
+              }).catch(console.error);
+            }
+          }
+
+          results.warned++;
+        }
+      }
+
+      // Step 3: 10+ days overdue → suspend + downgrade to BASIC (free)
+      if (daysPastDue >= 10 && invoice.ngoId && invoice.subscriptionPlan) {
+        const meta = (typeof invoice.metadata === "object" && invoice.metadata !== null ? invoice.metadata : {}) as any;
+        if (!meta.suspendedAt) {
+          const previousPlan = invoice.subscriptionPlan;
+
+          // Downgrade to BASIC
           await prisma.ngo.update({
             where: { id: invoice.ngoId },
             data: {
               subscriptionPlan: "BASIC",
               subscriptionStatus: "suspended",
+              subscriptionExpiresAt: null,
             },
           });
 
-          await prisma.notification.create({
+          // Mark in invoice metadata
+          await prisma.invoice.update({
+            where: { id: invoice.id },
             data: {
-              ngoId: invoice.ngoId,
-              type: "SUBSCRIPTION_EXPIRED",
-              title: "Servicii suspendate - factura neplatita",
-              message: `Factura ${invoice.invoiceNumber} nu a fost platita. Serviciile au fost suspendate. Platiti factura pentru a reactiva planul.`,
-              actionUrl: `/factura/${invoice.paymentToken}`,
+              metadata: {
+                ...meta,
+                suspendedAt: now.toISOString(),
+                previousPlan,
+              } as any,
             },
           });
+
+          // Audit log
+          await prisma.auditLog.create({
+            data: {
+              ngoId: invoice.ngoId,
+              action: "SUBSCRIPTION_SUSPENDED",
+              entityType: "Invoice",
+              entityId: invoice.id,
+              details: {
+                reason: "Factura neplatita",
+                invoiceNumber: invoice.invoiceNumber,
+                previousPlan,
+                daysPastDue,
+              } as any,
+            },
+          });
+
+          // Send suspended notification
+          notifySubscriptionExpired({
+            ngoName,
+            ngoId: invoice.ngoId,
+            previousPlan,
+          }).catch(console.error);
 
           results.suspended++;
         }
@@ -551,6 +757,19 @@ export async function createCreditInvoice(params: {
     data: { invoiceNextNumber: nextNum + 1 },
   });
 
+  // Send invoice notification (email + in-app + super admin)
+  notifyInvoiceCreated({
+    ngoName: ngo.billingName || ngo.name,
+    ngoId: ngo.id,
+    invoiceNumber,
+    amount: totalAmount,
+    currency: billing.invoiceCurrency || "RON",
+    plan: params.packageName,
+    period: `Pachet credite: ${creditsDescription}`,
+    dueDate,
+    invoiceUrl: `${APP_URL}/factura/${paymentToken}`,
+  }).catch(console.error);
+
   return {
     invoiceId: invoice.id,
     paymentToken,
@@ -650,43 +869,24 @@ export async function fulfillCreditPurchase(invoiceId: string): Promise<boolean>
     },
   });
 
-  // Send confirmation email with invoice to NGO admins
-  try {
-    const ngo = await prisma.ngo.findUnique({
-      where: { id: invoice.ngoId },
-      include: {
-        users: {
-          where: { role: "NGO_ADMIN" },
-          select: { email: true },
-        },
-      },
-    });
+  // Send credit purchase notification (email + in-app + super admin)
+  const ngoData = await prisma.ngo.findUnique({
+    where: { id: invoice.ngoId },
+    select: { name: true },
+  });
 
-    if (ngo) {
-      const emailData = creditPurchaseEmail({
-        ngoName: ngo.name,
-        packageName,
-        emailCredits,
-        smsCredits,
-        totalAmount: invoice.totalAmount,
-        currency: invoice.currency,
-        invoiceNumber: invoice.invoiceNumber,
-        paymentUrl: `${APP_URL}/factura/${invoice.paymentToken}`,
-        dashboardUrl: `${APP_URL}/dashboard/campaigns`,
-      });
-
-      for (const admin of ngo.users) {
-        await sendEmail({
-          to: admin.email,
-          subject: emailData.subject,
-          html: emailData.html,
-          from: "noreply@binevo.ro",
-          fromName: "Binevo",
-        }).catch(console.error);
-      }
-    }
-  } catch (emailErr) {
-    console.error("Failed to send credit purchase email:", emailErr);
+  if (ngoData) {
+    notifyCreditPurchase({
+      ngoName: ngoData.name,
+      ngoId: invoice.ngoId,
+      packageName,
+      emailCredits,
+      smsCredits,
+      totalAmount: invoice.totalAmount,
+      currency: invoice.currency,
+      invoiceNumber: invoice.invoiceNumber,
+      paymentUrl: `${APP_URL}/factura/${invoice.paymentToken}`,
+    }).catch(console.error);
   }
 
   return true;

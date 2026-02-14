@@ -11,6 +11,15 @@ import {
   donationConfirmationEmail,
   invoiceEmail,
 } from "@/lib/notification-emails";
+import {
+  subscriptionAssignedEmail,
+  subscriptionExpiringEmail,
+  subscriptionExpiredEmail,
+  subscriptionRenewedEmail,
+  paymentReminderEmail,
+  paymentFailedEmail,
+  creditPurchaseEmail,
+} from "@/lib/subscription-emails";
 
 const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
 
@@ -395,6 +404,602 @@ export async function notifySubscriptionChange(params: {
     });
   } catch (err) {
     console.error("Failed to send subscription alert:", err);
+  }
+}
+
+// ─── Invoice Created ─────────────────────────────────────────────
+
+export async function notifyInvoiceCreated(params: {
+  ngoName: string;
+  ngoId: string;
+  invoiceNumber: string;
+  amount: number;
+  currency: string;
+  plan: string;
+  period: string;
+  dueDate?: Date;
+  invoiceUrl?: string;
+}) {
+  const settings = await getNotifySettings();
+  if (!settings.notifyOnInvoice) return;
+
+  try {
+    const { default: prisma } = await import("@/lib/db");
+
+    // Send to NGO admins
+    const ngoUsers = await prisma.user.findMany({
+      where: { ngoId: params.ngoId, role: "NGO_ADMIN", isActive: true },
+      select: { email: true },
+    });
+
+    const template = invoiceEmail({
+      ngoName: params.ngoName,
+      invoiceNumber: params.invoiceNumber,
+      amount: params.amount,
+      currency: params.currency,
+      plan: params.plan,
+      period: params.period,
+      dueDate: params.dueDate,
+      invoiceUrl: params.invoiceUrl,
+    });
+
+    for (const user of ngoUsers) {
+      await sendPlatformEmail({
+        to: user.email,
+        subject: template.subject,
+        html: template.html,
+      });
+    }
+
+    // In-app notification
+    await prisma.notification.create({
+      data: {
+        ngoId: params.ngoId,
+        type: "SYSTEM",
+        title: `Factura ${params.invoiceNumber} generata`,
+        message: `Factura de ${params.amount} ${params.currency} pentru planul ${params.plan} (${params.period}) a fost emisa.`,
+        actionUrl: "/dashboard/billing",
+        metadata: {
+          invoiceNumber: params.invoiceNumber,
+          amount: params.amount,
+          plan: params.plan,
+        } as any,
+      },
+    });
+
+    // Alert super admin
+    await alertSuperAdmins(
+      `[Factura] ${params.invoiceNumber} - ${params.ngoName} - ${params.amount} ${params.currency}`,
+      buildSimpleAlert({
+        title: "Factura Noua Emisa",
+        gradient: "#6366f1 0%, #8b5cf6 100%",
+        body: `
+          <p>Factura <strong>${params.invoiceNumber}</strong> a fost generata pentru <strong>${params.ngoName}</strong>.</p>
+          <div style="background:#f0f0ff;border-radius:8px;padding:16px;margin:16px 0;text-align:center;">
+            <p style="margin:0;font-size:24px;font-weight:700;color:#6366f1;">${params.amount} ${params.currency}</p>
+            <p style="margin:4px 0 0;color:#6b7280;font-size:14px;">Plan ${params.plan} - ${params.period}</p>
+          </div>
+        `,
+        ctaText: "Vezi Facturi",
+        ctaUrl: `${APP_URL}/admin/invoices`,
+      })
+    );
+  } catch (err) {
+    console.error("Failed to send invoice notification:", err);
+  }
+}
+
+// ─── Invoice Paid ────────────────────────────────────────────────
+
+export async function notifyInvoicePaid(params: {
+  ngoName: string;
+  ngoId: string;
+  invoiceNumber: string;
+  amount: number;
+  currency: string;
+  paymentMethod?: string;
+}) {
+  try {
+    const { default: prisma } = await import("@/lib/db");
+
+    // In-app notification for NGO
+    await prisma.notification.create({
+      data: {
+        ngoId: params.ngoId,
+        type: "SYSTEM",
+        title: `Plata confirmata - ${params.invoiceNumber}`,
+        message: `Plata de ${params.amount} ${params.currency} pentru factura ${params.invoiceNumber} a fost confirmata cu succes.`,
+        actionUrl: "/dashboard/billing",
+        metadata: {
+          invoiceNumber: params.invoiceNumber,
+          amount: params.amount,
+          paymentMethod: params.paymentMethod,
+        } as any,
+      },
+    });
+
+    // Notify NGO admins via email
+    const ngoUsers = await prisma.user.findMany({
+      where: { ngoId: params.ngoId, role: "NGO_ADMIN", isActive: true },
+      select: { email: true },
+    });
+
+    const html = buildSimpleAlert({
+      title: "Plata Confirmata!",
+      gradient: "#059669 0%, #10b981 100%",
+      body: `
+        <p>Plata pentru factura <strong>${params.invoiceNumber}</strong> a fost procesata cu succes.</p>
+        <div style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:8px;padding:16px;margin:16px 0;text-align:center;">
+          <p style="margin:0;font-size:28px;font-weight:700;color:#059669;">${params.amount} ${params.currency}</p>
+          <p style="margin:4px 0 0;color:#065f46;font-size:14px;">Achitata${params.paymentMethod ? ` via ${params.paymentMethod}` : ""}</p>
+        </div>
+      `,
+      ctaText: "Vezi Facturi",
+      ctaUrl: `${APP_URL}/dashboard/billing`,
+    });
+
+    for (const user of ngoUsers) {
+      await sendPlatformEmail({
+        to: user.email,
+        subject: `Plata confirmata - Factura ${params.invoiceNumber}`,
+        html,
+      });
+    }
+
+    // Alert super admin
+    await alertSuperAdmins(
+      `[Plata] ${params.invoiceNumber} - ${params.ngoName} - ${params.amount} ${params.currency}`,
+      html
+    );
+  } catch (err) {
+    console.error("Failed to send invoice paid notification:", err);
+  }
+}
+
+// ─── Payment Failed ──────────────────────────────────────────────
+
+export async function notifyPaymentFailed(params: {
+  ngoName: string;
+  ngoId: string;
+  plan: string;
+  reason?: string;
+}) {
+  try {
+    const { default: prisma } = await import("@/lib/db");
+
+    // In-app notification
+    await prisma.notification.create({
+      data: {
+        ngoId: params.ngoId,
+        type: "PAYMENT_FAILED",
+        title: "Plata esuata",
+        message: `Plata pentru abonamentul ${params.plan} a esuat. Va rugam sa actualizati metoda de plata.`,
+        actionUrl: "/dashboard/settings",
+      },
+    });
+
+    // Send email to NGO admins
+    const ngoUsers = await prisma.user.findMany({
+      where: { ngoId: params.ngoId, role: "NGO_ADMIN", isActive: true },
+      select: { email: true },
+    });
+
+    const template = paymentFailedEmail({
+      ngoName: params.ngoName,
+      plan: params.plan,
+      dashboardUrl: `${APP_URL}/dashboard/settings`,
+    });
+
+    for (const user of ngoUsers) {
+      await sendPlatformEmail({
+        to: user.email,
+        subject: template.subject,
+        html: template.html,
+      });
+    }
+
+    // Alert super admin
+    await alertSuperAdmins(
+      `[Plata Esuata] ${params.ngoName} - Plan ${params.plan}`,
+      buildSimpleAlert({
+        title: "Plata Esuata",
+        gradient: "#dc2626 0%, #ef4444 100%",
+        body: `
+          <p>Plata recurenta a esuat pentru <strong>${params.ngoName}</strong>.</p>
+          <p>Plan: <strong>${params.plan}</strong></p>
+          ${params.reason ? `<p>Motiv: ${params.reason}</p>` : ""}
+        `,
+        ctaText: "Vezi Abonamente",
+        ctaUrl: `${APP_URL}/admin/subscriptions`,
+      })
+    );
+  } catch (err) {
+    console.error("Failed to send payment failed notification:", err);
+  }
+}
+
+// ─── Credit Purchase ─────────────────────────────────────────────
+
+export async function notifyCreditPurchase(params: {
+  ngoName: string;
+  ngoId: string;
+  packageName: string;
+  emailCredits: number;
+  smsCredits: number;
+  totalAmount: number;
+  currency: string;
+  invoiceNumber: string;
+  paymentUrl?: string;
+}) {
+  try {
+    const { default: prisma } = await import("@/lib/db");
+
+    // Build credit description
+    const parts: string[] = [];
+    if (params.emailCredits > 0) parts.push(`${params.emailCredits.toLocaleString("ro-RO")} email`);
+    if (params.smsCredits > 0) parts.push(`${params.smsCredits.toLocaleString("ro-RO")} SMS`);
+    const creditsDesc = parts.join(" + ");
+
+    // In-app notification
+    await prisma.notification.create({
+      data: {
+        ngoId: params.ngoId,
+        type: "SYSTEM",
+        title: `Credite achizitionate: ${params.packageName}`,
+        message: `${creditsDesc} credite au fost adaugate in contul dumneavoastra.`,
+        actionUrl: "/dashboard/campaigns",
+        metadata: {
+          packageName: params.packageName,
+          emailCredits: params.emailCredits,
+          smsCredits: params.smsCredits,
+        } as any,
+      },
+    });
+
+    // Send email to NGO admins
+    const ngoUsers = await prisma.user.findMany({
+      where: { ngoId: params.ngoId, role: "NGO_ADMIN", isActive: true },
+      select: { email: true },
+    });
+
+    const template = creditPurchaseEmail({
+      ngoName: params.ngoName,
+      packageName: params.packageName,
+      emailCredits: params.emailCredits,
+      smsCredits: params.smsCredits,
+      totalAmount: params.totalAmount,
+      currency: params.currency,
+      invoiceNumber: params.invoiceNumber,
+      paymentUrl: params.paymentUrl || `${APP_URL}/dashboard/billing`,
+      dashboardUrl: `${APP_URL}/dashboard/campaigns`,
+    });
+
+    for (const user of ngoUsers) {
+      await sendPlatformEmail({
+        to: user.email,
+        subject: template.subject,
+        html: template.html,
+      });
+    }
+
+    // Alert super admin
+    await alertSuperAdmins(
+      `[Credite] ${params.packageName} - ${params.ngoName} - ${params.totalAmount} ${params.currency}`,
+      buildSimpleAlert({
+        title: "Achizitie Credite",
+        gradient: "#059669 0%, #10b981 100%",
+        body: `
+          <p><strong>${params.ngoName}</strong> a achizitionat pachetul <strong>${params.packageName}</strong>.</p>
+          <div style="background:#ecfdf5;border-radius:8px;padding:16px;margin:16px 0;text-align:center;">
+            <p style="margin:0;font-size:20px;font-weight:700;color:#059669;">${creditsDesc}</p>
+            <p style="margin:4px 0 0;color:#065f46;font-size:14px;">${params.totalAmount} ${params.currency}</p>
+          </div>
+        `,
+        ctaText: "Vezi Tranzactii",
+        ctaUrl: `${APP_URL}/admin/invoices`,
+      })
+    );
+  } catch (err) {
+    console.error("Failed to send credit purchase notification:", err);
+  }
+}
+
+// ─── Campaign Completed ──────────────────────────────────────────
+
+export async function notifyCampaignCompleted(params: {
+  ngoName: string;
+  ngoId: string;
+  campaignName: string;
+  campaignId: string;
+  channel: string;
+  totalSent: number;
+  totalDelivered: number;
+  totalFailed?: number;
+}) {
+  try {
+    const { default: prisma } = await import("@/lib/db");
+
+    const successRate = params.totalSent > 0
+      ? Math.round((params.totalDelivered / params.totalSent) * 100)
+      : 0;
+
+    // In-app notification
+    await prisma.notification.create({
+      data: {
+        ngoId: params.ngoId,
+        type: "CAMPAIGN_COMPLETED",
+        title: `Campanie finalizata: ${params.campaignName}`,
+        message: `${params.totalSent} mesaje trimise (${successRate}% livrate) prin ${params.channel}.`,
+        actionUrl: `/dashboard/campaigns/${params.campaignId}`,
+        metadata: {
+          campaignId: params.campaignId,
+          channel: params.channel,
+          totalSent: params.totalSent,
+          totalDelivered: params.totalDelivered,
+        } as any,
+      },
+    });
+
+    // Send email to NGO admins
+    const ngoUsers = await prisma.user.findMany({
+      where: { ngoId: params.ngoId, role: "NGO_ADMIN", isActive: true },
+      select: { email: true },
+    });
+
+    const channelLabel = params.channel === "BOTH" ? "Email + SMS" : params.channel;
+    const html = buildSimpleAlert({
+      title: "Campanie Finalizata!",
+      gradient: "#6366f1 0%, #8b5cf6 100%",
+      body: `
+        <p>Campania <strong>${params.campaignName}</strong> a fost trimisa cu succes.</p>
+        <div style="background:#f0f0ff;border-radius:8px;padding:20px;margin:16px 0;">
+          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+            <tr><td style="padding:6px 0;color:#6b7280;">Canal:</td><td style="text-align:right;font-weight:600;">${channelLabel}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;">Trimise:</td><td style="text-align:right;font-weight:600;">${params.totalSent}</td></tr>
+            <tr><td style="padding:6px 0;color:#6b7280;">Livrate:</td><td style="text-align:right;font-weight:600;color:#059669;">${params.totalDelivered}</td></tr>
+            ${params.totalFailed ? `<tr><td style="padding:6px 0;color:#6b7280;">Esuate:</td><td style="text-align:right;font-weight:600;color:#dc2626;">${params.totalFailed}</td></tr>` : ""}
+            <tr style="border-top:1px solid #e5e7eb;"><td style="padding:8px 0;color:#6b7280;">Rata livrare:</td><td style="text-align:right;font-weight:700;font-size:18px;color:#6366f1;">${successRate}%</td></tr>
+          </table>
+        </div>
+      `,
+      ctaText: "Vezi Raport Campanie",
+      ctaUrl: `${APP_URL}/dashboard/campaigns/${params.campaignId}`,
+    });
+
+    for (const user of ngoUsers) {
+      await sendPlatformEmail({
+        to: user.email,
+        subject: `Campanie finalizata: ${params.campaignName} - ${params.totalSent} mesaje trimise`,
+        html,
+      });
+    }
+  } catch (err) {
+    console.error("Failed to send campaign completed notification:", err);
+  }
+}
+
+// ─── Subscription Expiring (to NGO) ─────────────────────────────
+
+export async function notifySubscriptionExpiring(params: {
+  ngoName: string;
+  ngoId: string;
+  plan: string;
+  expiresAt: Date;
+  daysLeft: number;
+}) {
+  const settings = await getNotifySettings();
+  if (!settings.notifyOnSubscription) return;
+
+  try {
+    const { default: prisma } = await import("@/lib/db");
+
+    // In-app notification
+    await prisma.notification.create({
+      data: {
+        ngoId: params.ngoId,
+        type: "SUBSCRIPTION_EXPIRING",
+        title: `Abonamentul expira in ${params.daysLeft} zile`,
+        message: `Planul ${params.plan} expira pe ${new Date(params.expiresAt).toLocaleDateString("ro-RO")}. Reinnoiti pentru a pastra functiile avansate.`,
+        actionUrl: "/dashboard/settings",
+      },
+    });
+
+    // Send email to NGO admins
+    const ngoUsers = await prisma.user.findMany({
+      where: { ngoId: params.ngoId, role: "NGO_ADMIN", isActive: true },
+      select: { email: true },
+    });
+
+    const template = subscriptionExpiringEmail({
+      ngoName: params.ngoName,
+      plan: params.plan,
+      expiresAt: params.expiresAt,
+      daysLeft: params.daysLeft,
+      dashboardUrl: `${APP_URL}/dashboard/settings`,
+    });
+
+    for (const user of ngoUsers) {
+      await sendPlatformEmail({
+        to: user.email,
+        subject: template.subject,
+        html: template.html,
+      });
+    }
+
+    // Alert super admin too
+    await notifySubscriptionChange({
+      ngoName: params.ngoName,
+      event: "expired",
+      plan: params.plan,
+    });
+  } catch (err) {
+    console.error("Failed to send subscription expiring notification:", err);
+  }
+}
+
+// ─── Subscription Expired (to NGO) ──────────────────────────────
+
+export async function notifySubscriptionExpired(params: {
+  ngoName: string;
+  ngoId: string;
+  previousPlan: string;
+}) {
+  const settings = await getNotifySettings();
+  if (!settings.notifyOnSubscription) return;
+
+  try {
+    const { default: prisma } = await import("@/lib/db");
+
+    // In-app notification
+    await prisma.notification.create({
+      data: {
+        ngoId: params.ngoId,
+        type: "SUBSCRIPTION_EXPIRED",
+        title: "Abonament expirat",
+        message: `Planul ${params.previousPlan} a expirat. Contul a fost trecut pe planul BASIC.`,
+        actionUrl: "/dashboard/settings",
+      },
+    });
+
+    // Send to NGO admins
+    const ngoUsers = await prisma.user.findMany({
+      where: { ngoId: params.ngoId, role: "NGO_ADMIN", isActive: true },
+      select: { email: true },
+    });
+
+    const { subscriptionExpiredEmail: expiredEmail } = await import("@/lib/subscription-emails");
+    const template = expiredEmail({
+      ngoName: params.ngoName,
+      previousPlan: params.previousPlan,
+      dashboardUrl: `${APP_URL}/dashboard/settings`,
+    });
+
+    for (const user of ngoUsers) {
+      await sendPlatformEmail({
+        to: user.email,
+        subject: template.subject,
+        html: template.html,
+      });
+    }
+
+    // Alert super admin
+    await notifySubscriptionChange({
+      ngoName: params.ngoName,
+      event: "expired",
+      plan: "BASIC",
+      previousPlan: params.previousPlan,
+    });
+  } catch (err) {
+    console.error("Failed to send subscription expired notification:", err);
+  }
+}
+
+// ─── Subscription Renewed (to NGO) ──────────────────────────────
+
+export async function notifySubscriptionRenewed(params: {
+  ngoName: string;
+  ngoId: string;
+  plan: string;
+  nextExpiresAt?: Date | null;
+}) {
+  const settings = await getNotifySettings();
+  if (!settings.notifyOnSubscription) return;
+
+  try {
+    const { default: prisma } = await import("@/lib/db");
+
+    // In-app notification
+    await prisma.notification.create({
+      data: {
+        ngoId: params.ngoId,
+        type: "SUBSCRIPTION_RENEWED",
+        title: "Abonament reinnoit!",
+        message: `Planul ${params.plan} a fost reinnoit cu succes${params.nextExpiresAt ? ` pana la ${new Date(params.nextExpiresAt).toLocaleDateString("ro-RO")}` : ""}.`,
+        actionUrl: "/dashboard/settings",
+      },
+    });
+
+    // Send email to NGO admins
+    const ngoUsers = await prisma.user.findMany({
+      where: { ngoId: params.ngoId, role: "NGO_ADMIN", isActive: true },
+      select: { email: true },
+    });
+
+    const template = subscriptionRenewedEmail({
+      ngoName: params.ngoName,
+      plan: params.plan,
+      nextExpiresAt: params.nextExpiresAt,
+      dashboardUrl: `${APP_URL}/dashboard`,
+    });
+
+    for (const user of ngoUsers) {
+      await sendPlatformEmail({
+        to: user.email,
+        subject: template.subject,
+        html: template.html,
+      });
+    }
+
+    // Alert super admin
+    await notifySubscriptionChange({
+      ngoName: params.ngoName,
+      event: "renewed",
+      plan: params.plan,
+    });
+  } catch (err) {
+    console.error("Failed to send subscription renewed notification:", err);
+  }
+}
+
+// ─── Payment Reminder ────────────────────────────────────────────
+
+export async function notifyPaymentReminder(params: {
+  ngoName: string;
+  ngoId: string;
+  plan: string;
+  amount: number;
+  currency: string;
+  dueDate: Date;
+  paymentUrl: string;
+}) {
+  try {
+    const { default: prisma } = await import("@/lib/db");
+
+    // In-app notification
+    await prisma.notification.create({
+      data: {
+        ngoId: params.ngoId,
+        type: "SYSTEM",
+        title: `Factura scadenta: ${params.amount} ${params.currency}`,
+        message: `Factura pentru planul ${params.plan} este scadenta pe ${new Date(params.dueDate).toLocaleDateString("ro-RO")}.`,
+        actionUrl: "/dashboard/billing",
+      },
+    });
+
+    // Send to NGO admins
+    const ngoUsers = await prisma.user.findMany({
+      where: { ngoId: params.ngoId, role: "NGO_ADMIN", isActive: true },
+      select: { email: true },
+    });
+
+    const template = paymentReminderEmail({
+      ngoName: params.ngoName,
+      plan: params.plan,
+      amount: params.amount,
+      currency: params.currency,
+      dueDate: params.dueDate,
+      paymentUrl: params.paymentUrl,
+    });
+
+    for (const user of ngoUsers) {
+      await sendPlatformEmail({
+        to: user.email,
+        subject: template.subject,
+        html: template.html,
+      });
+    }
+  } catch (err) {
+    console.error("Failed to send payment reminder notification:", err);
   }
 }
 
