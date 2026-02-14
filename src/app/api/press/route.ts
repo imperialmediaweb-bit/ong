@@ -226,9 +226,8 @@ export async function POST(req: NextRequest) {
     const { releaseId, package: pkg } = body;
 
     const priceMap: Record<string, number> = {
-      "50_ziare": 100,
-      "100_ziare": 500,
-      "200_ziare": 1000,
+      "comunicat_50": 100,
+      "articol_50": 1000,
     };
 
     // Update release with MediaExpress info
