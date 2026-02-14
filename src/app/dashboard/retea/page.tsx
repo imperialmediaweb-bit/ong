@@ -769,7 +769,8 @@ export default function ReteaPage() {
               <p className="font-semibold text-sm">Cauta Sponsori</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <p className="text-[11px] text-muted-foreground mt-1 leading-tight">Gaseste companii potrivite pentru sponsorizari folosind AI sau LinkedIn</p>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
             <span className="flex items-center gap-1">
               <Linkedin className="h-3 w-3 text-[#0A66C2]" />
               {linkedinTotal}
@@ -799,7 +800,7 @@ export default function ReteaPage() {
               <p className="font-semibold text-sm">CRM Companii</p>
             </div>
           </div>
-          <p className="text-xs text-muted-foreground">Pipeline sponsorizari</p>
+          <p className="text-[11px] text-muted-foreground mt-1 leading-tight">Gestioneaza relatii cu sponsorii: contacte, interactiuni si statusul fiecarei companii</p>
         </button>
 
         {/* Card 3: Retea ONG */}
@@ -819,7 +820,8 @@ export default function ReteaPage() {
               <p className="font-semibold text-sm">Retea ONG</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <p className="text-[11px] text-muted-foreground mt-1 leading-tight">Conecteaza-te cu alte ONG-uri, descopera organizatii si colaboreaza</p>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
             <span>{accepted.length} conexiuni</span>
             {pendingReceived.length > 0 && (
               <>
@@ -849,7 +851,8 @@ export default function ReteaPage() {
               <p className="font-semibold text-sm">Mesaje</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <p className="text-[11px] text-muted-foreground mt-1 leading-tight">Trimite mesaje directe catre ONG-urile din reteaua ta</p>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
             <span>{conversations.length} conversatii</span>
             {totalUnread > 0 && (
               <>
@@ -870,6 +873,13 @@ export default function ReteaPage() {
       {/* ─────────────── CAUTA SPONSORI ──────────── */}
       {activeSection === "cauta" && (
         <div className="space-y-4">
+          <div className="bg-blue-50/60 border border-blue-100 rounded-lg px-4 py-3">
+            <p className="text-xs text-blue-700 leading-relaxed">
+              <Sparkles className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
+              <strong>Cautare AI</strong> — Scrie cuvinte cheie (ex: &quot;IT&quot;, &quot;banci&quot;) si AI-ul gaseste companii potrivite cu informatii de contact.
+              <strong className="ml-2">LinkedIn Galaxy</strong> — Importa prospecti direct din LinkedIn si genereaza mesaje personalizate.
+            </p>
+          </div>
           {/* Sub-navigation: AI vs LinkedIn */}
           <div className="flex items-center gap-2 bg-white rounded-lg p-1 border shadow-sm w-fit">
             <button
@@ -954,40 +964,43 @@ export default function ReteaPage() {
 
               {/* Quick LinkedIn shortcuts (when no results) */}
               {!prospectLoading && prospectResults.length === 0 && (
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <a href="https://www.linkedin.com/search/results/companies/?keywords=Romania&origin=GLOBAL_SEARCH_HEADER" target="_blank" rel="noopener noreferrer"
-                    className="group flex items-center gap-3 bg-white rounded-xl p-4 border shadow-sm hover:shadow-md hover:border-blue-200 transition-all">
-                    <div className="p-2 rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-                      <Building className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">Companii Romania</p>
-                      <p className="text-xs text-muted-foreground">Deschide LinkedIn</p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </a>
-                  <a href="https://www.linkedin.com/search/results/people/?keywords=CSR%20Romania&origin=GLOBAL_SEARCH_HEADER" target="_blank" rel="noopener noreferrer"
-                    className="group flex items-center gap-3 bg-white rounded-xl p-4 border shadow-sm hover:shadow-md hover:border-purple-200 transition-all">
-                    <div className="p-2 rounded-lg bg-purple-100 text-purple-600 group-hover:bg-purple-500 group-hover:text-white transition-colors">
-                      <UserSearch className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">Factori de decizie CSR</p>
-                      <p className="text-xs text-muted-foreground">Persoane CSR / HR</p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </a>
-                  <a href="https://www.linkedin.com/search/results/people/?keywords=Director%20General%20Romania&origin=GLOBAL_SEARCH_HEADER" target="_blank" rel="noopener noreferrer"
-                    className="group flex items-center gap-3 bg-white rounded-xl p-4 border shadow-sm hover:shadow-md hover:border-amber-200 transition-all">
-                    <div className="p-2 rounded-lg bg-amber-100 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors">
-                      <Briefcase className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">CEO / Directori</p>
-                      <p className="text-xs text-muted-foreground">Directori executivi</p>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </a>
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">Acces rapid LinkedIn — deschide direct cautari relevante pe LinkedIn:</p>
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <a href="https://www.linkedin.com/search/results/companies/?keywords=Romania&origin=GLOBAL_SEARCH_HEADER" target="_blank" rel="noopener noreferrer"
+                      className="group flex items-center gap-3 bg-white rounded-xl p-4 border shadow-sm hover:shadow-md hover:border-blue-200 transition-all">
+                      <div className="p-2 rounded-lg bg-blue-100 text-blue-600 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                        <Building className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">Companii Romania</p>
+                        <p className="text-xs text-muted-foreground">Cauta companii din Romania pe LinkedIn</p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                    <a href="https://www.linkedin.com/search/results/people/?keywords=CSR%20Romania&origin=GLOBAL_SEARCH_HEADER" target="_blank" rel="noopener noreferrer"
+                      className="group flex items-center gap-3 bg-white rounded-xl p-4 border shadow-sm hover:shadow-md hover:border-purple-200 transition-all">
+                      <div className="p-2 rounded-lg bg-purple-100 text-purple-600 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                        <UserSearch className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">Factori de decizie CSR</p>
+                        <p className="text-xs text-muted-foreground">Gaseste persoane din departamentele CSR / HR</p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                    <a href="https://www.linkedin.com/search/results/people/?keywords=Director%20General%20Romania&origin=GLOBAL_SEARCH_HEADER" target="_blank" rel="noopener noreferrer"
+                      className="group flex items-center gap-3 bg-white rounded-xl p-4 border shadow-sm hover:shadow-md hover:border-amber-200 transition-all">
+                      <div className="p-2 rounded-lg bg-amber-100 text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-colors">
+                        <Briefcase className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold">CEO / Directori</p>
+                        <p className="text-xs text-muted-foreground">Contacteaza directori executivi si CEO</p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  </div>
                 </div>
               )}
 
@@ -1572,11 +1585,28 @@ export default function ReteaPage() {
       )}
 
       {/* ─────────────── CRM COMPANII ──────────── */}
-      {activeSection === "crm" && <SponsorCRM />}
+      {activeSection === "crm" && (
+        <>
+          <div className="bg-emerald-50/60 border border-emerald-100 rounded-lg px-4 py-3 mb-4">
+            <p className="text-xs text-emerald-700 leading-relaxed">
+              <Briefcase className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
+              Adauga companii manual sau salveaza-le din <strong>Cauta Sponsori</strong>. Urmareste statusul fiecarei companii (Nou, Contactat, Raspuns, Intalnire, Sponsor), adauga persoane de contact si noteaza fiecare interactiune.
+            </p>
+          </div>
+          <SponsorCRM />
+        </>
+      )}
 
       {/* ─────────────── RETEA ONG ────────────── */}
       {activeSection === "retea" && (
         <div className="space-y-4">
+          <div className="bg-purple-50/60 border border-purple-100 rounded-lg px-4 py-3">
+            <p className="text-xs text-purple-700 leading-relaxed">
+              <Users className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
+              <strong>Conexiuni</strong> — Vezi ONG-urile cu care esti conectat, accepta sau respinge cereri de conectare.
+              <strong className="ml-2">Descopera ONG-uri</strong> — Gaseste alte organizatii si trimite cereri de conectare pentru a colabora.
+            </p>
+          </div>
           {/* Sub-nav: Conexiuni / Descopera */}
           <div className="flex items-center gap-2 bg-white rounded-lg p-1 border shadow-sm w-fit">
             <button onClick={() => setNetworkMode("conexiuni")}
@@ -1804,6 +1834,13 @@ export default function ReteaPage() {
 
       {/* ─────────────── MESAJE ────────────── */}
       {activeSection === "mesaje" && (
+        <>
+        <div className="bg-orange-50/60 border border-orange-100 rounded-lg px-4 py-3">
+          <p className="text-xs text-orange-700 leading-relaxed">
+            <MessageCircle className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
+            Trimite si primeste mesaje directe de la ONG-urile conectate. Selecteaza o conversatie din stanga sau conecteaza-te cu ONG-uri noi din tab-ul <strong>Retea ONG</strong>.
+          </p>
+        </div>
         <Card className="overflow-hidden border-0 shadow-sm">
           <div className="flex h-[550px]">
             {/* Conversations sidebar */}
@@ -1922,6 +1959,7 @@ export default function ReteaPage() {
             </div>
           </div>
         </Card>
+        </>
       )}
     </div>
   );
