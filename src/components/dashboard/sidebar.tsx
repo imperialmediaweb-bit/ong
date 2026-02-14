@@ -8,6 +8,7 @@ import {
   Shield, Settings, Home, Heart, LogOut, Menu, X, FileText,
   Globe, Briefcase, Share2, Sparkles, ChevronRight, CircleDollarSign,
   Banknote, Receipt, Building2, ShieldCheck, CreditCard,
+  Eye, Newspaper,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
@@ -38,6 +39,8 @@ const ngoNavGroups = [
       { name: "Campanii", href: "/dashboard/campaigns", icon: Mail },
       { name: "Automatizari", href: "/dashboard/automations", icon: Zap },
       { name: "AI & Social Media", href: "/dashboard/social-ai", icon: Sparkles },
+      { name: "Monitorizare Mentiuni", href: "/dashboard/mentions", icon: Eye },
+      { name: "Retea Media & Presa", href: "/dashboard/media-press", icon: Newspaper },
     ],
   },
   {
