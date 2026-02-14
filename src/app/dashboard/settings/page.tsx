@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { PageHelp } from "@/components/ui/page-help";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,6 +50,11 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Copy,
+  Upload,
+  Image as ImageIcon,
+  Heart,
+  Pipette,
+  Check,
 } from "lucide-react";
 
 interface ProfileSettings {
@@ -125,6 +130,8 @@ export default function SettingsPage() {
     website: "",
   });
   const [profileLoading, setProfileLoading] = useState(true);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const logoFileRef = useRef<HTMLInputElement>(null);
 
   // Email
   const [email, setEmail] = useState<EmailSettings>({
@@ -169,6 +176,7 @@ export default function SettingsPage() {
     heroTitle: "",
     heroDescription: "",
     primaryColor: "#6366f1",
+    accentColor: "#f59e0b",
     showNewsletter: true,
     showDonation: true,
     showUpdates: true,
@@ -297,6 +305,7 @@ export default function SettingsPage() {
             heroTitle: data.minisite.heroTitle || "",
             heroDescription: data.minisite.heroDescription || "",
             primaryColor: data.minisite.primaryColor || "#6366f1",
+            accentColor: data.minisite.accentColor || "#f59e0b",
             showNewsletter: data.minisite.showNewsletter !== false,
             showDonation: data.minisite.showDonation !== false,
             showUpdates: data.minisite.showUpdates !== false,
@@ -414,6 +423,33 @@ export default function SettingsPage() {
       setError(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    clearMessages();
+    setLogoUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("logo", file);
+      const res = await fetch("/api/upload/logo", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Eroare la incarcarea logo-ului");
+      }
+      const data = await res.json();
+      setProfile({ ...profile, logoUrl: data.logoUrl });
+      setSuccess("Logo-ul a fost incarcat cu succes.");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLogoUploading(false);
+      if (logoFileRef.current) logoFileRef.current.value = "";
     }
   };
 
@@ -676,10 +712,14 @@ export default function SettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); clearMessages(); }}>
-        <TabsList className="grid w-full grid-cols-6 overflow-x-auto">
+        <TabsList className="grid w-full grid-cols-7 overflow-x-auto">
           <TabsTrigger value="profile" className="gap-1 text-xs">
             <Building className="h-3 w-3" />
             Profil
+          </TabsTrigger>
+          <TabsTrigger value="minisite" className="gap-1 text-xs">
+            <Palette className="h-3 w-3" />
+            Culori
           </TabsTrigger>
           <TabsTrigger value="payment" className="gap-1 text-xs">
             <Wallet className="h-3 w-3" />
@@ -742,28 +782,76 @@ export default function SettingsPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="logoUrl">URL Logo</Label>
-                    <div className="flex gap-3">
-                      <Input
-                        id="logoUrl"
-                        placeholder="https://example.com/logo.png"
-                        value={profile.logoUrl}
-                        onChange={(e) => setProfile({ ...profile, logoUrl: e.target.value })}
-                        className="flex-1"
-                      />
-                      {profile.logoUrl && (
-                        <div className="flex h-10 w-10 items-center justify-center rounded border bg-muted shrink-0 overflow-hidden">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <Label>Logo organizatie</Label>
+                    <div className="flex items-start gap-4">
+                      <div className="flex h-20 w-20 items-center justify-center rounded-xl border-2 border-dashed bg-muted shrink-0 overflow-hidden">
+                        {profile.logoUrl ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
                           <img
                             src={profile.logoUrl}
-                            alt="Previzualizare logo"
+                            alt="Logo"
                             className="h-full w-full object-contain"
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = "none";
                             }}
                           />
+                        ) : (
+                          <div className="flex flex-col items-center text-muted-foreground">
+                            <Heart className="h-6 w-6 text-indigo-400" />
+                            <span className="text-[10px] mt-1">Fara logo</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => logoFileRef.current?.click()}
+                            disabled={logoUploading}
+                          >
+                            {logoUploading ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            ) : (
+                              <Upload className="mr-2 h-4 w-4" />
+                            )}
+                            Incarca logo
+                          </Button>
+                          {profile.logoUrl && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setProfile({ ...profile, logoUrl: "" })}
+                              className="text-red-500 hover:text-red-700"
+                            >
+                              <Trash2 className="mr-1 h-3 w-3" />
+                              Sterge
+                            </Button>
+                          )}
                         </div>
-                      )}
+                        <input
+                          ref={logoFileRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp,image/svg+xml"
+                          className="hidden"
+                          onChange={handleLogoUpload}
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          JPG, PNG, WebP sau SVG. Max 5MB.
+                        </p>
+                        <div className="flex gap-2 items-center">
+                          <span className="text-xs text-muted-foreground">sau URL:</span>
+                          <Input
+                            id="logoUrl"
+                            placeholder="https://example.com/logo.png"
+                            value={profile.logoUrl}
+                            onChange={(e) => setProfile({ ...profile, logoUrl: e.target.value })}
+                            className="flex-1 h-8 text-xs"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <div className="grid gap-2">
@@ -789,6 +877,172 @@ export default function SettingsPage() {
                   <Save className="mr-2 h-4 w-4" />
                 )}
                 Salveaza profilul
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+
+        {/* Mini-site Colors Tab */}
+        <TabsContent value="minisite">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Palette className="h-5 w-5" />
+                Culorile site-ului tau
+              </CardTitle>
+              <CardDescription>
+                Alege culorile potrivite pentru mini-site-ul ONG-ului tau. Culoarea principala e folosita pentru butoane, header si linkuri. Culoarea accent e pentru elemente importante (donatii, CTA).
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {minisiteLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  {/* Color palette suggestions */}
+                  <div>
+                    <Label className="text-sm font-medium mb-3 block">Palete de culori sugerate</Label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      {[
+                        { name: "Albastru clasic", primary: "#2563eb", accent: "#f59e0b" },
+                        { name: "Verde natura", primary: "#059669", accent: "#f97316" },
+                        { name: "Indigo modern", primary: "#6366f1", accent: "#f59e0b" },
+                        { name: "Rosu cald", primary: "#dc2626", accent: "#2563eb" },
+                        { name: "Violet regal", primary: "#7c3aed", accent: "#10b981" },
+                        { name: "Turcoaz fresh", primary: "#0891b2", accent: "#e11d48" },
+                        { name: "Portocaliu energie", primary: "#ea580c", accent: "#6366f1" },
+                        { name: "Roz empatie", primary: "#db2777", accent: "#0891b2" },
+                        { name: "Albastru inchis", primary: "#1e40af", accent: "#fbbf24" },
+                      ].map((palette) => {
+                        const isSelected = minisite.primaryColor === palette.primary && minisite.accentColor === palette.accent;
+                        return (
+                          <button
+                            key={palette.name}
+                            type="button"
+                            onClick={() => setMinisite({ ...minisite, primaryColor: palette.primary, accentColor: palette.accent })}
+                            className={`relative flex items-center gap-3 rounded-lg border-2 p-3 text-left transition-all hover:shadow-md ${
+                              isSelected ? "border-indigo-500 bg-indigo-50 shadow-md" : "border-gray-200 hover:border-gray-300"
+                            }`}
+                          >
+                            {isSelected && (
+                              <div className="absolute -top-1.5 -right-1.5 rounded-full bg-indigo-500 p-0.5">
+                                <Check className="h-3 w-3 text-white" />
+                              </div>
+                            )}
+                            <div className="flex gap-1 shrink-0">
+                              <div className="h-8 w-8 rounded-lg shadow-inner" style={{ backgroundColor: palette.primary }} />
+                              <div className="h-8 w-8 rounded-lg shadow-inner" style={{ backgroundColor: palette.accent }} />
+                            </div>
+                            <span className="text-xs font-medium leading-tight">{palette.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Custom color pickers */}
+                  <div className="grid sm:grid-cols-2 gap-6 pt-2">
+                    <div className="space-y-3">
+                      <Label className="flex items-center gap-2">
+                        <Pipette className="h-4 w-4" />
+                        Culoare principala
+                      </Label>
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <input
+                            type="color"
+                            value={minisite.primaryColor}
+                            onChange={(e) => setMinisite({ ...minisite, primaryColor: e.target.value })}
+                            className="h-12 w-12 cursor-pointer rounded-lg border-2 border-gray-200 p-0.5"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Input
+                            value={minisite.primaryColor}
+                            onChange={(e) => setMinisite({ ...minisite, primaryColor: e.target.value })}
+                            placeholder="#6366f1"
+                            className="font-mono text-sm"
+                          />
+                        </div>
+                      </div>
+                      {/* Preview */}
+                      <div className="rounded-lg border p-3 space-y-2">
+                        <div className="h-8 rounded-md flex items-center justify-center text-white text-xs font-medium" style={{ backgroundColor: minisite.primaryColor }}>
+                          Buton principal
+                        </div>
+                        <div className="h-6 rounded flex items-center px-2 text-xs font-medium" style={{ backgroundColor: `${minisite.primaryColor}15`, color: minisite.primaryColor }}>
+                          Text evidentieat
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      <Label className="flex items-center gap-2">
+                        <Pipette className="h-4 w-4" />
+                        Culoare accent
+                      </Label>
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <input
+                            type="color"
+                            value={minisite.accentColor}
+                            onChange={(e) => setMinisite({ ...minisite, accentColor: e.target.value })}
+                            className="h-12 w-12 cursor-pointer rounded-lg border-2 border-gray-200 p-0.5"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <Input
+                            value={minisite.accentColor}
+                            onChange={(e) => setMinisite({ ...minisite, accentColor: e.target.value })}
+                            placeholder="#f59e0b"
+                            className="font-mono text-sm"
+                          />
+                        </div>
+                      </div>
+                      {/* Preview */}
+                      <div className="rounded-lg border p-3 space-y-2">
+                        <div className="h-8 rounded-md flex items-center justify-center text-white text-xs font-medium" style={{ backgroundColor: minisite.accentColor }}>
+                          Buton doneaza
+                        </div>
+                        <div className="h-6 rounded flex items-center px-2 text-xs font-medium" style={{ backgroundColor: `${minisite.accentColor}15`, color: minisite.accentColor }}>
+                          Suma evidentiata
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Live preview bar */}
+                  <div className="rounded-xl overflow-hidden border">
+                    <div className="p-4 text-white text-center" style={{ backgroundColor: minisite.primaryColor }}>
+                      <p className="text-sm font-bold mb-2">Previzualizare header</p>
+                      <div className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold" style={{ backgroundColor: minisite.accentColor }}>
+                        Doneaza acum
+                      </div>
+                    </div>
+                  </div>
+
+                  {ngoSlug && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
+                      <ExternalLink className="h-4 w-4" />
+                      <span>Previzualizare completa:</span>
+                      <a href={`/s/${ngoSlug}`} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline font-medium">
+                        /s/{ngoSlug}
+                      </a>
+                    </div>
+                  )}
+                </>
+              )}
+            </CardContent>
+            <CardFooter className="border-t pt-6">
+              <Button onClick={handleSaveMinisite} disabled={saving || minisiteLoading}>
+                {saving ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="mr-2 h-4 w-4" />
+                )}
+                Salveaza culorile
               </Button>
             </CardFooter>
           </Card>
