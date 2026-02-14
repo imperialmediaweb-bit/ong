@@ -19,8 +19,8 @@ import {
 import {
   Sparkles, Facebook, Instagram, Linkedin, Twitter,
   Loader2, Copy, CheckCircle2, MessageCircle,
-  Target, TrendingUp, Lightbulb, Send, RefreshCw,
-  Megaphone, BookOpen, Zap,
+  Target, Lightbulb, Send,
+  Megaphone, BookOpen, Zap, Wand2,
 } from "lucide-react";
 
 export default function SocialAiPage() {
@@ -187,79 +187,95 @@ export default function SocialAiPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <Sparkles className="h-7 w-7 text-primary" />
-          Social Media & AI Trainer
-        </h1>
-        <p className="text-muted-foreground">
-          Genereaza postari, primeste sfaturi de fundraising si planifica campanii cu ajutorul AI.
-        </p>
+      {/* Header with gradient */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-6 text-white shadow-xl">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djZoLTZWMzRoNnptMC0zMHY2aC02VjRoNnptMCAxMnY2aC02VjE2aDZ6bTAgMTJ2Nmg2djZoLTZ2LTZ6bTEyLTEydjZoLTZWMTZoNnptLTI0IDB2Nmg2djZILTZ2LTZIMjR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
+        <div className="relative">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Social Media & AI Trainer</h1>
+              <p className="text-white/80 text-sm">
+                Genereaza postari, primeste sfaturi de fundraising si planifica campanii cu ajutorul AI.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="generator" className="gap-1 text-xs">
-            <Megaphone className="h-3 w-3" />
-            Generator postari
+        <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-muted/50 rounded-xl">
+          <TabsTrigger value="generator" className="gap-1.5 text-xs py-2.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <Megaphone className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Generator postari</span>
+            <span className="sm:hidden">Generator</span>
           </TabsTrigger>
-          <TabsTrigger value="trainer" className="gap-1 text-xs">
-            <BookOpen className="h-3 w-3" />
-            Trainer fundraising
+          <TabsTrigger value="trainer" className="gap-1.5 text-xs py-2.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <BookOpen className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Trainer fundraising</span>
+            <span className="sm:hidden">Trainer</span>
           </TabsTrigger>
-          <TabsTrigger value="strategy" className="gap-1 text-xs">
-            <Target className="h-3 w-3" />
-            Strategie campanie
+          <TabsTrigger value="strategy" className="gap-1.5 text-xs py-2.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <Target className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Strategie campanie</span>
+            <span className="sm:hidden">Strategie</span>
           </TabsTrigger>
-          <TabsTrigger value="optimize" className="gap-1 text-xs">
-            <Zap className="h-3 w-3" />
-            Optimizare postare
+          <TabsTrigger value="optimize" className="gap-1.5 text-xs py-2.5 rounded-lg data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <Zap className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Optimizare postare</span>
+            <span className="sm:hidden">Optimizare</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Post Generator */}
-        <TabsContent value="generator" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Megaphone className="h-5 w-5" />
-                Generator postari social media
-              </CardTitle>
-              <CardDescription>
-                Genereaza automat postari optimizate pentru Facebook, Instagram, LinkedIn, Twitter sau TikTok.
-              </CardDescription>
+        <TabsContent value="generator" className="space-y-4 mt-4">
+          <Card className="border-0 shadow-lg overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/30 border-b">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-md">
+                  <Megaphone className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Generator postari social media</CardTitle>
+                  <CardDescription>
+                    Genereaza automat postari optimizate pentru Facebook, Instagram, LinkedIn, Twitter sau TikTok.
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label>Platforma</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Platforma</Label>
                   <Select value={platform} onValueChange={setPlatform}>
-                    <SelectTrigger>
+                    <SelectTrigger className="rounded-lg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="facebook">
-                        <span className="flex items-center gap-2"><Facebook className="h-3 w-3" /> Facebook</span>
+                        <span className="flex items-center gap-2"><Facebook className="h-3.5 w-3.5 text-blue-600" /> Facebook</span>
                       </SelectItem>
                       <SelectItem value="instagram">
-                        <span className="flex items-center gap-2"><Instagram className="h-3 w-3" /> Instagram</span>
+                        <span className="flex items-center gap-2"><Instagram className="h-3.5 w-3.5 text-pink-600" /> Instagram</span>
                       </SelectItem>
                       <SelectItem value="linkedin">
-                        <span className="flex items-center gap-2"><Linkedin className="h-3 w-3" /> LinkedIn</span>
+                        <span className="flex items-center gap-2"><Linkedin className="h-3.5 w-3.5 text-blue-700" /> LinkedIn</span>
                       </SelectItem>
                       <SelectItem value="twitter">
-                        <span className="flex items-center gap-2"><Twitter className="h-3 w-3" /> Twitter / X</span>
+                        <span className="flex items-center gap-2"><Twitter className="h-3.5 w-3.5" /> Twitter / X</span>
                       </SelectItem>
                       <SelectItem value="tiktok">
-                        <span className="flex items-center gap-2"><MessageCircle className="h-3 w-3" /> TikTok</span>
+                        <span className="flex items-center gap-2"><MessageCircle className="h-3.5 w-3.5 text-black" /> TikTok</span>
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label>Ton</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ton</Label>
                   <Select value={tone} onValueChange={setTone}>
-                    <SelectTrigger>
+                    <SelectTrigger className="rounded-lg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -274,63 +290,69 @@ export default function SocialAiPage() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="topic">Subiectul postarii *</Label>
+                <Label htmlFor="topic" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Subiectul postarii *</Label>
                 <Input
                   id="topic"
                   placeholder="Ex: Campanie de strangere de fonduri pentru copii, Multumim donatorilor, Rezultatele proiectului..."
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
+                  className="rounded-lg"
                 />
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="campaign">Numele campaniei (optional)</Label>
+                <Label htmlFor="campaign" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Numele campaniei (optional)</Label>
                 <Input
                   id="campaign"
                   placeholder="Ex: Speranta pentru Educatie"
                   value={campaignName}
                   onChange={(e) => setCampaignName(e.target.value)}
+                  className="rounded-lg"
                 />
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="context">Context aditional (optional)</Label>
+                <Label htmlFor="context" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Context aditional (optional)</Label>
                 <Textarea
                   id="context"
                   placeholder="Informatii suplimentare despre campanie, public tinta, rezultate, etc."
                   value={customContext}
                   onChange={(e) => setCustomContext(e.target.value)}
-                  className="min-h-[60px]"
+                  className="min-h-[60px] rounded-lg"
                 />
               </div>
 
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-6 p-3 bg-muted/30 rounded-lg">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={includeHashtags}
                     onChange={(e) => setIncludeHashtags(e.target.checked)}
-                    className="h-4 w-4"
+                    className="h-4 w-4 rounded"
                   />
-                  <span className="text-sm"># Hashtag-uri</span>
+                  <span className="text-sm font-medium"># Hashtag-uri</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={includeEmoji}
                     onChange={(e) => setIncludeEmoji(e.target.checked)}
-                    className="h-4 w-4"
+                    className="h-4 w-4 rounded"
                   />
-                  <span className="text-sm">Emoji-uri</span>
+                  <span className="text-sm font-medium">Emoji-uri</span>
                 </label>
               </div>
             </CardContent>
-            <CardFooter className="border-t pt-6">
-              <Button onClick={handleGenerate} disabled={generating || !topic.trim()}>
+            <CardFooter className="border-t bg-muted/20 pt-4">
+              <Button
+                onClick={handleGenerate}
+                disabled={generating || !topic.trim()}
+                className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-md rounded-lg"
+              >
                 {generating ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  <Sparkles className="mr-2 h-4 w-4" />
+                  <Wand2 className="mr-2 h-4 w-4" />
                 )}
                 Genereaza 3 variante
               </Button>
@@ -340,23 +362,26 @@ export default function SocialAiPage() {
           {/* Generated variants */}
           {variants.length > 0 && (
             <div className="space-y-3">
-              <h3 className="font-semibold flex items-center gap-2">
+              <h3 className="font-semibold flex items-center gap-2 text-sm">
                 {platformIcon(platform)}
                 Variante generate pentru {platform.charAt(0).toUpperCase() + platform.slice(1)}
               </h3>
               {variants.map((v, i) => (
-                <Card key={i} className="hover:border-primary/30 transition">
+                <Card key={i} className="border-0 shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden">
+                  <div className={`h-1 ${i === 0 ? 'bg-gradient-to-r from-violet-500 to-purple-500' : i === 1 ? 'bg-gradient-to-r from-pink-500 to-rose-500' : 'bg-gradient-to-r from-amber-500 to-orange-500'}`} />
                   <CardContent className="py-4">
                     <div className="flex justify-between items-start gap-3">
                       <div className="flex-1">
-                        <Badge variant="outline" className="mb-2">Varianta {i + 1}</Badge>
-                        <p className="text-sm whitespace-pre-wrap">{v}</p>
+                        <Badge variant="outline" className={`mb-2 ${i === 0 ? 'border-violet-300 text-violet-700 bg-violet-50' : i === 1 ? 'border-pink-300 text-pink-700 bg-pink-50' : 'border-amber-300 text-amber-700 bg-amber-50'}`}>
+                          Varianta {i + 1}
+                        </Badge>
+                        <p className="text-sm whitespace-pre-wrap leading-relaxed">{v}</p>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => copyToClipboard(v, i)}
-                        className="shrink-0"
+                        className="shrink-0 rounded-lg"
                       >
                         {copied === i ? (
                           <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -373,48 +398,56 @@ export default function SocialAiPage() {
         </TabsContent>
 
         {/* Fundraising Trainer */}
-        <TabsContent value="trainer" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                AI Trainer Fundraising
-              </CardTitle>
-              <CardDescription>
-                Intreaba orice despre fundraising, strategie, campanii sau social media. AI-ul cunoaste contextul romanesc, legislatia si cele mai bune practici.
-              </CardDescription>
+        <TabsContent value="trainer" className="space-y-4 mt-4">
+          <Card className="border-0 shadow-lg overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-b">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-md">
+                  <BookOpen className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">AI Trainer Fundraising</CardTitle>
+                  <CardDescription>
+                    Intreaba orice despre fundraising, strategie, campanii sau social media. AI-ul cunoaste contextul romanesc, legislatia si cele mai bune practici.
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-5">
               <div className="grid gap-2">
-                <Label>Intreaba trainerul AI</Label>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Intreaba trainerul AI</Label>
                 <Textarea
                   placeholder="Ex: Cum pot atrage mai multi donatori prin social media? Ce strategii functioneaza pentru ONG-uri mici?"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  className="min-h-[80px]"
+                  className="min-h-[80px] rounded-lg"
                 />
               </div>
 
               <div>
-                <p className="text-xs text-muted-foreground mb-2">Intrebari rapide:</p>
+                <p className="text-xs text-muted-foreground mb-2 font-medium">Intrebari rapide:</p>
                 <div className="flex flex-wrap gap-2">
                   {quickQuestions.map((q, i) => (
                     <Button
                       key={i}
                       variant="outline"
                       size="sm"
-                      className="text-xs h-auto py-1.5"
+                      className="text-xs h-auto py-1.5 rounded-full border-emerald-200 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-700 transition-colors"
                       onClick={() => setQuestion(q)}
                     >
-                      <Lightbulb className="h-3 w-3 mr-1" />
+                      <Lightbulb className="h-3 w-3 mr-1 text-emerald-500" />
                       {q.length > 45 ? q.slice(0, 45) + "..." : q}
                     </Button>
                   ))}
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="border-t pt-6">
-              <Button onClick={handleAskTrainer} disabled={adviceLoading || !question.trim()}>
+            <CardFooter className="border-t bg-muted/20 pt-4">
+              <Button
+                onClick={handleAskTrainer}
+                disabled={adviceLoading || !question.trim()}
+                className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-md rounded-lg"
+              >
                 {adviceLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -426,10 +459,11 @@ export default function SocialAiPage() {
           </Card>
 
           {advice && (
-            <Card>
+            <Card className="border-0 shadow-lg overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
+                  <Sparkles className="h-4 w-4 text-emerald-500" />
                   Raspunsul trainerului AI
                 </CardTitle>
               </CardHeader>
@@ -444,41 +478,47 @@ export default function SocialAiPage() {
         </TabsContent>
 
         {/* Campaign Strategy */}
-        <TabsContent value="strategy" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Target className="h-5 w-5" />
-                Generator strategie campanie
-              </CardTitle>
-              <CardDescription>
-                Primeste un plan complet de campanie cu calendar, canale, mesaje si KPI-uri.
-              </CardDescription>
+        <TabsContent value="strategy" className="space-y-4 mt-4">
+          <Card className="border-0 shadow-lg overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-b">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-md">
+                  <Target className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Generator strategie campanie</CardTitle>
+                  <CardDescription>
+                    Primeste un plan complet de campanie cu calendar, canale, mesaje si KPI-uri.
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label>Obiectivul campaniei</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Obiectivul campaniei</Label>
                   <Input
                     placeholder="Ex: Strangere 50.000 RON pentru echipamente"
                     value={campaignGoal}
                     onChange={(e) => setCampaignGoal(e.target.value)}
+                    className="rounded-lg"
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label>Public tinta</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Public tinta</Label>
                   <Input
                     placeholder="Ex: Tineri 25-35 ani, profesionisti IT"
                     value={targetAudience}
                     onChange={(e) => setTargetAudience(e.target.value)}
+                    className="rounded-lg"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label>Buget estimat</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Buget estimat</Label>
                   <Select value={budget || undefined} onValueChange={setBudget}>
-                    <SelectTrigger>
+                    <SelectTrigger className="rounded-lg">
                       <SelectValue placeholder="Selecteaza" />
                     </SelectTrigger>
                     <SelectContent>
@@ -491,9 +531,9 @@ export default function SocialAiPage() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label>Durata campaniei</Label>
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Durata campaniei</Label>
                   <Select value={timeline} onValueChange={setTimeline}>
-                    <SelectTrigger>
+                    <SelectTrigger className="rounded-lg">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -507,8 +547,12 @@ export default function SocialAiPage() {
                 </div>
               </div>
             </CardContent>
-            <CardFooter className="border-t pt-6">
-              <Button onClick={handleStrategy} disabled={strategyLoading}>
+            <CardFooter className="border-t bg-muted/20 pt-4">
+              <Button
+                onClick={handleStrategy}
+                disabled={strategyLoading}
+                className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white shadow-md rounded-lg"
+              >
                 {strategyLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -520,10 +564,11 @@ export default function SocialAiPage() {
           </Card>
 
           {strategy && (
-            <Card>
+            <Card className="border-0 shadow-lg overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-orange-500 to-amber-500" />
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
+                  <Sparkles className="h-4 w-4 text-orange-500" />
                   Strategie de campanie
                 </CardTitle>
               </CardHeader>
@@ -538,6 +583,7 @@ export default function SocialAiPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => copyToClipboard(strategy, -1)}
+                  className="rounded-lg"
                 >
                   {copied === -1 ? (
                     <CheckCircle2 className="mr-2 h-3 w-3 text-green-500" />
@@ -552,22 +598,26 @@ export default function SocialAiPage() {
         </TabsContent>
 
         {/* Post Optimizer */}
-        <TabsContent value="optimize" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                Optimizator postari
-              </CardTitle>
-              <CardDescription>
-                Lipeste o postare existenta si primeste analiza, scor de impact si versiune optimizata.
-              </CardDescription>
+        <TabsContent value="optimize" className="space-y-4 mt-4">
+          <Card className="border-0 shadow-lg overflow-hidden">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-b">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-md">
+                  <Zap className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Optimizator postari</CardTitle>
+                  <CardDescription>
+                    Lipeste o postare existenta si primeste analiza, scor de impact si versiune optimizata.
+                  </CardDescription>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 pt-5">
               <div className="grid gap-2">
-                <Label>Platforma</Label>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Platforma</Label>
                 <Select value={optimizePlatform} onValueChange={setOptimizePlatform}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-48 rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -579,17 +629,21 @@ export default function SocialAiPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label>Postarea ta</Label>
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Postarea ta</Label>
                 <Textarea
                   placeholder="Lipeste aici postarea pe care vrei sa o optimizezi..."
                   value={postToOptimize}
                   onChange={(e) => setPostToOptimize(e.target.value)}
-                  className="min-h-[120px]"
+                  className="min-h-[120px] rounded-lg"
                 />
               </div>
             </CardContent>
-            <CardFooter className="border-t pt-6">
-              <Button onClick={handleOptimize} disabled={optimizeLoading || !postToOptimize.trim()}>
+            <CardFooter className="border-t bg-muted/20 pt-4">
+              <Button
+                onClick={handleOptimize}
+                disabled={optimizeLoading || !postToOptimize.trim()}
+                className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white shadow-md rounded-lg"
+              >
                 {optimizeLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
@@ -601,10 +655,11 @@ export default function SocialAiPage() {
           </Card>
 
           {analysis && (
-            <Card>
+            <Card className="border-0 shadow-lg overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-blue-500 to-cyan-500" />
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
+                  <Sparkles className="h-4 w-4 text-blue-500" />
                   Analiza si recomandari
                 </CardTitle>
               </CardHeader>

@@ -162,23 +162,41 @@ export default function DonationsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Donatii</h1>
-          <p className="text-muted-foreground">
-            Urmareste toate donatiile.{" "}
-            {total > 0 && `${total} donati${total !== 1 ? "i" : "e"} in total ${formatCurrency(totalAmount)}.`}
-          </p>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-600 via-pink-600 to-fuchsia-700 p-8 text-white shadow-xl">
+        <div className="absolute inset-0 opacity-10">
+          <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <pattern id="donations-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" strokeWidth="0.5" />
+              </pattern>
+            </defs>
+            <rect width="100" height="100" fill="url(#donations-grid)" />
+          </svg>
         </div>
-        <Button variant="outline" onClick={handleExport}>
-          <Download className="mr-2 h-4 w-4" />
-          Export CSV
-        </Button>
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <Heart className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Donatii</h1>
+              <p className="text-white/70 mt-1">
+                Urmareste toate donatiile.{" "}
+                {total > 0 && `${total} donati${total !== 1 ? "i" : "e"} in total ${formatCurrency(totalAmount)}.`}
+              </p>
+            </div>
+          </div>
+          <Button variant="outline" onClick={handleExport} className="bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-sm">
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
+        <Card className="border-0 shadow-lg overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-rose-500 to-pink-500" />
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -189,7 +207,8 @@ export default function DonationsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-0 shadow-lg overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-emerald-500 to-green-500" />
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -200,7 +219,8 @@ export default function DonationsPage() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-0 shadow-lg overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-violet-500 to-purple-500" />
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
@@ -216,7 +236,7 @@ export default function DonationsPage() {
       </div>
 
       {/* Search & Filters */}
-      <Card>
+      <Card className="border-0 shadow-lg">
         <CardContent className="pt-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="relative flex-1">
@@ -303,7 +323,7 @@ export default function DonationsPage() {
       )}
 
       {/* Donations Table */}
-      <Card>
+      <Card className="border-0 shadow-lg">
         <CardContent className="p-0">
           {loading ? (
             <div className="flex items-center justify-center py-20">

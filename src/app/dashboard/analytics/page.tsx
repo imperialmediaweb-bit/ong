@@ -34,6 +34,7 @@ import {
   Mail,
   MessageSquare,
   CreditCard,
+  BarChart3,
 } from "lucide-react";
 import {
   BarChart,
@@ -279,27 +280,44 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Analitica</h1>
-          <p className="text-muted-foreground">
-            Performanta campaniilor, perspective si tendinte.
-          </p>
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-8 text-white shadow-xl">
+        <div className="absolute inset-0 opacity-10">
+          <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <pattern id="analytics-grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" strokeWidth="0.5" />
+              </pattern>
+            </defs>
+            <rect width="100" height="100" fill="url(#analytics-grid)" />
+          </svg>
         </div>
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PERIOD_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="relative flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+              <BarChart3 className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">Analitica</h1>
+              <p className="text-white/70 mt-1">
+                Performanta campaniilor, perspective si tendinte.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2">
+            <Calendar className="h-4 w-4 text-white/70" />
+            <Select value={period} onValueChange={setPeriod}>
+              <SelectTrigger className="w-40 border-0 bg-transparent text-white focus:ring-0 focus:ring-offset-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PERIOD_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -472,7 +490,8 @@ export default function AnalyticsPage() {
       {/* Summary Cards */}
       {summary && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="border-0 shadow-lg overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-indigo-500 to-purple-500" />
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
