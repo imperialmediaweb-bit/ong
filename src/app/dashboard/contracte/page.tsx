@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { PageHelp } from "@/components/ui/page-help";
 import {
   Card,
   CardContent,
@@ -278,6 +279,14 @@ export default function ContracteDashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      <PageHelp items={[
+        { title: "Ce sunt contractele", description: "Contracte de sponsorizare generate automat care pot fi trimise companiilor pentru semnare." },
+        { title: "Contract nou", description: "Completeaza datele companiei (nume, CUI, suma, scop) si genereaza un contract cu link public." },
+        { title: "Link public", description: "Copiaza link-ul si trimite-l companiei — pot completa si semna contractul online." },
+        { title: "Status", description: "DRAFT = ciorna, SENT = trimis, SIGNED = semnat, ACTIVE = activ, COMPLETED = finalizat, CANCELLED = anulat." },
+        { title: "Statistici", description: "Vezi totalul contractelor, suma totala si numarul de contracte active." },
+      ]} />
     </div>
   );
 }

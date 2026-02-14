@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDate, percentage } from "@/lib/utils";
+import { PageHelp } from "@/components/ui/page-help";
 import {
   Search,
   Plus,
@@ -917,6 +918,15 @@ h2{font-size:16px;margin-top:30px;border-bottom:2px solid #333;padding-bottom:5p
           )}
         </TabsContent>
       </Tabs>
+
+      <PageHelp items={[
+        { title: "Campanie noua", description: "Apasa + Campanie noua pentru a crea o campanie de email sau SMS cu wizard pas-cu-pas." },
+        { title: "Tipuri campanii", description: "THANK_YOU (multumire), UPDATE (noutati), NEWSLETTER, EMERGENCY (apel urgent), REACTIVATION (re-engagement), CORPORATE." },
+        { title: "Status", description: "DRAFT = ciorna, SCHEDULED = programata, SENDING = in trimitere, SENT = trimisa, COMPLETED = finalizata." },
+        { title: "Performanta", description: "Click pe o campanie pentru a vedea rata de deschidere, click, bounce si lista destinatarilor." },
+        { title: "Credite", description: "Fiecare trimitere consuma credite email/SMS. Vezi tab-ul Credite pentru sold si limite." },
+        { title: "Export", description: "Descarca raportul campaniilor in format CSV." },
+      ]} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { PageHelp } from "@/components/ui/page-help";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1576,6 +1577,15 @@ export default function SettingsPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      <PageHelp items={[
+        { title: "Profil ONG", description: "Seteaza numele, logo-ul, descrierea si website-ul organizatiei tale." },
+        { title: "Email (SendGrid)", description: "Configureaza cheia API SendGrid si adresa de expeditor pentru trimiterea emailurilor." },
+        { title: "SMS (Twilio/Telnyx)", description: "Alege provider-ul SMS si introdu credentialele pentru trimiterea de SMS-uri." },
+        { title: "Echipa", description: "Invita membrii echipei cu roluri: ADMIN (acces total), MANAGER, MEMBER, VIEWER (doar citire)." },
+        { title: "API", description: "Genereaza chei API pentru integrari externe si webhook-uri." },
+        { title: "Credite", description: "Vezi soldul de credite email si SMS disponibile." },
+      ]} />
     </div>
   );
 }

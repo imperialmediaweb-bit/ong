@@ -7,6 +7,7 @@ import {
   BarChart3, Globe, Sparkles, Target,
 } from "lucide-react";
 import Link from "next/link";
+import { PageHelp } from "@/components/ui/page-help";
 import prisma from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -406,6 +407,14 @@ function NgoStatsSection({ data }: { data: any }) {
           </CardContent>
         </Card>
       </div>
+
+      <PageHelp items={[
+        { title: "Donatori activi", description: "Numarul total de donatori cu status activ in baza ta de date." },
+        { title: "Campanii active", description: "Campanii in desfasurare (trimise, programate sau in curs de trimitere)." },
+        { title: "Total donatii", description: "Suma totala a tuturor donatiilor primite si numarul de tranzactii." },
+        { title: "Donatii recente", description: "Ultimele 8 donatii primite, cu numele donatorului si campania asociata." },
+        { title: "Top campanii", description: "Cele mai performante 5 campanii dupa rata de deschidere a mesajelor." },
+      ]} />
     </>
   );
 }

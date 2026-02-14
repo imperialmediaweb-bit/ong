@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { PageHelp } from "@/components/ui/page-help";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -374,6 +375,14 @@ export default function PledgesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <PageHelp items={[
+        { title: "Ce sunt pledges", description: "Donatii declarate de donatori (ex: transfer bancar) care necesita verificare manuala." },
+        { title: "Verificare", description: "Click pe Verifica pentru a confirma plata dupa ce verifici extrasul bancar. Poti ajusta suma reala." },
+        { title: "Respingere", description: "Click pe Respinge daca plata nu a fost identificata. Poti adauga o nota explicativa." },
+        { title: "Dovada plata", description: "Donatorii pot incarca o dovada (screenshot transfer) — vezi fisierul atasat la fiecare pledge." },
+        { title: "Status", description: "PENDING = in asteptare, VERIFIED = confirmat, REJECTED = respins." },
+      ]} />
     </div>
   );
 }

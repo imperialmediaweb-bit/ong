@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatCurrency, formatDate, getInitials } from "@/lib/utils";
+import { PageHelp } from "@/components/ui/page-help";
 import {
   Search,
   Plus,
@@ -693,6 +694,14 @@ export default function DonorsPage() {
           )}
         </CardContent>
       </Card>
+
+      <PageHelp items={[
+        { title: "Adauga donator", description: "Butonul + adauga manual un donator nou cu email, telefon si consimtaminte GDPR." },
+        { title: "Filtre", description: "Filtreaza dupa status (Activ, Inactiv, Dezabonat) sau cauta dupa nume/email." },
+        { title: "Tag-uri", description: "Atribuie tag-uri donatorilor pentru segmentare in campanii (ex: corporate, recurent)." },
+        { title: "Click pe donator", description: "Deschide profilul complet: istoric donatii, consimtaminte, mesaje primite." },
+        { title: "Status donator", description: "ACTIV = primeste mesaje, INACTIV = nu a donat recent, DEZABONAT = nu mai doreste comunicari." },
+      ]} />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDateTime } from "@/lib/utils";
+import { PageHelp } from "@/components/ui/page-help";
 import {
   Search,
   Filter,
@@ -315,6 +316,13 @@ export default function MessagesPage() {
           )}
         </CardContent>
       </Card>
+
+      <PageHelp items={[
+        { title: "Istoric mesaje", description: "Toate mesajele trimise din campanii, cu canalul folosit (email sau SMS)." },
+        { title: "Status livrare", description: "PENDING = in coada, SENDING = se trimite, SENT = trimis, DELIVERED = livrat, FAILED = esuat, BOUNCED = respins." },
+        { title: "Filtre", description: "Filtreaza dupa canal (Email/SMS) sau status pentru a gasi mesaje specifice." },
+        { title: "Destinatari", description: "Fiecare mesaj arata numarul total de destinatari si campania asociata." },
+      ]} />
     </div>
   );
 }

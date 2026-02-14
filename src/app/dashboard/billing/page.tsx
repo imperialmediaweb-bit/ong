@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { PageHelp } from "@/components/ui/page-help";
 import Link from "next/link";
 import { BinevoLogo } from "@/components/BinevoLogo";
 import { Button } from "@/components/ui/button";
@@ -398,6 +399,14 @@ export default function BillingPage() {
           )}
         </CardContent>
       </Card>
+
+      <PageHelp items={[
+        { title: "Abonament", description: "Planul curent al organizatiei, data expirarii si optiuni de reinnoire." },
+        { title: "Facturi", description: "Lista facturilor emise cu status (DRAFT, EMISA, TRIMISA, PLATITA, SCADENTA, ANULATA)." },
+        { title: "Date facturare", description: "Completeaza datele de facturare: denumire, CUI, adresa, email — necesare pentru emiterea facturilor." },
+        { title: "Plata", description: "Click pe link-ul de plata din dreptul facturii pentru a efectua plata online." },
+        { title: "Download", description: "Descarca facturile in format PDF pentru evidenta contabila." },
+      ]} />
     </div>
   );
 }

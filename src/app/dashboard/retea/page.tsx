@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { SponsorCRM } from "@/components/dashboard/sponsor-crm";
+import { PageHelp } from "@/components/ui/page-help";
 
 // ────────────────────────────────────────────
 // Types
@@ -873,13 +874,6 @@ export default function ReteaPage() {
       {/* ─────────────── CAUTA SPONSORI ──────────── */}
       {activeSection === "cauta" && (
         <div className="space-y-4">
-          <div className="bg-blue-50/60 border border-blue-100 rounded-lg px-4 py-3">
-            <p className="text-xs text-blue-700 leading-relaxed">
-              <Sparkles className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
-              <strong>Cautare AI</strong> — Scrie cuvinte cheie (ex: &quot;IT&quot;, &quot;banci&quot;) si AI-ul gaseste companii potrivite cu informatii de contact.
-              <strong className="ml-2">LinkedIn Galaxy</strong> — Importa prospecti direct din LinkedIn si genereaza mesaje personalizate.
-            </p>
-          </div>
           {/* Sub-navigation: AI vs LinkedIn */}
           <div className="flex items-center gap-2 bg-white rounded-lg p-1 border shadow-sm w-fit">
             <button
@@ -1587,12 +1581,6 @@ export default function ReteaPage() {
       {/* ─────────────── CRM COMPANII ──────────── */}
       {activeSection === "crm" && (
         <>
-          <div className="bg-emerald-50/60 border border-emerald-100 rounded-lg px-4 py-3 mb-4">
-            <p className="text-xs text-emerald-700 leading-relaxed">
-              <Briefcase className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
-              Adauga companii manual sau salveaza-le din <strong>Cauta Sponsori</strong>. Urmareste statusul fiecarei companii (Nou, Contactat, Raspuns, Intalnire, Sponsor), adauga persoane de contact si noteaza fiecare interactiune.
-            </p>
-          </div>
           <SponsorCRM />
         </>
       )}
@@ -1600,13 +1588,6 @@ export default function ReteaPage() {
       {/* ─────────────── RETEA ONG ────────────── */}
       {activeSection === "retea" && (
         <div className="space-y-4">
-          <div className="bg-purple-50/60 border border-purple-100 rounded-lg px-4 py-3">
-            <p className="text-xs text-purple-700 leading-relaxed">
-              <Users className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
-              <strong>Conexiuni</strong> — Vezi ONG-urile cu care esti conectat, accepta sau respinge cereri de conectare.
-              <strong className="ml-2">Descopera ONG-uri</strong> — Gaseste alte organizatii si trimite cereri de conectare pentru a colabora.
-            </p>
-          </div>
           {/* Sub-nav: Conexiuni / Descopera */}
           <div className="flex items-center gap-2 bg-white rounded-lg p-1 border shadow-sm w-fit">
             <button onClick={() => setNetworkMode("conexiuni")}
@@ -1835,12 +1816,6 @@ export default function ReteaPage() {
       {/* ─────────────── MESAJE ────────────── */}
       {activeSection === "mesaje" && (
         <>
-        <div className="bg-orange-50/60 border border-orange-100 rounded-lg px-4 py-3">
-          <p className="text-xs text-orange-700 leading-relaxed">
-            <MessageCircle className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
-            Trimite si primeste mesaje directe de la ONG-urile conectate. Selecteaza o conversatie din stanga sau conecteaza-te cu ONG-uri noi din tab-ul <strong>Retea ONG</strong>.
-          </p>
-        </div>
         <Card className="overflow-hidden border-0 shadow-sm">
           <div className="flex h-[550px]">
             {/* Conversations sidebar */}
@@ -1961,6 +1936,16 @@ export default function ReteaPage() {
         </Card>
         </>
       )}
+
+      <PageHelp items={[
+        { title: "Cauta Sponsori", description: "Gaseste companii potrivite pentru sponsorizari folosind AI (cuvinte cheie) sau LinkedIn Galaxy (import prospecti)." },
+        { title: "Cautare AI", description: "Scrie cuvinte cheie (ex: IT, banci) si AI-ul gaseste companii cu informatii de contact si motive de sponsorizare." },
+        { title: "LinkedIn Galaxy", description: "Importa prospecti din LinkedIn cu extensia Chrome. Genereaza mesaje personalizate si analizeaza compatibilitatea." },
+        { title: "CRM Companii", description: "Gestioneaza relatiile cu sponsorii: adauga companii, contacte, interactiuni si urmareste statusul (Nou, Contactat, Sponsor)." },
+        { title: "Retea ONG", description: "Conecteaza-te cu alte ONG-uri. Tab Conexiuni = organizatii conectate, tab Descopera = gaseste ONG-uri noi." },
+        { title: "Mesaje", description: "Chat direct cu ONG-urile conectate. Selecteaza o conversatie si trimite mesaje." },
+        { title: "Carduri rapide LinkedIn", description: "Shortcut-uri care deschid cautari LinkedIn preconfigurate: companii Romania, CSR, CEO/Directori." },
+      ]} />
     </div>
   );
 }

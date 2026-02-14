@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { PageHelp } from "@/components/ui/page-help";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -616,6 +617,14 @@ export default function PrivacyPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      <PageHelp items={[
+        { title: "Texte consimtamant", description: "Editeaza textele GDPR pe care donatorii le accepta: email marketing, SMS, procesare date, cookies." },
+        { title: "Versiuni", description: "Fiecare modificare creeaza o versiune noua — consimtamintele vechi raman legate de versiunea acceptata." },
+        { title: "Audit Log", description: "Jurnal complet cu toate actiunile din sistem: cine a facut, ce a facut, cand si de unde (IP)." },
+        { title: "Export date", description: "Descarca toate datele unui donator conform dreptului GDPR la portabilitate." },
+        { title: "Anonimizare", description: "Sterge ireversibil datele personale ale unui donator conform dreptului la uitare." },
+      ]} />
     </div>
   );
 }

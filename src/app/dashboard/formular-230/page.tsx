@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { PageHelp } from "@/components/ui/page-help";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -200,6 +201,13 @@ export default function FormularAnafDashboard() {
           )}
         </CardContent>
       </Card>
+
+      <PageHelp items={[
+        { title: "Ce este Formularul 230", description: "Formularul ANAF prin care cetatenii redirectioneaza 3.5% din impozitul pe venit catre ONG-ul tau." },
+        { title: "Link public", description: "Copiaza link-ul si distribuie-l pe site, social media sau email — donatorii completeaza formularul online." },
+        { title: "Status formulare", description: "GENERATED = generat, DOWNLOADED = descarcat, SIGNED = semnat, SUBMITTED = depus la ANAF." },
+        { title: "An fiscal", description: "Filtreaza formularele pe anul fiscal pentru a vedea cate au fost completate in fiecare an." },
+      ]} />
     </div>
   );
 }
