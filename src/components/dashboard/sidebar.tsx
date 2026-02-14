@@ -8,7 +8,7 @@ import {
   Shield, Settings, Home, Heart, LogOut, Menu, X, FileText,
   Globe, Briefcase, Share2, Sparkles, ChevronRight, CircleDollarSign,
   Banknote, Receipt, Building2, ShieldCheck, CreditCard,
-  Eye, Newspaper,
+  Eye, Newspaper, Lock,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
@@ -39,7 +39,7 @@ const ngoNavGroups = [
       { name: "Campanii", href: "/dashboard/campaigns", icon: Mail },
       { name: "Automatizari", href: "/dashboard/automations", icon: Zap },
       { name: "AI & Social Media", href: "/dashboard/social-ai", icon: Sparkles },
-      { name: "Monitorizare Mentiuni", href: "/dashboard/mentions", icon: Eye },
+      { name: "Monitorizare Mentiuni", href: "/dashboard/mentions", icon: Eye, requiredPlan: "ELITE" as const },
       { name: "Retea Media & Presa", href: "/dashboard/media-press", icon: Newspaper },
     ],
   },
@@ -127,6 +127,8 @@ export function Sidebar() {
                 const isExactMatch = exactMatchPaths.includes(item.href) && pathname === item.href;
                 const isPrefixMatch = !exactMatchPaths.includes(item.href) && (pathname === item.href || pathname?.startsWith(item.href + "/"));
                 const active = isExactMatch || isPrefixMatch;
+                const requiredPlan = (item as any).requiredPlan;
+                const isLocked = requiredPlan && plan !== requiredPlan && !isSuperAdmin;
                 return (
                   <Link
                     key={item.name}
@@ -141,7 +143,12 @@ export function Sidebar() {
                   >
                     <item.icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-white" : "")} />
                     <span className="truncate">{item.name}</span>
-                    {active && (
+                    {isLocked && (
+                      <Badge className="ml-auto text-[9px] px-1.5 py-0 h-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 font-semibold">
+                        ELITE
+                      </Badge>
+                    )}
+                    {active && !isLocked && (
                       <ChevronRight className="h-3 w-3 ml-auto opacity-70" />
                     )}
                   </Link>

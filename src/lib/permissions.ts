@@ -12,7 +12,8 @@ type Feature =
   | "ai_optimization"
   | "gdpr_tools"
   | "analytics"
-  | "export_csv";
+  | "export_csv"
+  | "mentions_monitor";
 
 const PLAN_FEATURES: Record<SubscriptionPlan, Feature[]> = {
   BASIC: [
@@ -31,6 +32,7 @@ const PLAN_FEATURES: Record<SubscriptionPlan, Feature[]> = {
     "campaigns_sms", "ai_generator", "automations_basic",
     "automations_advanced", "ab_testing", "ai_optimization",
     "gdpr_tools", "analytics", "export_csv",
+    "mentions_monitor",
   ],
 };
 

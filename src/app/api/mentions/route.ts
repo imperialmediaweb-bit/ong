@@ -231,6 +231,13 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "NGO negasit" }, { status: 400 });
   }
 
+  // Check ELITE plan requirement
+  const plan = (session.user as any).plan;
+  const role = (session.user as any).role;
+  if (role !== "SUPER_ADMIN" && plan !== "ELITE") {
+    return NextResponse.json({ error: "Aceasta functie este disponibila doar in pachetul ELITE.", requiresElite: true }, { status: 403 });
+  }
+
   const { searchParams } = new URL(req.url);
   const action = searchParams.get("action");
 
@@ -311,6 +318,13 @@ export async function POST(req: NextRequest) {
   const ngoId = (session.user as any).ngoId;
   if (!ngoId) {
     return NextResponse.json({ error: "NGO negasit" }, { status: 400 });
+  }
+
+  // Check ELITE plan requirement
+  const plan = (session.user as any).plan;
+  const role = (session.user as any).role;
+  if (role !== "SUPER_ADMIN" && plan !== "ELITE") {
+    return NextResponse.json({ error: "Aceasta functie este disponibila doar in pachetul ELITE.", requiresElite: true }, { status: 403 });
   }
 
   const body = await req.json();
