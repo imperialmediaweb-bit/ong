@@ -32,6 +32,8 @@ interface PlatformSettings {
   twilioSid: string;
   twilioToken: string;
   twilioPhone: string;
+  telnyxApiKey: string;
+  telnyxPhone: string;
 }
 
 const defaultSettings: PlatformSettings = {
@@ -56,6 +58,8 @@ const defaultSettings: PlatformSettings = {
   twilioSid: "",
   twilioToken: "",
   twilioPhone: "",
+  telnyxApiKey: "",
+  telnyxPhone: "",
 };
 
 export default function AdminSettingsPage() {
@@ -102,6 +106,8 @@ export default function AdminSettingsPage() {
         twilioSid: settings.twilioSid || "",
         twilioToken: settings.twilioToken || "",
         twilioPhone: settings.twilioPhone || "",
+        telnyxApiKey: settings.telnyxApiKey || "",
+        telnyxPhone: settings.telnyxPhone || "",
       });
     } catch (err) {
       console.error(err);
@@ -179,6 +185,8 @@ export default function AdminSettingsPage() {
           twilioSid: data.twilioSid,
           twilioToken: data.twilioToken,
           twilioPhone: data.twilioPhone,
+          telnyxApiKey: data.telnyxApiKey,
+          telnyxPhone: data.telnyxPhone,
         }),
       });
       if (!res.ok) throw new Error("Eroare la salvare");
@@ -612,6 +620,47 @@ export default function AdminSettingsPage() {
                 placeholder="+40..."
               />
               <p className="text-xs text-muted-foreground">Pentru trimiterea de SMS-uri. Configureaza de la twilio.com/console</p>
+            </div>
+
+            {/* Telnyx */}
+            <div className="border-t pt-4 mt-4">
+              <h3 className="text-sm font-semibold text-muted-foreground mb-3">Telnyx (alternativa SMS - ~0.02 RON/SMS Romania)</h3>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Label>Telnyx API Key</Label>
+                {data.telnyxApiKey ? (
+                  <Badge className="bg-green-100 text-green-800 text-[10px]"><CheckCircle2 className="h-3 w-3 mr-1" />Configurat</Badge>
+                ) : (
+                  <Badge className="bg-slate-100 text-slate-600 text-[10px]"><XCircle className="h-3 w-3 mr-1" />Neconfigurat</Badge>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Input
+                  type={showKeys.telnyxApiKey ? "text" : "password"}
+                  value={data.telnyxApiKey}
+                  onChange={(e) => updateField("telnyxApiKey", e.target.value)}
+                  placeholder="KEY..."
+                  className="font-mono text-sm"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleKeyVisibility("telnyxApiKey")}
+                >
+                  {showKeys.telnyxApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Obtine cheia de la portal.telnyx.com. Cost: ~$0.004/SMS Romania</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Telnyx Phone Number</Label>
+              <Input
+                value={data.telnyxPhone}
+                onChange={(e) => updateField("telnyxPhone", e.target.value)}
+                placeholder="+40..."
+              />
             </div>
           </div>
         </CardContent>

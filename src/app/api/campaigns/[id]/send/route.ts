@@ -5,7 +5,7 @@ import prisma from "@/lib/db";
 import { createAuditLog } from "@/lib/audit";
 import { sendEmail, generateUnsubscribeUrl } from "@/lib/email";
 import { sendSms, formatPhoneNumber } from "@/lib/sms";
-import { hasFeature, hasPermission } from "@/lib/permissions";
+import { hasFeature, hasPermission, fetchEffectivePlan } from "@/lib/permissions";
 import { decrypt } from "@/lib/encryption";
 
 export async function POST(
@@ -28,7 +28,7 @@ export async function POST(
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
-    const plan = (session.user as any).plan;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
 
     const campaign = await prisma.campaign.findFirst({
       where: { id: params.id, ngoId },

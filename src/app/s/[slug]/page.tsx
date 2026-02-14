@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import prisma from "@/lib/db";
+import { getEffectivePlan, isSectionAllowedForPlan } from "@/lib/permissions";
 import { MiniSiteDonation } from "@/components/minisite/donation-form";
 import { MiniSiteNewsletter } from "@/components/minisite/newsletter-form";
 import { CounterAnimation } from "@/components/minisite/counter-animation";
@@ -110,6 +111,11 @@ export default async function MiniSitePage({ params }: Props) {
 
   if (!ngo) notFound();
 
+  // Determine effective plan (accounts for expiration)
+  const effectivePlan = getEffectivePlan(ngo);
+  const isPaidPlan = effectivePlan === "PRO" || effectivePlan === "ELITE";
+  const canShowSection = (section: string) => isSectionAllowedForPlan(effectivePlan, section);
+
   const config = ngo.miniSiteConfig;
   const consentTexts = Object.fromEntries(
     ngo.consentTexts.map((ct: any) => [ct.type, ct.text])
@@ -152,9 +158,11 @@ export default async function MiniSitePage({ params }: Props) {
   const hasContact =
     config?.contactEmail || config?.contactPhone || config?.contactAddress;
 
-  // Fetch blog posts (with try/catch - table might not exist)
+  // Fetch blog posts (premium section, with try/catch - table might not exist)
   let blogPosts: any[] = [];
-  try {
+  if (!canShowSection("blog")) {
+    blogPosts = [];
+  } else try {
     blogPosts = await (prisma as any).blogPost.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { publishedAt: "desc" },
@@ -181,49 +189,51 @@ export default async function MiniSitePage({ params }: Props) {
     : [];
 
   const showRedirectImpozit = showFormular230 || showContract;
-  const showCampaigns = miniSiteCampaigns.length > 0;
+  const showCampaigns = miniSiteCampaigns.length > 0 && canShowSection("campaigns");
 
-  // ── New section data ────────────────────────────────────────────
+  // ── New section data (premium sections gated by plan) ──────────
   const urgentBanner = (config as any)?.urgentBanner;
-  const showUrgentBanner = urgentBanner?.active && urgentBanner?.text;
+  const showUrgentBanner = urgentBanner?.active && urgentBanner?.text && canShowSection("urgentBanner");
 
   const videoSection = (config as any)?.videoSection;
-  const videoEmbedUrl = videoSection?.url ? getVideoEmbedUrl(videoSection.url) : null;
+  const videoEmbedUrl = canShowSection("videoSection") && videoSection?.url
+    ? getVideoEmbedUrl(videoSection.url)
+    : null;
 
-  const teamMembers: any[] = Array.isArray((config as any)?.teamMembers)
+  const teamMembers: any[] = canShowSection("teamMembers") && Array.isArray((config as any)?.teamMembers)
     ? (config as any).teamMembers
     : [];
 
-  const testimonials: any[] = Array.isArray((config as any)?.testimonials)
+  const testimonials: any[] = canShowSection("testimonials") && Array.isArray((config as any)?.testimonials)
     ? (config as any).testimonials
     : [];
 
-  const partners: any[] = Array.isArray((config as any)?.partners)
+  const partners: any[] = canShowSection("partners") && Array.isArray((config as any)?.partners)
     ? (config as any).partners
     : [];
 
-  const counterStats: any[] = Array.isArray((config as any)?.counterStats)
+  const counterStats: any[] = canShowSection("counterStats") && Array.isArray((config as any)?.counterStats)
     ? (config as any).counterStats
     : [];
 
-  const events: any[] = Array.isArray((config as any)?.events)
+  const events: any[] = canShowSection("events") && Array.isArray((config as any)?.events)
     ? (config as any).events
     : [];
 
-  const faqItems: any[] = Array.isArray((config as any)?.faqItems)
+  const faqItems: any[] = canShowSection("faqItems") && Array.isArray((config as any)?.faqItems)
     ? (config as any).faqItems
     : [];
 
-  const transparencyDocs: any[] = Array.isArray((config as any)?.transparencyDocs)
+  const transparencyDocs: any[] = canShowSection("transparencyDocs") && Array.isArray((config as any)?.transparencyDocs)
     ? (config as any).transparencyDocs
     : [];
 
-  const showVolunteerForm = (config as any)?.showVolunteerForm === true;
+  const showVolunteerForm = (config as any)?.showVolunteerForm === true && canShowSection("volunteerForm");
 
-  const googleMapsUrl = (config as any)?.googleMapsUrl || "";
+  const googleMapsUrl = canShowSection("googleMaps") ? ((config as any)?.googleMapsUrl || "") : "";
 
   const donationPopup = (config as any)?.donationPopup;
-  const showDonationPopup = donationPopup?.active && showDonation;
+  const showDonationPopup = donationPopup?.active && showDonation && canShowSection("donationPopup");
 
   return (
     <div
@@ -2209,19 +2219,26 @@ export default async function MiniSitePage({ params }: Props) {
               </p>
             </div>
 
-            {/* Copyright & Built with */}
+            {/* Copyright & Built with (branding shown only on free plan) */}
             <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-white/40">
               <span>&copy; {new Date().getFullYear()} {ngo.name}</span>
-              <span className="hidden sm:inline">|</span>
-              <span>
-                Construit cu{" "}
-                <span
-                  className="font-bold transition-colors hover:text-white/70"
-                  style={{ color: `rgba(${accentRgb}, 0.7)` }}
-                >
-                  Binevo
-                </span>
-              </span>
+              {!isPaidPlan && (
+                <>
+                  <span className="hidden sm:inline">|</span>
+                  <span>
+                    Construit cu{" "}
+                    <a
+                      href="https://binevo.ro"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-bold transition-colors hover:text-white/70"
+                      style={{ color: `rgba(${accentRgb}, 0.7)` }}
+                    >
+                      Binevo
+                    </a>
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -54,6 +54,7 @@ export const authOptions: NextAuthOptions = {
           let ngoId = user.ngoId;
           let ngoName = user.ngo?.name;
           let ngoSlug = user.ngo?.slug;
+          let ngoLogoUrl = user.ngo?.logoUrl;
           let plan = user.ngo?.subscriptionPlan;
 
           if (user.role === "SUPER_ADMIN") {
@@ -66,6 +67,7 @@ export const authOptions: NextAuthOptions = {
                 ngoId = firstNgo.id;
                 ngoName = firstNgo.name;
                 ngoSlug = firstNgo.slug;
+                ngoLogoUrl = firstNgo.logoUrl;
               }
             }
           }
@@ -78,6 +80,7 @@ export const authOptions: NextAuthOptions = {
             ngoId,
             ngoName,
             ngoSlug,
+            ngoLogoUrl,
             plan,
           };
         } catch (error: any) {
@@ -95,6 +98,7 @@ export const authOptions: NextAuthOptions = {
         token.ngoId = (user as any).ngoId;
         token.ngoName = (user as any).ngoName;
         token.ngoSlug = (user as any).ngoSlug;
+        token.ngoLogoUrl = (user as any).ngoLogoUrl;
         token.plan = (user as any).plan;
       }
       // Ensure SUPER_ADMIN always has ELITE plan and an ngoId
@@ -109,6 +113,7 @@ export const authOptions: NextAuthOptions = {
               token.ngoId = firstNgo.id;
               token.ngoName = firstNgo.name;
               token.ngoSlug = firstNgo.slug;
+              token.ngoLogoUrl = firstNgo.logoUrl;
             }
           } catch {
             // Ignore DB errors in jwt callback
@@ -124,6 +129,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).ngoId = token.ngoId;
         (session.user as any).ngoName = token.ngoName;
         (session.user as any).ngoSlug = token.ngoSlug;
+        (session.user as any).ngoLogoUrl = token.ngoLogoUrl;
         (session.user as any).plan = token.plan;
       }
       return session;
@@ -139,5 +145,6 @@ export type SessionUser = {
   ngoId: string | null;
   ngoName?: string;
   ngoSlug?: string;
+  ngoLogoUrl?: string | null;
   plan?: string;
 };

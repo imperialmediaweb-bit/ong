@@ -10,6 +10,216 @@ function getOpenAI(): OpenAI {
   });
 }
 
+// ---- RSS XML parsing utilities ----
+
+interface RssItem {
+  title: string;
+  url: string;
+  description: string;
+  pubDate: string;
+  sourceName?: string;
+}
+
+function extractXmlTag(xml: string, tag: string): string | null {
+  // Handle CDATA sections
+  const cdataRegex = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${tag}>`, "i");
+  const cdataMatch = xml.match(cdataRegex);
+  if (cdataMatch) return cdataMatch[1].trim();
+
+  // Handle regular content
+  const regex = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i");
+  const match = xml.match(regex);
+  return match ? match[1].trim() : null;
+}
+
+function decodeXmlEntities(text: string): string {
+  return text
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&apos;/g, "'");
+}
+
+function stripHtmlTags(html: string): string {
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function escapeRegExp(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function parseRssXml(xml: string): RssItem[] {
+  const items: RssItem[] = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  let match;
+
+  while ((match = itemRegex.exec(xml)) !== null) {
+    const itemXml = match[1];
+
+    const rawTitle = extractXmlTag(itemXml, "title");
+    const link = extractXmlTag(itemXml, "link");
+    const description = extractXmlTag(itemXml, "description");
+    const pubDate = extractXmlTag(itemXml, "pubDate");
+
+    // Extract source from <source url="...">Name</source>
+    const sourceMatch = itemXml.match(/<source[^>]*>([\s\S]*?)<\/source>/);
+    const sourceName = sourceMatch ? decodeXmlEntities(sourceMatch[1].trim()) : undefined;
+
+    // Try to extract actual article URL from description HTML (Google News pattern)
+    const descDecoded = decodeXmlEntities(description || "");
+    const hrefMatch = descDecoded.match(/<a\s+href="([^"]+)"/);
+    const articleUrl = hrefMatch ? hrefMatch[1] : link;
+
+    // Clean title - Google News appends " - Source Name"
+    let cleanTitle = decodeXmlEntities(rawTitle || "");
+    if (sourceName) {
+      const suffixPattern = new RegExp(
+        `\\s*[-–—]\\s*${escapeRegExp(sourceName)}\\s*$`
+      );
+      cleanTitle = cleanTitle.replace(suffixPattern, "");
+    }
+
+    // Strip HTML from description
+    const cleanDesc = stripHtmlTags(descDecoded);
+
+    if (cleanTitle && articleUrl) {
+      items.push({
+        title: cleanTitle,
+        url: articleUrl,
+        description: cleanDesc || cleanTitle,
+        pubDate: pubDate
+          ? new Date(pubDate).toISOString()
+          : new Date().toISOString(),
+        sourceName,
+      });
+    }
+  }
+
+  return items;
+}
+
+// ---- Real mention fetching ----
+
+async function fetchGoogleNewsRss(query: string): Promise<RssItem[]> {
+  const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ro&gl=RO&ceid=RO:ro`;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "application/rss+xml, application/xml, text/xml, */*",
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      console.error(`Google News RSS returned ${response.status} for query: ${query}`);
+      return [];
+    }
+
+    const xml = await response.text();
+    return parseRssXml(xml);
+  } catch (err) {
+    console.error(`Google News RSS fetch error for "${query}":`, err);
+    return [];
+  }
+}
+
+async function fetchCustomRssFeed(feedUrl: string): Promise<RssItem[]> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    const response = await fetch(feedUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (compatible; NGOHub/1.0; +https://binevo.ro)",
+        Accept: "application/rss+xml, application/xml, text/xml, */*",
+      },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      console.error(`RSS feed returned ${response.status} for: ${feedUrl}`);
+      return [];
+    }
+
+    const xml = await response.text();
+    return parseRssXml(xml);
+  } catch (err) {
+    console.error(`RSS feed fetch error for "${feedUrl}":`, err);
+    return [];
+  }
+}
+
+async function fetchRealMentions(
+  ngoName: string,
+  queries: string[],
+  rssSources: string[]
+): Promise<any[]> {
+  const allMentions: any[] = [];
+  const seenUrls = new Set<string>();
+
+  // 1. Fetch from Google News RSS for each search query
+  const googlePromises = queries.map((query) => fetchGoogleNewsRss(query));
+  const googleResults = await Promise.all(googlePromises);
+
+  for (let qi = 0; qi < queries.length; qi++) {
+    const items = googleResults[qi];
+    for (const item of items) {
+      if (seenUrls.has(item.url)) continue;
+      seenUrls.add(item.url);
+      allMentions.push({
+        sourceType: "NEWS",
+        title: item.title,
+        url: item.url,
+        snippet: item.description,
+        publishedAt: item.pubDate,
+        sourceName: item.sourceName || getDomainFromUrl(item.url),
+      });
+    }
+  }
+
+  // 2. Fetch from custom RSS feeds
+  const validRssSources = rssSources.filter((s) => s.trim());
+  if (validRssSources.length > 0) {
+    const rssPromises = validRssSources.map((url) => fetchCustomRssFeed(url));
+    const rssResults = await Promise.all(rssPromises);
+
+    for (let ri = 0; ri < validRssSources.length; ri++) {
+      const items = rssResults[ri];
+      for (const item of items) {
+        if (seenUrls.has(item.url)) continue;
+        seenUrls.add(item.url);
+        allMentions.push({
+          sourceType: "RSS",
+          title: item.title,
+          url: item.url,
+          snippet: item.description,
+          publishedAt: item.pubDate,
+          sourceName: item.sourceName || getDomainFromUrl(item.url),
+        });
+      }
+    }
+  }
+
+  return allMentions.slice(0, 50); // Limit to 50 results per crawl
+}
+
+function getDomainFromUrl(url: string): string {
+  try {
+    const hostname = new URL(url).hostname;
+    return hostname.replace(/^www\./, "");
+  } catch {
+    return "Unknown";
+  }
+}
+
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
@@ -19,6 +229,14 @@ export async function GET(req: NextRequest) {
   const ngoId = (session.user as any).ngoId;
   if (!ngoId) {
     return NextResponse.json({ error: "NGO negasit" }, { status: 400 });
+  }
+
+  // Check ELITE plan requirement (with expiration check)
+  const role = (session.user as any).role;
+  const { fetchEffectivePlan, hasFeature } = await import("@/lib/permissions");
+  const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+  if (!hasFeature(plan, "mentions_monitor", role)) {
+    return NextResponse.json({ error: "Aceasta functie este disponibila doar in pachetul ELITE.", requiresElite: true }, { status: 403 });
   }
 
   const { searchParams } = new URL(req.url);
@@ -103,6 +321,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "NGO negasit" }, { status: 400 });
   }
 
+  // Check ELITE plan requirement (with expiration check)
+  const role = (session.user as any).role;
+  const { fetchEffectivePlan: fetchPlan, hasFeature: checkFeature } = await import("@/lib/permissions");
+  const plan = await fetchPlan(ngoId, (session.user as any).plan, role);
+  if (!checkFeature(plan, "mentions_monitor", role)) {
+    return NextResponse.json({ error: "Aceasta functie este disponibila doar in pachetul ELITE.", requiresElite: true }, { status: 403 });
+  }
+
   const body = await req.json();
   const { action } = body;
 
@@ -159,15 +385,31 @@ export async function POST(req: NextRequest) {
     }
 
     const searchQueries = (config?.searchQueries as string[] | null) || [ngo.name];
+    const rssSources = (config?.rssSources as string[] | null) || [];
     const threshold = config?.relevanceThreshold || 70;
 
-    // Generate demo mentions for now (in production, this would call search APIs)
-    const demoMentions = generateDemoMentions(ngo.name, searchQueries);
+    // Fetch real mentions from Google News and custom RSS feeds
+    const rawMentions = await fetchRealMentions(ngo.name, searchQueries, rssSources);
+
+    if (rawMentions.length === 0) {
+      // Update last crawl time even if no results
+      if (config) {
+        await prisma.mentionConfig.update({
+          where: { ngoId },
+          data: { lastCrawlAt: new Date() },
+        });
+      }
+      return NextResponse.json({
+        crawled: 0,
+        saved: 0,
+        message: "Nu s-au gasit mentiuni noi. Verificati termenii de cautare din Configurare.",
+      });
+    }
 
     // Process with AI if available
     const processedMentions = process.env.OPENAI_API_KEY
-      ? await processWithAI(demoMentions, ngo.name, threshold)
-      : processDemo(demoMentions, ngo.name, threshold);
+      ? await processWithAI(rawMentions, ngo.name, threshold)
+      : processDemo(rawMentions, ngo.name, threshold);
 
     // Save to database (skip duplicates)
     let saved = 0;
@@ -214,48 +456,6 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ error: "Actiune necunoscuta" }, { status: 400 });
 }
 
-function generateDemoMentions(ngoName: string, queries: string[]) {
-  const sources = [
-    {
-      sourceType: "GOOGLE",
-      title: `${ngoName} a lansat o noua campanie de strangere de fonduri`,
-      url: `https://stiri-locale.ro/articol-${Date.now()}-1`,
-      snippet: `Organizatia ${ngoName} a anuntat astazi lansarea unei noi campanii de strangere de fonduri pentru educatia copiilor din medii defavorizate. Campania are un obiectiv de 100.000 RON.`,
-      publishedAt: new Date().toISOString(),
-    },
-    {
-      sourceType: "NEWS",
-      title: `Interviu cu reprezentantul ${ngoName} despre impactul proiectelor sociale`,
-      url: `https://publicatie-nationala.ro/interviu-${Date.now()}-2`,
-      snippet: `Intr-un interviu acordat redactiei noastre, reprezentantul ${ngoName} a vorbit despre impactul proiectelor sociale desfasurate in ultimul an si despre planurile de viitor ale organizatiei.`,
-      publishedAt: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      sourceType: "FACEBOOK",
-      title: `Postare virala despre actiunea ${ngoName}`,
-      url: `https://facebook.com/post-${Date.now()}-3`,
-      snippet: `O postare despre actiunea de voluntariat organizata de ${ngoName} a devenit virala pe Facebook, strangand mii de reactii si comentarii pozitive din partea comunitatii.`,
-      publishedAt: new Date(Date.now() - 172800000).toISOString(),
-    },
-    {
-      sourceType: "NEWS",
-      title: `Raport: Cele mai active ONG-uri din Romania - ${ngoName} in top 10`,
-      url: `https://raport-ong.ro/top-${Date.now()}-4`,
-      snippet: `Conform celui mai recent raport, ${ngoName} se numara printre cele mai active organizatii neguvernamentale din Romania, fiind remarcata pentru transparenta si impactul social.`,
-      publishedAt: new Date(Date.now() - 259200000).toISOString(),
-    },
-    {
-      sourceType: "RSS",
-      title: `Comunitatea locala sustine proiectele ${ngoName}`,
-      url: `https://presa-locala.ro/comunitate-${Date.now()}-5`,
-      snippet: `Primaria orasului a anuntat ca va sprijini proiectele derulate de ${ngoName} prin punerea la dispozitie a spatiilor comunitare si a unui fond de 50.000 RON.`,
-      publishedAt: new Date(Date.now() - 345600000).toISOString(),
-    },
-  ];
-
-  return sources;
-}
-
 async function processWithAI(mentions: any[], ngoName: string, threshold: number) {
   const openai = getOpenAI();
 
@@ -267,7 +467,7 @@ async function processWithAI(mentions: any[], ngoName: string, threshold: number
         messages: [
           {
             role: "system",
-            content: `Esti un analist media AI. Analizeaza mentiunea urmatoare despre organizatia "${ngoName}". Raspunde in JSON cu: { "relevanceScore": 0-100, "relevanceReason": "...", "sentiment": "POSITIVE"|"NEUTRAL"|"NEGATIVE", "mentionType": "NEWS"|"PRESS_RELEASE"|"INTERVIEW"|"OPINION"|"REVIEW"|"SOCIAL_MENTION"|"BLOG"|"OTHER", "summary": "rezumat 2-3 propozitii", "entities": { "project": null, "location": null, "persons": [], "ngoNameFound": "" } }`,
+            content: `Esti un analist media AI. Analizeaza mentiunea urmatoare despre organizatia "${ngoName}". Raspunde in JSON cu: { "relevanceScore": 0-100, "relevanceReason": "...", "sentiment": "POSITIVE"|"NEUTRAL"|"NEGATIVE", "mentionType": "NEWS"|"PRESS_RELEASE"|"INTERVIEW"|"OPINION"|"REVIEW"|"SOCIAL_MENTION"|"BLOG"|"OTHER", "summary": "rezumat 2-3 propozitii in romana", "entities": { "project": null, "location": null, "persons": [], "ngoNameFound": "", "sourceName": "" } }`,
           },
           {
             role: "user",
@@ -326,6 +526,7 @@ function processSingleDemo(mention: any, ngoName: string) {
       location: null,
       persons: [],
       ngoNameFound: ngoName,
+      sourceName: mention.sourceName || getDomainFromUrl(mention.url),
     },
   };
 }

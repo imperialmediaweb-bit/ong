@@ -5,7 +5,7 @@ import prisma from "@/lib/db";
 import { donorSchema } from "@/lib/validations";
 import { createAuditLog } from "@/lib/audit";
 import { encrypt } from "@/lib/encryption";
-import { hasFeature, hasPermission } from "@/lib/permissions";
+import { hasFeature, hasPermission, isOverDonorLimit, getDonorLimit, getEffectivePlan, fetchEffectivePlan } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   try {
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
-    const plan = (session.user as any).plan;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
     if (!hasFeature(plan, "donors_view")) {
       return NextResponse.json({ error: "Feature not available on your plan" }, { status: 403 });
     }
@@ -143,9 +143,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
-    const plan = (session.user as any).plan;
-    if (!hasFeature(plan, "donors_manage")) {
+    const effectivePlan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(effectivePlan, "donors_manage")) {
       return NextResponse.json({ error: "Feature not available on your plan" }, { status: 403 });
+    }
+
+    // Check donor limit for current plan
+    const currentDonorCount = await prisma.donor.count({ where: { ngoId, isAnonymized: false } });
+    const donorLimit = getDonorLimit(effectivePlan);
+
+    if (isOverDonorLimit(effectivePlan, currentDonorCount)) {
+      return NextResponse.json(
+        {
+          error: `Ai atins limita de ${donorLimit} donatori pentru planul ${effectivePlan}. Fa upgrade pentru a adauga mai multi donatori.`,
+          code: "DONOR_LIMIT_REACHED",
+          limit: donorLimit,
+          current: currentDonorCount,
+          plan: effectivePlan,
+        },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();

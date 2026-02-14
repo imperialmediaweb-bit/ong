@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { createAuditLog } from "@/lib/audit";
 import { encrypt } from "@/lib/encryption";
-import { hasFeature, hasPermission } from "@/lib/permissions";
+import { hasFeature, hasPermission, isOverDonorLimit, getDonorLimit, getEffectivePlan } from "@/lib/permissions";
 
 interface ImportRow {
   name?: string;
@@ -81,6 +81,25 @@ export async function POST(request: NextRequest) {
     const plan = (session.user as any).plan;
     if (!hasFeature(plan, "donors_manage")) {
       return NextResponse.json({ error: "Feature not available on your plan" }, { status: 403 });
+    }
+
+    // Check donor limit for current plan
+    const ngo = await prisma.ngo.findUnique({ where: { id: ngoId } });
+    const effectivePlan = ngo ? getEffectivePlan(ngo) : plan;
+    const currentDonorCount = await prisma.donor.count({ where: { ngoId, isAnonymized: false } });
+    const donorLimit = getDonorLimit(effectivePlan);
+
+    if (isOverDonorLimit(effectivePlan, currentDonorCount)) {
+      return NextResponse.json(
+        {
+          error: `Ai atins limita de ${donorLimit} donatori pentru planul ${effectivePlan}. Fa upgrade pentru a adauga mai multi donatori.`,
+          code: "DONOR_LIMIT_REACHED",
+          limit: donorLimit,
+          current: currentDonorCount,
+          plan: effectivePlan,
+        },
+        { status: 403 }
+      );
     }
 
     const formData = await request.formData();
@@ -161,6 +180,12 @@ export async function POST(request: NextRequest) {
               tagIds.push(newTag.id);
             }
           }
+        }
+
+        if (!existingDonor && donorLimit > 0 && (currentDonorCount + created) >= donorLimit) {
+          errors.push({ row: i + 2, message: `Limita de ${donorLimit} donatori atinsa. Fa upgrade.` });
+          skipped++;
+          continue;
         }
 
         if (existingDonor) {

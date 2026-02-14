@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +24,7 @@ import {
   Sparkles, Newspaper, Radio, MessageSquare, Youtube,
   Twitter, Facebook, Rss, BarChart3, Download,
   ThumbsUp, ThumbsDown, Clock, ChevronDown, ChevronUp,
-  Plus, Trash2, Save,
+  Plus, Trash2, Save, Lock, Crown, Zap,
 } from "lucide-react";
 import { PageHelp } from "@/components/ui/page-help";
 
@@ -54,6 +56,11 @@ interface MentionStats {
 }
 
 export default function MentionsPage() {
+  const { data: session } = useSession();
+  const plan = (session?.user as any)?.plan || "BASIC";
+  const role = (session?.user as any)?.role;
+  const isElite = plan === "ELITE" || role === "SUPER_ADMIN";
+
   const [activeTab, setActiveTab] = useState("inbox");
   const [mentions, setMentions] = useState<MentionItem[]>([]);
   const [stats, setStats] = useState<MentionStats>({
@@ -127,17 +134,28 @@ export default function MentionsPage() {
     loadMentions();
   }, [filterSentiment, filterSource, filterStatus]);
 
+  const [crawlResult, setCrawlResult] = useState<string | null>(null);
+
   const handleCrawl = async () => {
     setCrawling(true);
+    setCrawlResult(null);
     try {
-      await fetch("/api/mentions", {
+      const res = await fetch("/api/mentions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "crawl" }),
       });
+      const data = await res.json();
+      if (data.saved > 0) {
+        setCrawlResult(`S-au gasit ${data.crawled} mentiuni, ${data.saved} noi salvate.`);
+      } else if (data.crawled > 0) {
+        setCrawlResult(`S-au gasit ${data.crawled} mentiuni, toate existau deja.`);
+      } else {
+        setCrawlResult(data.message || "Nu s-au gasit mentiuni noi.");
+      }
       await loadMentions();
     } catch {
-      // silently fail
+      setCrawlResult("Eroare la scanare. Incercati din nou.");
     } finally {
       setCrawling(false);
     }
@@ -235,6 +253,72 @@ export default function MentionsPage() {
     }
   };
 
+  if (!isElite) {
+    return (
+      <div className="space-y-6">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 p-8 text-white shadow-xl">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djZoLTZWMzRoNnptMC0zMHY2aC02VjRoNnptMCAxMnY2aC02VjE2aDZ6bTAgMTJ2Nmg2djZoLTZ2LTZ6bTEyLTEydjZoLTZWMTZoNnptLTI0IDB2Nmg2djZILTZ2LTZIMjR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
+          <div className="relative text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm mx-auto mb-4">
+              <Crown className="h-8 w-8" />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">Monitorizare Mentiuni</h1>
+            <p className="text-white/90 text-lg mb-1">Functie disponibila exclusiv in pachetul ELITE</p>
+            <p className="text-white/70 text-sm max-w-xl mx-auto">
+              Monitorizeaza automat mentiunile organizatiei tale din Google News, Facebook, presa si alte surse online cu analiza AI.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <Card className="border-0 shadow-md">
+            <CardContent className="pt-6 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600 mx-auto mb-3">
+                <Search className="h-6 w-6" />
+              </div>
+              <h3 className="font-semibold mb-1">Google News & RSS</h3>
+              <p className="text-sm text-muted-foreground">Scanare automata din Google News, surse RSS si publicatii online.</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md">
+            <CardContent className="pt-6 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600 mx-auto mb-3">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <h3 className="font-semibold mb-1">Analiza AI</h3>
+              <p className="text-sm text-muted-foreground">Sentiment, relevanta si rezumat automat pentru fiecare mentiune gasita.</p>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-md">
+            <CardContent className="pt-6 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-100 text-green-600 mx-auto mb-3">
+                <Bell className="h-6 w-6" />
+              </div>
+              <h3 className="font-semibold mb-1">Notificari</h3>
+              <p className="text-sm text-muted-foreground">Primesti alerte instant, zilnice sau saptamanale cu mentiunile noi.</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="border-0 shadow-lg overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
+          <CardContent className="py-8 text-center">
+            <h3 className="text-xl font-bold mb-2">Upgradare la pachetul ELITE</h3>
+            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+              Obtine acces la monitorizarea mentiunilor, AI optimization, A/B testing si toate functiile premium.
+            </p>
+            <Link href="/dashboard/billing">
+              <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md rounded-lg px-8 py-3 text-base font-semibold">
+                <Zap className="mr-2 h-5 w-5" />
+                Upgradare ELITE
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -267,6 +351,11 @@ export default function MentionsPage() {
               Scanare acum
             </Button>
           </div>
+          {crawlResult && (
+            <div className="mt-3 text-sm text-white/90 bg-white/10 rounded-lg px-3 py-2 backdrop-blur-sm">
+              {crawlResult}
+            </div>
+          )}
         </div>
       </div>
 
@@ -462,7 +551,7 @@ export default function MentionsPage() {
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           <span className="flex items-center gap-1">
                             {sourceIcon(mention.sourceType)}
-                            {mention.sourceType}
+                            {mention.entities?.sourceName || mention.sourceType}
                           </span>
                           {mention.relevanceScore && (
                             <span className="flex items-center gap-1">

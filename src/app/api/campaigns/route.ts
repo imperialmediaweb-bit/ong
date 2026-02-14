@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { campaignSchema } from "@/lib/validations";
 import { createAuditLog } from "@/lib/audit";
-import { hasFeature, hasPermission } from "@/lib/permissions";
+import { hasFeature, hasPermission, fetchEffectivePlan } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   try {
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
-    const plan = (session.user as any).plan;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
 
     const body = await request.json();
     const parsed = campaignSchema.safeParse(body);

@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { automationSchema } from "@/lib/validations";
 import { createAuditLog } from "@/lib/audit";
-import { hasFeature, hasPermission } from "@/lib/permissions";
+import { hasFeature, hasPermission, fetchEffectivePlan } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,9 +23,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
-    const plan = (session.user as any).plan;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
     if (!hasFeature(plan, "automations_basic")) {
-      return NextResponse.json({ error: "Automations are not available on your plan" }, { status: 403 });
+      return NextResponse.json({ error: "Automatizarile nu sunt disponibile pe planul tau. Fa upgrade la PRO." }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -104,9 +104,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
     }
 
-    const plan = (session.user as any).plan;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
     if (!hasFeature(plan, "automations_basic")) {
-      return NextResponse.json({ error: "Automations are not available on your plan" }, { status: 403 });
+      return NextResponse.json({ error: "Automatizarile nu sunt disponibile pe planul tau. Fa upgrade la PRO." }, { status: 403 });
+    }
+
+    // Check automation limit
+    const { isOverAutomationLimit } = await import("@/lib/permissions");
+    const activeAutomationCount = await prisma.automation.count({ where: { ngoId, isActive: true } });
+    if (isOverAutomationLimit(plan, activeAutomationCount)) {
+      const { PLAN_LIMITS } = await import("@/lib/permissions");
+      return NextResponse.json(
+        {
+          error: `Ai atins limita de ${PLAN_LIMITS[plan].maxAutomations} automatizari active pentru planul ${plan}. Fa upgrade pentru mai multe.`,
+          code: "AUTOMATION_LIMIT_REACHED",
+        },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();
