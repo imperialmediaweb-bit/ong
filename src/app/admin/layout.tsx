@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Building2, ShieldCheck, Users,
   CreditCard, FileText, Globe, Settings, LogOut, Menu, X, Shield, Mail, Bell,
-  Receipt, Landmark, Wallet,
+  Receipt, Landmark, Wallet, MessageSquare, FileCode,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
@@ -20,6 +20,8 @@ const navigation = [
   { name: "Utilizatori", href: "/admin/users", icon: Users },
   { name: "Abonamente", href: "/admin/subscriptions", icon: CreditCard },
   { name: "Email & Notificari", href: "/admin/email", icon: Mail },
+  { name: "Configurare SMS", href: "/admin/sms", icon: MessageSquare },
+  { name: "Template-uri", href: "/admin/templates", icon: FileCode },
   { name: "Centru Alerte", href: "/admin/notifications", icon: Bell },
   { name: "Date facturare", href: "/admin/billing", icon: Landmark },
   { name: "Facturi", href: "/admin/invoices", icon: Receipt },
