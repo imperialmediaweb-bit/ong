@@ -224,12 +224,21 @@ model Donor {
   ngoId             String
   ngo               Ngo             @relation(fields: [ngoId], references: [id], onDelete: Cascade)
 
+  // Type: individual or company
+  donorType         DonorType       @default(INDIVIDUAL)
+
   // Contact (encrypted at app level)
   email             String?
   emailEncrypted    String?
   phone             String?
   phoneEncrypted    String?
   name              String?
+
+  // Company-specific fields
+  companyName       String?
+  companyCui        String?
+  companyAddress    String?
+  contactPerson     String?
 
   // Preferences
   preferredChannel  ContactChannel  @default(EMAIL)
@@ -277,6 +286,11 @@ enum DonorStatus {
   INACTIVE
   UNSUBSCRIBED
   DELETED
+}
+
+enum DonorType {
+  INDIVIDUAL
+  COMPANY
 }
 
 // ─── Tags ─────────────────────────────────────────────────────────

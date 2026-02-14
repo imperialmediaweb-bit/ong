@@ -28,6 +28,7 @@ const ngoNavGroups = [
     label: "Donatori & Donatii",
     items: [
       { name: "Donatori", href: "/dashboard/donors", icon: Users },
+      { name: "Firme & Sponsori", href: "/dashboard/donors/companies", icon: Building2 },
       { name: "Donatii", href: "/dashboard/donations", icon: CircleDollarSign },
       { name: "Verificare plati", href: "/dashboard/donations/pledges", icon: Banknote },
       { name: "Formular 230", href: "/dashboard/formular-230", icon: FileText },

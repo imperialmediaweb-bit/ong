@@ -140,6 +140,12 @@ interface MiniSiteState {
   showCounterStats: boolean;
 }
 
+interface CampaignUpdate {
+  id: string;
+  date: string;
+  text: string;
+}
+
 interface MiniSiteCampaign {
   id: string;
   title: string;
@@ -148,6 +154,7 @@ interface MiniSiteCampaign {
   raisedAmount: number;
   imageUrl: string;
   isActive: boolean;
+  updates?: CampaignUpdate[];
 }
 
 interface TeamMember { id: string; name: string; role: string; photoUrl: string; bio: string; }
@@ -941,6 +948,44 @@ export default function MiniSiteBuilderPage() {
                         onChange={(e) => setState((prev) => ({ ...prev, miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
                           i === idx ? { ...c, imageUrl: e.target.value } : c) }))} />
                     </div>
+                  </div>
+
+                  {/* Campaign Updates / Timeline */}
+                  <div className="space-y-3 border-t pt-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="flex items-center gap-1.5">
+                        <CalendarDays className="h-4 w-4" />
+                        Actualizari campanie
+                      </Label>
+                      <Button variant="outline" size="sm" onClick={() => {
+                        const today = new Date().toISOString().split("T")[0];
+                        setState((prev) => ({ ...prev, miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                          i === idx ? { ...c, updates: [...(c.updates || []), { id: Date.now().toString(), date: today, text: "" }] } : c) }));
+                      }}>
+                        <Plus className="h-3.5 w-3.5 mr-1" /> Adauga update
+                      </Button>
+                    </div>
+                    {(campaign.updates || []).length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">Niciun update adaugat. Adauga actualizari pentru a tine donatorii la curent cu progresul campaniei.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {(campaign.updates || []).map((update, uIdx) => (
+                          <div key={update.id} className="flex gap-2 items-start">
+                            <Input type="date" value={update.date} className="w-40 shrink-0 text-xs"
+                              onChange={(e) => setState((prev) => ({ ...prev, miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                i === idx ? { ...c, updates: (c.updates || []).map((u, ui) => ui === uIdx ? { ...u, date: e.target.value } : u) } : c) }))} />
+                            <Input placeholder="Ex: Operatia a fost realizata cu succes!" value={update.text} className="flex-1 text-xs"
+                              onChange={(e) => setState((prev) => ({ ...prev, miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                i === idx ? { ...c, updates: (c.updates || []).map((u, ui) => ui === uIdx ? { ...u, text: e.target.value } : u) } : c) }))} />
+                            <Button variant="ghost" size="sm" className="text-red-500 hover:text-red-700 shrink-0 h-9 w-9 p-0"
+                              onClick={() => setState((prev) => ({ ...prev, miniSiteCampaigns: prev.miniSiteCampaigns.map((c, i) =>
+                                i === idx ? { ...c, updates: (c.updates || []).filter((_, ui) => ui !== uIdx) } : c) }))}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-2">
