@@ -127,17 +127,28 @@ export default function MentionsPage() {
     loadMentions();
   }, [filterSentiment, filterSource, filterStatus]);
 
+  const [crawlResult, setCrawlResult] = useState<string | null>(null);
+
   const handleCrawl = async () => {
     setCrawling(true);
+    setCrawlResult(null);
     try {
-      await fetch("/api/mentions", {
+      const res = await fetch("/api/mentions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "crawl" }),
       });
+      const data = await res.json();
+      if (data.saved > 0) {
+        setCrawlResult(`S-au gasit ${data.crawled} mentiuni, ${data.saved} noi salvate.`);
+      } else if (data.crawled > 0) {
+        setCrawlResult(`S-au gasit ${data.crawled} mentiuni, toate existau deja.`);
+      } else {
+        setCrawlResult(data.message || "Nu s-au gasit mentiuni noi.");
+      }
       await loadMentions();
     } catch {
-      // silently fail
+      setCrawlResult("Eroare la scanare. Incercati din nou.");
     } finally {
       setCrawling(false);
     }
@@ -267,6 +278,11 @@ export default function MentionsPage() {
               Scanare acum
             </Button>
           </div>
+          {crawlResult && (
+            <div className="mt-3 text-sm text-white/90 bg-white/10 rounded-lg px-3 py-2 backdrop-blur-sm">
+              {crawlResult}
+            </div>
+          )}
         </div>
       </div>
 
@@ -462,7 +478,7 @@ export default function MentionsPage() {
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
                           <span className="flex items-center gap-1">
                             {sourceIcon(mention.sourceType)}
-                            {mention.sourceType}
+                            {mention.entities?.sourceName || mention.sourceType}
                           </span>
                           {mention.relevanceScore && (
                             <span className="flex items-center gap-1">
