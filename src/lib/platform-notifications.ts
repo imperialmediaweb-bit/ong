@@ -419,6 +419,7 @@ export async function notifyInvoiceCreated(params: {
   period: string;
   dueDate?: Date;
   invoiceUrl?: string;
+  invoiceId?: string;
 }) {
   const settings = await getNotifySettings();
   if (!settings.notifyOnInvoice) return;
@@ -432,16 +433,77 @@ export async function notifyInvoiceCreated(params: {
       select: { email: true },
     });
 
-    const template = invoiceEmail({
-      ngoName: params.ngoName,
-      invoiceNumber: params.invoiceNumber,
-      amount: params.amount,
-      currency: params.currency,
-      plan: params.plan,
-      period: params.period,
-      dueDate: params.dueDate,
-      invoiceUrl: params.invoiceUrl,
-    });
+    // Load full invoice for branded email template
+    let template: { subject: string; html: string };
+    if (params.invoiceId) {
+      const invoice = await prisma.invoice.findUnique({ where: { id: params.invoiceId } });
+      if (invoice) {
+        template = invoiceEmail({
+          invoiceNumber: invoice.invoiceNumber,
+          invoiceSeries: invoice.invoiceSeries || undefined,
+          sellerName: invoice.sellerName,
+          sellerCui: invoice.sellerCui || undefined,
+          sellerRegCom: invoice.sellerRegCom || undefined,
+          sellerAddress: invoice.sellerAddress || undefined,
+          sellerCity: invoice.sellerCity || undefined,
+          sellerCounty: invoice.sellerCounty || undefined,
+          sellerEmail: invoice.sellerEmail || undefined,
+          sellerIban: invoice.sellerIban || undefined,
+          sellerBankName: invoice.sellerBankName || undefined,
+          sellerVatPayer: invoice.sellerVatPayer,
+          buyerName: invoice.buyerName,
+          buyerCui: invoice.buyerCui || undefined,
+          buyerRegCom: invoice.buyerRegCom || undefined,
+          buyerAddress: invoice.buyerAddress || undefined,
+          buyerCity: invoice.buyerCity || undefined,
+          buyerCounty: invoice.buyerCounty || undefined,
+          buyerEmail: invoice.buyerEmail || undefined,
+          issueDate: invoice.issueDate,
+          dueDate: invoice.dueDate,
+          paidAt: invoice.paidAt,
+          status: invoice.status,
+          items: (invoice.items as any[]) || [],
+          subtotal: invoice.subtotal,
+          vatAmount: invoice.vatAmount,
+          totalAmount: invoice.totalAmount,
+          currency: invoice.currency,
+          notes: invoice.notes || undefined,
+          paymentUrl: params.invoiceUrl,
+        });
+      } else {
+        template = invoiceEmail({
+          invoiceNumber: params.invoiceNumber,
+          sellerName: "Binevo SRL",
+          buyerName: params.ngoName,
+          issueDate: new Date(),
+          dueDate: params.dueDate,
+          paidAt: null,
+          status: "ISSUED",
+          items: [{ description: `${params.plan} - ${params.period}`, quantity: 1, unitPrice: params.amount }],
+          subtotal: params.amount,
+          vatAmount: 0,
+          totalAmount: params.amount,
+          currency: params.currency,
+          paymentUrl: params.invoiceUrl,
+        });
+      }
+    } else {
+      template = invoiceEmail({
+        invoiceNumber: params.invoiceNumber,
+        sellerName: "Binevo SRL",
+        buyerName: params.ngoName,
+        issueDate: new Date(),
+        dueDate: params.dueDate,
+        paidAt: null,
+        status: "ISSUED",
+        items: [{ description: `${params.plan} - ${params.period}`, quantity: 1, unitPrice: params.amount }],
+        subtotal: params.amount,
+        vatAmount: 0,
+        totalAmount: params.amount,
+        currency: params.currency,
+        paymentUrl: params.invoiceUrl,
+      });
+    }
 
     for (const user of ngoUsers) {
       await sendPlatformEmail({
