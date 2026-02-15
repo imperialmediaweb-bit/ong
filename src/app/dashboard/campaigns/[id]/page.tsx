@@ -36,6 +36,8 @@ import {
   TrendingUp,
   BarChart3,
   Search,
+  ExternalLink,
+  Share2,
 } from "lucide-react";
 import {
   BarChart,
@@ -109,6 +111,7 @@ export default function CampaignDetailPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [recipientSearch, setRecipientSearch] = useState("");
   const [recipientStatusFilter, setRecipientStatusFilter] = useState("all");
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const fetchCampaign = useCallback(async () => {
     setLoading(true);
@@ -279,6 +282,39 @@ export default function CampaignDetailPage() {
             <Copy className="mr-2 h-4 w-4" />
             Duplica
           </Button>
+          {["SENT", "SENDING", "SCHEDULED"].includes(campaign.status) && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const url = `${window.location.origin}/c/${campaignId}`;
+                  navigator.clipboard.writeText(url);
+                  setLinkCopied(true);
+                  setTimeout(() => setLinkCopied(false), 2000);
+                }}
+              >
+                {linkCopied ? (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4 text-green-600" />
+                    Link copiat!
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Link public
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => window.open(`/c/${campaignId}`, "_blank")}
+                title="Deschide pagina publica"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
