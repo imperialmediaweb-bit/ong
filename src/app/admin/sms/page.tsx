@@ -16,8 +16,11 @@ interface SmsConfig {
   twilioSid: string;
   twilioToken: string;
   twilioPhone: string;
+  telnyxApiKey: string;
+  telnyxPhone: string;
   _hasTwilioSid?: boolean;
   _hasTwilioToken?: boolean;
+  _hasTelnyxApiKey?: boolean;
 }
 
 const defaultConfig: SmsConfig = {
@@ -25,6 +28,8 @@ const defaultConfig: SmsConfig = {
   twilioSid: "",
   twilioToken: "",
   twilioPhone: "",
+  telnyxApiKey: "",
+  telnyxPhone: "",
 };
 
 const providers = [
@@ -147,7 +152,9 @@ export default function AdminSmsPage() {
   }
 
   const isConfigured = () => {
-    return !!(config.twilioSid || config._hasTwilioSid) && !!(config.twilioToken || config._hasTwilioToken) && !!config.twilioPhone;
+    const twilioOk = !!(config.twilioSid || config._hasTwilioSid) && !!(config.twilioToken || config._hasTwilioToken) && !!config.twilioPhone;
+    const telnyxOk = !!(config.telnyxApiKey || config._hasTelnyxApiKey) && !!config.telnyxPhone;
+    return twilioOk || telnyxOk;
   };
 
   return (
@@ -288,6 +295,57 @@ export default function AdminSmsPage() {
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Telnyx Configuration */}
+      <Card className="border-green-200">
+        <CardContent className="p-6">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-green-600" />
+            Credentiale Telnyx (Platform-level)
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Alternativa mai ieftina la Twilio. Obtine cheia API de la portal.telnyx.com. Cost: ~$0.004/SMS Romania.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>API Key *</Label>
+              <div className="flex gap-2">
+                <Input
+                  type={showPasswords.telnyxApiKey ? "text" : "password"}
+                  value={config.telnyxApiKey}
+                  onChange={(e) => updateField("telnyxApiKey", e.target.value)}
+                  placeholder="KEY0xxxxxxxxx..."
+                  className="font-mono text-sm"
+                />
+                <Button variant="ghost" size="icon" onClick={() => togglePassword("telnyxApiKey")}>
+                  {showPasswords.telnyxApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Numar de telefon Telnyx *</Label>
+              <Input
+                value={config.telnyxPhone}
+                onChange={(e) => updateField("telnyxPhone", e.target.value)}
+                placeholder="+40xxxxxxxxx"
+              />
+              <p className="text-xs text-muted-foreground">
+                Numarul de telefon Telnyx de pe care se trimit SMS-urile (format international: +40...)
+              </p>
+            </div>
+          </div>
+
+          {!config.telnyxApiKey && !config._hasTelnyxApiKey && (
+            <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-sm text-amber-800">
+                <AlertTriangle className="h-4 w-4 inline mr-1" />
+                Telnyx nu este configurat. SMS-urile vor fi trimise prin Twilio daca este configurat.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 

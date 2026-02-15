@@ -21,7 +21,7 @@ import {
   creditPurchaseEmail,
 } from "@/lib/subscription-emails";
 
-const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://www.binevo.ro";
 
 interface NotifyConfig {
   notifyOnRegistration?: boolean;

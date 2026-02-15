@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
       accountSid: body.twilioSid?.includes("••") ? settings?.twilioSid : (body.twilioSid || settings?.twilioSid),
       authToken: body.twilioToken === "••••••••" ? settings?.twilioToken : (body.twilioToken || settings?.twilioToken),
       phoneNumber: body.twilioPhone || settings?.twilioPhone,
+      telnyxApiKey: body.telnyxApiKey?.includes("••") ? settings?.telnyxApiKey : (body.telnyxApiKey || settings?.telnyxApiKey),
+      telnyxPhone: body.telnyxPhone || settings?.telnyxPhone,
     };
 
     const formattedPhone = formatPhoneNumber(testPhone);
@@ -34,12 +36,14 @@ export async function POST(request: NextRequest) {
       {
         to: formattedPhone,
         body: "Test SMS de la platforma Binevo. Daca primesti acest mesaj, configuratia SMS functioneaza corect!",
-        from: config.phoneNumber || undefined,
+        from: config.phoneNumber || config.telnyxPhone || undefined,
       },
       {
         accountSid: config.accountSid || undefined,
         authToken: config.authToken || undefined,
         phoneNumber: config.phoneNumber || undefined,
+        telnyxApiKey: config.telnyxApiKey || undefined,
+        telnyxPhoneNumber: config.telnyxPhone || undefined,
       }
     );
 

@@ -16,6 +16,8 @@ export async function GET() {
         twilioSid: true,
         twilioToken: true,
         twilioPhone: true,
+        telnyxApiKey: true,
+        telnyxPhone: true,
       },
     });
 
@@ -25,8 +27,11 @@ export async function GET() {
         twilioSid: "",
         twilioToken: "",
         twilioPhone: "",
+        telnyxApiKey: "",
+        telnyxPhone: "",
         _hasTwilioToken: false,
         _hasTwilioSid: false,
+        _hasTelnyxApiKey: false,
       });
     }
 
@@ -35,8 +40,11 @@ export async function GET() {
       twilioSid: settings.twilioSid ? maskKey(settings.twilioSid) : "",
       twilioToken: settings.twilioToken ? "••••••••" : "",
       twilioPhone: settings.twilioPhone || "",
+      telnyxApiKey: settings.telnyxApiKey ? maskKey(settings.telnyxApiKey) : "",
+      telnyxPhone: settings.telnyxPhone || "",
       _hasTwilioSid: !!settings.twilioSid,
       _hasTwilioToken: !!settings.twilioToken,
+      _hasTelnyxApiKey: !!settings.telnyxApiKey,
     });
   } catch (error: any) {
     console.error("Error loading SMS config:", error);
@@ -62,6 +70,12 @@ export async function PATCH(request: NextRequest) {
     }
     if (body.twilioPhone !== undefined) {
       data.twilioPhone = body.twilioPhone;
+    }
+    if (body.telnyxApiKey && !body.telnyxApiKey.includes("••")) {
+      data.telnyxApiKey = body.telnyxApiKey;
+    }
+    if (body.telnyxPhone !== undefined) {
+      data.telnyxPhone = body.telnyxPhone;
     }
 
     await prisma.platformSettings.upsert({

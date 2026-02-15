@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
     const donationId = searchParams.get("donation_id");
 
     if (!sessionId || !donationId) {
-      const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+      const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://www.binevo.ro";
       return NextResponse.redirect(`${appUrl}?error=parametri_lipsa`);
     }
 
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     });
 
     if (!donation) {
-      const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+      const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://www.binevo.ro";
       return NextResponse.redirect(`${appUrl}?error=donatie_negasita`);
     }
 
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     const { retrieveCheckoutSession } = await import("@/lib/stripe-connect");
     const checkoutSession = await retrieveCheckoutSession(sessionId);
 
-    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://www.binevo.ro";
 
     if (checkoutSession.payment_status !== "paid") {
       // Plata nu a fost finalizata
@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
     );
   } catch (error: any) {
     console.error("Donate success callback error:", error.message);
-    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://www.binevo.ro";
     return NextResponse.redirect(`${appUrl}?error=eroare_verificare_plata`);
   }
 }

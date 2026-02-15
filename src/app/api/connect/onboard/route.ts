@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "ONG-ul nu a fost gasit" }, { status: 404 });
     }
 
-    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://www.binevo.ro";
     const returnUrl = `${appUrl}/dashboard/settings?connect=success`;
     const refreshUrl = `${appUrl}/dashboard/settings?connect=refresh`;
 

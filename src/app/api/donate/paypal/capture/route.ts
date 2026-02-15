@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
     const donationId = searchParams.get("donation_id");
     const token = searchParams.get("token"); // PayPal order ID from redirect
 
-    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://www.binevo.ro";
 
     if (!donationId) {
       return NextResponse.redirect(`${appUrl}?error=parametri_lipsa`);
@@ -141,7 +141,7 @@ export async function GET(req: NextRequest) {
     );
   } catch (error: any) {
     console.error("PayPal capture error:", error.message);
-    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://www.binevo.ro";
     return NextResponse.redirect(`${appUrl}?error=eroare_paypal`);
   }
 }

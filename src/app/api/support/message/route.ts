@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
         </div>
       `,
       ctaText: "Vezi in Admin",
-      ctaUrl: `${process.env.APP_URL || "http://localhost:3000"}/admin/notifications`,
+      ctaUrl: `${process.env.APP_URL || process.env.NEXTAUTH_URL || "https://www.binevo.ro"}/admin/notifications`,
     }).catch(() => {});
 
     return NextResponse.json({ success: true });

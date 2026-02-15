@@ -82,6 +82,6 @@ export async function sendEmail(params: SendEmailParams, apiKey?: string): Promi
 }
 
 export function generateUnsubscribeUrl(donorId: string, ngoSlug: string): string {
-  const baseUrl = process.env.APP_URL || "http://localhost:3000";
+  const baseUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://www.binevo.ro";
   return `${baseUrl}/unsubscribe/${ngoSlug}?did=${donorId}`;
 }
