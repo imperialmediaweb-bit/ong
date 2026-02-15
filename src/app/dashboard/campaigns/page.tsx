@@ -597,14 +597,26 @@ h2{font-size:16px;margin-top:30px;border-bottom:2px solid #333;padding-bottom:5p
               Pachete de credite
             </h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {packages.map((pkg) => (
+              {packages.map((pkg) => {
+                const isSmsPackage = pkg.channel === "SMS" || pkg.channel === "BOTH";
+                return (
                 <Card
                   key={pkg.id}
-                  className={`relative transition-all hover:shadow-md ${
-                    pkg.popular ? "border-indigo-300 shadow-sm ring-1 ring-indigo-200" : ""
+                  className={`relative transition-all ${
+                    isSmsPackage ? "opacity-60" : "hover:shadow-md"
+                  } ${
+                    pkg.popular && !isSmsPackage ? "border-indigo-300 shadow-sm ring-1 ring-indigo-200" : ""
                   }`}
                 >
-                  {pkg.popular && (
+                  {isSmsPackage && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+                      <Badge variant="secondary" className="bg-amber-100 text-amber-800 border-amber-300">
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Indisponibil momentan
+                      </Badge>
+                    </div>
+                  )}
+                  {pkg.popular && !isSmsPackage && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <Badge className="bg-indigo-600 text-white">
                         <Star className="h-3 w-3 mr-1" />
@@ -638,28 +650,40 @@ h2{font-size:16px;margin-top:30px;border-bottom:2px solid #333;padding-bottom:5p
                         </div>
                       )}
                     </div>
-                    <Button
-                      className="w-full"
-                      size="sm"
-                      variant={pkg.popular ? "default" : "outline"}
-                      onClick={() => handlePurchase(pkg.id)}
-                      disabled={!!purchasing}
-                    >
-                      {purchasing === pkg.id ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-1" />
-                          Se genereaza factura...
-                        </>
-                      ) : (
-                        <>
-                          <CreditCard className="h-4 w-4 mr-1" />
-                          Cumpara - {pkg.price} RON
-                        </>
-                      )}
-                    </Button>
+                    {isSmsPackage ? (
+                      <Button
+                        className="w-full"
+                        size="sm"
+                        variant="outline"
+                        disabled
+                      >
+                        Serviciu indisponibil momentan
+                      </Button>
+                    ) : (
+                      <Button
+                        className="w-full"
+                        size="sm"
+                        variant={pkg.popular ? "default" : "outline"}
+                        onClick={() => handlePurchase(pkg.id)}
+                        disabled={!!purchasing}
+                      >
+                        {purchasing === pkg.id ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                            Se genereaza factura...
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="h-4 w-4 mr-1" />
+                            Cumpara - {pkg.price} RON
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           </div>
 

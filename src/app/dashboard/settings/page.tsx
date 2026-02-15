@@ -46,6 +46,8 @@ import {
   Heart,
   Pipette,
   Check,
+  Plus,
+  Info,
 } from "lucide-react";
 
 interface ProfileSettings {
@@ -161,6 +163,9 @@ export default function SettingsPage() {
   const [newPaypalClientId, setNewPaypalClientId] = useState("");
   const [newPaypalClientSecret, setNewPaypalClientSecret] = useState("");
 
+  // Multiple IBANs
+  const [ibanAccounts, setIbanAccounts] = useState<Array<{ currency: string; iban: string; bankName: string }>>([]);
+
   // Fetch profile settings
   const fetchProfile = useCallback(async () => {
     setProfileLoading(true);
@@ -267,6 +272,17 @@ export default function SettingsPage() {
           revolutPhone: data.revolutPhone || "",
           revolutLink: data.revolutLink || "",
         });
+        // Load multiple IBANs
+        if (data.ibanAccounts && Array.isArray(data.ibanAccounts)) {
+          setIbanAccounts(data.ibanAccounts);
+        } else {
+          // Migrate from old ibanRon/ibanEur fields
+          const migrated: Array<{ currency: string; iban: string; bankName: string }> = [];
+          if (data.ibanRon) migrated.push({ currency: "RON", iban: data.ibanRon, bankName: data.bankName || "" });
+          if (data.ibanEur) migrated.push({ currency: "EUR", iban: data.ibanEur, bankName: data.bankName || "" });
+          if (migrated.length === 0) migrated.push({ currency: "RON", iban: "", bankName: "" });
+          setIbanAccounts(migrated);
+        }
       }
     } catch (err: any) {
       console.error(err);
@@ -449,10 +465,14 @@ export default function SettingsPage() {
     clearMessages();
     setSaving(true);
     try {
+      // Extract first RON/EUR iban for backward compatibility
+      const ronAccount = ibanAccounts.find(a => a.currency === "RON");
+      const eurAccount = ibanAccounts.find(a => a.currency === "EUR");
       const payload: any = {
-        bankName: payment.bankName,
-        ibanRon: payment.ibanRon,
-        ibanEur: payment.ibanEur,
+        bankName: ibanAccounts[0]?.bankName || payment.bankName,
+        ibanRon: ronAccount?.iban || "",
+        ibanEur: eurAccount?.iban || "",
+        ibanAccounts: ibanAccounts.filter(a => a.iban.trim() !== ""),
         revolutTag: payment.revolutTag,
         revolutPhone: payment.revolutPhone,
         revolutLink: payment.revolutLink,
@@ -1024,6 +1044,27 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
+                    {/* Setup Guide - show when not connected */}
+                    {!payment.stripeConnectId && (
+                      <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                        <div className="flex items-start gap-2 mb-3">
+                          <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                          <h4 className="font-semibold text-blue-900 text-sm">Cum activezi platile cu cardul prin Stripe</h4>
+                        </div>
+                        <ol className="text-sm text-blue-800 space-y-1.5 ml-6 list-decimal">
+                          <li>Apasa butonul &quot;Activeaza plati cu cardul&quot; de mai jos</li>
+                          <li>Vei fi redirectionat catre Stripe pentru a crea un cont (sau te vei conecta la unul existent)</li>
+                          <li>Completeaza datele organizatiei: denumire, adresa, CUI/CIF</li>
+                          <li>Adauga un cont bancar (IBAN) pentru a primi transferurile de fonduri</li>
+                          <li>Verifica identitatea reprezentantului legal (buletin/pasaport)</li>
+                          <li>Dupa aprobare, platile cu cardul vor fi active automat pe mini-site</li>
+                        </ol>
+                        <p className="text-xs text-blue-600 mt-3">
+                          Procesul dureaza 5-10 minute. Stripe percepe un comision de ~2.9% + 0.25 EUR per tranzactie.
+                        </p>
+                      </div>
+                    )}
+
                     {/* Status Display */}
                     <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/30">
                       <div className="flex-1">
@@ -1107,6 +1148,26 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <>
+                    {/* PayPal Setup Guide */}
+                    {!payment.paypalEmail && !payment.paypalClientId && (
+                      <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                        <div className="flex items-start gap-2 mb-3">
+                          <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                          <h4 className="font-semibold text-blue-900 text-sm">Cum activezi PayPal pentru donatii</h4>
+                        </div>
+                        <ol className="text-sm text-blue-800 space-y-1.5 ml-6 list-decimal">
+                          <li>Creeaza un cont PayPal Business la <span className="font-medium">paypal.com/business</span></li>
+                          <li>Completeaza datele organizatiei (denumire, adresa, CUI)</li>
+                          <li>Adauga un cont bancar sau card pentru retragerea fondurilor</li>
+                          <li>Verifica adresa de email si identitatea organizatiei</li>
+                          <li>Copiaza adresa de email PayPal si adaug-o mai jos</li>
+                        </ol>
+                        <p className="text-xs text-blue-600 mt-3">
+                          PayPal percepe un comision de ~3.4% + 0.35 EUR per tranzactie pentru organizatii non-profit.
+                        </p>
+                      </div>
+                    )}
+
                     {/* PayPal Status */}
                     <div className="flex items-center gap-4 p-4 border rounded-lg bg-muted/30">
                       <div className="flex-1">
@@ -1170,15 +1231,15 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            {/* Bank Transfer Section */}
+            {/* Bank Transfer Section - Multiple IBANs */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Banknote className="h-5 w-5" />
-                  Transfer bancar
+                  Transfer bancar (IBAN)
                 </CardTitle>
                 <CardDescription>
-                  Configureaza datele bancare pentru a primi donatii prin transfer bancar.
+                  Adauga unul sau mai multe conturi IBAN in diferite valute (RON, EUR, USD, GBP etc.) pentru a primi donatii prin transfer bancar.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -1188,33 +1249,109 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <>
-                    <div className="grid gap-2">
-                      <Label htmlFor="bankName">Numele bancii</Label>
-                      <Input
-                        id="bankName"
-                        placeholder="Ex: Banca Transilvania, ING, BRD..."
-                        value={payment.bankName}
-                        onChange={(e) => setPayment({ ...payment, bankName: e.target.value })}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="ibanRon">IBAN RON</Label>
-                      <Input
-                        id="ibanRon"
-                        placeholder="RO49 AAAA 1B31 0075 9384 0000"
-                        value={payment.ibanRon}
-                        onChange={(e) => setPayment({ ...payment, ibanRon: e.target.value })}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="ibanEur">IBAN EUR (optional)</Label>
-                      <Input
-                        id="ibanEur"
-                        placeholder="RO49 AAAA 1B31 0075 9384 0001"
-                        value={payment.ibanEur}
-                        onChange={(e) => setPayment({ ...payment, ibanEur: e.target.value })}
-                      />
-                    </div>
+                    {/* IBAN Setup Guide */}
+                    {ibanAccounts.length <= 1 && !ibanAccounts[0]?.iban && (
+                      <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                        <div className="flex items-start gap-2 mb-3">
+                          <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                          <h4 className="font-semibold text-blue-900 text-sm">Adauga conturile bancare ale organizatiei</h4>
+                        </div>
+                        <p className="text-sm text-blue-800 mb-2">
+                          Poti adauga mai multe conturi IBAN in diferite valute. Donatorii vor vedea optiunile disponibile pe pagina de donatie.
+                        </p>
+                        <ul className="text-sm text-blue-800 space-y-1 ml-5 list-disc">
+                          <li><strong>RON</strong> - pentru donatii in lei romanesti</li>
+                          <li><strong>EUR</strong> - pentru donatii din zona euro</li>
+                          <li><strong>USD</strong> - pentru donatii din SUA sau in dolari</li>
+                          <li><strong>GBP</strong> - pentru donatii din Marea Britanie</li>
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Multiple IBAN entries */}
+                    {ibanAccounts.map((account, index) => (
+                      <div key={index} className="p-4 border rounded-lg space-y-3 bg-muted/10">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-semibold">Cont bancar #{index + 1}</Label>
+                          {ibanAccounts.length > 1 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500 hover:text-red-700 h-7 px-2"
+                              onClick={() => {
+                                const updated = ibanAccounts.filter((_, i) => i !== index);
+                                setIbanAccounts(updated);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3 mr-1" />
+                              Sterge
+                            </Button>
+                          )}
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          <div className="grid gap-1.5">
+                            <Label className="text-xs">Valuta</Label>
+                            <Select
+                              value={account.currency}
+                              onValueChange={(val) => {
+                                const updated = [...ibanAccounts];
+                                updated[index] = { ...updated[index], currency: val };
+                                setIbanAccounts(updated);
+                              }}
+                            >
+                              <SelectTrigger className="h-9">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="RON">RON (Lei)</SelectItem>
+                                <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                                <SelectItem value="USD">USD (Dolari)</SelectItem>
+                                <SelectItem value="GBP">GBP (Lire)</SelectItem>
+                                <SelectItem value="CHF">CHF (Franci)</SelectItem>
+                                <SelectItem value="HUF">HUF (Forint)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="grid gap-1.5 sm:col-span-2">
+                            <Label className="text-xs">IBAN</Label>
+                            <Input
+                              placeholder={account.currency === "RON" ? "RO49 AAAA 1B31 0075 9384 0000" : "IBAN..."}
+                              value={account.iban}
+                              onChange={(e) => {
+                                const updated = [...ibanAccounts];
+                                updated[index] = { ...updated[index], iban: e.target.value };
+                                setIbanAccounts(updated);
+                              }}
+                              className="h-9"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid gap-1.5">
+                          <Label className="text-xs">Numele bancii</Label>
+                          <Input
+                            placeholder="Ex: Banca Transilvania, ING, BRD, Raiffeisen..."
+                            value={account.bankName}
+                            onChange={(e) => {
+                              const updated = [...ibanAccounts];
+                              updated[index] = { ...updated[index], bankName: e.target.value };
+                              setIbanAccounts(updated);
+                            }}
+                            className="h-9"
+                          />
+                        </div>
+                      </div>
+                    ))}
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIbanAccounts([...ibanAccounts, { currency: "EUR", iban: "", bankName: "" }])}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Adauga alt IBAN
+                    </Button>
                   </>
                 )}
               </CardContent>
@@ -1238,6 +1375,26 @@ export default function SettingsPage() {
                   </div>
                 ) : (
                   <>
+                    {/* Revolut Setup Guide */}
+                    {!payment.revolutTag && !payment.revolutLink && (
+                      <div className="p-4 rounded-lg bg-blue-50 border border-blue-200">
+                        <div className="flex items-start gap-2 mb-3">
+                          <Info className="h-4 w-4 text-blue-600 mt-0.5 shrink-0" />
+                          <h4 className="font-semibold text-blue-900 text-sm">Cum activezi Revolut pentru donatii</h4>
+                        </div>
+                        <ol className="text-sm text-blue-800 space-y-1.5 ml-6 list-decimal">
+                          <li>Descarca aplicatia Revolut si creeaza un cont Business (sau personal)</li>
+                          <li>Completeaza verificarea de identitate (KYC)</li>
+                          <li>Activeaza-ti un @tag Revolut din setarile aplicatiei</li>
+                          <li>Optional: genereaza un link revolut.me pentru plati rapide</li>
+                          <li>Adauga detaliile mai jos - donatorii vor putea trimite bani instant</li>
+                        </ol>
+                        <p className="text-xs text-blue-600 mt-3">
+                          Revolut nu percepe comisioane pentru transferuri intre conturi Revolut. Transferurile externe pot avea comisioane minime.
+                        </p>
+                      </div>
+                    )}
+
                     <div className="grid gap-2">
                       <Label htmlFor="revolutTag">Revolut @tag</Label>
                       <Input

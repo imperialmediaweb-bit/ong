@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const appUrl = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://www.binevo.ro";
     const donationCurrency = currency || "RON";
 
     // Calculate plan-based fee

@@ -82,6 +82,8 @@ export const CREDIT_PACKAGES: CreditPackage[] = [
   },
   // ── SMS Packages ────────────────────────────────────────────
   // Cost: ~0.34 RON/SMS (Twilio Romania)
+  // NOTA: Pachetele SMS sunt momentan indisponibile.
+  // ONG-urile trebuie sa configureze propriul API Twilio/Telnyx.
   {
     id: "sms-starter",
     name: "SMS Starter",
