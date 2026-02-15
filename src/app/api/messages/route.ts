@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,6 +19,11 @@ export async function GET(request: NextRequest) {
     const role = (session.user as any).role;
     if (!hasPermission(role, "campaigns:read")) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    }
+
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "campaigns_email", role)) {
+      return NextResponse.json({ error: "Mesajele nu sunt disponibile pe planul tau. Fa upgrade la PRO." }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

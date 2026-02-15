@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { createAuditLog } from "@/lib/audit";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 export async function GET(
   request: NextRequest,
@@ -17,6 +18,12 @@ export async function GET(
     const ngoId = (session.user as any).ngoId;
     if (!ngoId) {
       return NextResponse.json({ error: "No NGO associated" }, { status: 403 });
+    }
+
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "sponsor_crm", role)) {
+      return NextResponse.json({ error: "CRM Sponsori nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
     }
 
     // Verify company belongs to this NGO
@@ -56,6 +63,12 @@ export async function POST(
       return NextResponse.json({ error: "No NGO associated" }, { status: 403 });
     }
 
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "sponsor_crm", role)) {
+      return NextResponse.json({ error: "CRM Sponsori nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
+    }
+
     const userId = (session.user as any).id;
 
     // Verify company belongs to this NGO
@@ -69,7 +82,7 @@ export async function POST(
     }
 
     const body = await request.json();
-    const { fullName, role, email, phone, linkedinUrl, notes } = body;
+    const { fullName, role: contactRole, email, phone, linkedinUrl, notes } = body;
 
     if (!fullName || typeof fullName !== "string" || fullName.trim().length === 0) {
       return NextResponse.json({ error: "Contact full name is required" }, { status: 400 });
@@ -79,7 +92,7 @@ export async function POST(
       data: {
         companyId: params.id,
         fullName: fullName.trim(),
-        role: role || null,
+        role: contactRole || null,
         email: email || null,
         phone: phone || null,
         linkedinUrl: linkedinUrl || null,

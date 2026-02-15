@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { callAI, parseAiJson, getAvailableProviders } from "@/lib/ai-providers";
 import prisma from "@/lib/db";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -14,6 +15,12 @@ export async function POST(request: NextRequest) {
     const ngoId = (session.user as any).ngoId;
     if (!ngoId) {
       return NextResponse.json({ error: "No NGO associated" }, { status: 403 });
+    }
+
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "sponsor_ai", role)) {
+      return NextResponse.json({ error: "LinkedIn Prospects nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
     }
 
     const providers = await getAvailableProviders();

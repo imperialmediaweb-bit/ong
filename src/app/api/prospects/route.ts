@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 // GET /api/prospects — List LinkedIn prospects for current NGO
 export async function GET(request: NextRequest) {
@@ -14,6 +15,12 @@ export async function GET(request: NextRequest) {
     const ngoId = (session.user as any).ngoId;
     if (!ngoId) {
       return NextResponse.json({ error: "No NGO associated" }, { status: 403 });
+    }
+
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "linkedin_prospects", role)) {
+      return NextResponse.json({ error: "LinkedIn Prospects nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -99,6 +106,12 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "No NGO associated" }, { status: 403 });
     }
 
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "linkedin_prospects", role)) {
+      return NextResponse.json({ error: "LinkedIn Prospects nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
+    }
+
     const body = await request.json();
     const { id, status, notes, tags } = body;
 
@@ -138,6 +151,12 @@ export async function DELETE(request: NextRequest) {
     const ngoId = (session.user as any).ngoId;
     if (!ngoId) {
       return NextResponse.json({ error: "No NGO associated" }, { status: 403 });
+    }
+
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "linkedin_prospects", role)) {
+      return NextResponse.json({ error: "LinkedIn Prospects nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

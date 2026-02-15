@@ -22,6 +22,7 @@ import {
   Target, Lightbulb, Send,
   Megaphone, BookOpen, Zap, Wand2,
 } from "lucide-react";
+import { PlanGate } from "@/components/dashboard/plan-gate";
 
 export default function SocialAiPage() {
   const [activeTab, setActiveTab] = useState("generator");
@@ -186,6 +187,16 @@ export default function SocialAiPage() {
   ];
 
   return (
+    <PlanGate
+      requiredPlan="PRO"
+      featureName="AI & Social Media"
+      featureDescription="Genereaza postari pentru social media, obtine sfaturi de fundraising si strategii de campanie cu ajutorul AI."
+      features={[
+        { icon: Sparkles, title: "Generator Postari AI", description: "Creeaza postari optimizate pentru Facebook, Instagram, LinkedIn, Twitter.", iconBg: "bg-purple-100", iconColor: "text-purple-600" },
+        { icon: Target, title: "Strategie Campanie", description: "Primeste o strategie completa generata de AI pe baza obiectivelor tale.", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+        { icon: Lightbulb, title: "Trainer Fundraising", description: "Intreaba AI-ul despre bune practici si strategii de strangere de fonduri.", iconBg: "bg-green-100", iconColor: "text-green-600" },
+      ]}
+    >
     <div className="space-y-6">
       {/* Header with gradient */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-6 text-white shadow-xl">
@@ -681,5 +692,6 @@ export default function SocialAiPage() {
         { title: "Optimizare postari", description: "Lipeste o postare existenta si primesti sugestii de imbunatatire de la AI." },
       ]} chatHint="Fiecare tab foloseste AI — scrie in limba romana si vei primi raspunsuri personalizate." />
     </div>
+    </PlanGate>
   );
 }

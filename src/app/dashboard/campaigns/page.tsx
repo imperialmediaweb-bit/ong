@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/select";
 import { formatDate, percentage } from "@/lib/utils";
 import { PageHelp } from "@/components/ui/page-help";
+import { PlanGate } from "@/components/dashboard/plan-gate";
+import { Mail as MailIcon, MessageSquare as SmsIcon, Zap as AutoIcon } from "lucide-react";
 import {
   Search,
   Plus,
@@ -354,6 +356,16 @@ h2{font-size:16px;margin-top:30px;border-bottom:2px solid #333;padding-bottom:5p
   };
 
   return (
+    <PlanGate
+      requiredPlan="PRO"
+      featureName="Campanii Email & SMS"
+      featureDescription="Trimite campanii email si SMS catre donatorii tai, cu A/B testing, template-uri si analytics detaliate."
+      features={[
+        { icon: MailIcon, title: "Campanii Email", description: "Trimite email-uri in masa cu template-uri profesionale si tracking.", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+        { icon: SmsIcon, title: "Campanii SMS", description: "Comunica rapid cu donatorii prin SMS cu opt-in/opt-out automat.", iconBg: "bg-green-100", iconColor: "text-green-600" },
+        { icon: AutoIcon, title: "A/B Testing", description: "Testeaza variante de subiect si continut pentru rezultate mai bune.", iconBg: "bg-purple-100", iconColor: "text-purple-600" },
+      ]}
+    >
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -952,5 +964,6 @@ h2{font-size:16px;margin-top:30px;border-bottom:2px solid #333;padding-bottom:5p
         { title: "Export", description: "Descarca raportul campaniilor in format CSV." },
       ]} />
     </div>
+    </PlanGate>
   );
 }

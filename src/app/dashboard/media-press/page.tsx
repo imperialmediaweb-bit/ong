@@ -25,6 +25,7 @@ import {
   Star, Zap,
 } from "lucide-react";
 import { PageHelp } from "@/components/ui/page-help";
+import { PlanGate } from "@/components/dashboard/plan-gate";
 
 interface PressContactItem {
   id: string;
@@ -303,6 +304,16 @@ export default function MediaPressPage() {
   };
 
   return (
+    <PlanGate
+      requiredPlan="ELITE"
+      featureName="Retea Media & Presa"
+      featureDescription="Gestioneaza contacte de presa, genereaza comunicate profesionale cu AI si distribuie in publicatii online din Romania."
+      features={[
+        { icon: Newspaper, title: "Contacte Presa", description: "Gestioneaza o baza de date cu publicatii, jurnalisti si contacte media.", iconBg: "bg-rose-100", iconColor: "text-rose-600" },
+        { icon: Sparkles, title: "Comunicate AI", description: "Genereaza comunicate de presa profesionale cu ajutorul inteligentei artificiale.", iconBg: "bg-purple-100", iconColor: "text-purple-600" },
+        { icon: Send, title: "Distribuire MediaExpress", description: "Distribuie comunicate in 50-200 publicatii online din Romania.", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+      ]}
+    >
     <div className="space-y-6">
       {/* Header */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-rose-600 via-pink-600 to-fuchsia-700 p-6 text-white shadow-xl">
@@ -942,5 +953,6 @@ export default function MediaPressPage() {
         { title: "Cauta contacte AI", description: "AI-ul poate gasi automat publicatii si adrese de email din orasul tau." },
       ]} chatHint="Gestioneaza reteaua media a organizatiei tale si distribuie comunicate in presa." />
     </div>
+    </PlanGate>
   );
 }

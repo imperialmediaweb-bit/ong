@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { createAuditLog } from "@/lib/audit";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 import OpenAI from "openai";
 
 function getOpenAI(): OpenAI {
@@ -25,6 +26,12 @@ export async function POST(
         { error: "Nu exista un ONG asociat contului" },
         { status: 403 }
       );
+    }
+
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "sponsor_ai", role)) {
+      return NextResponse.json({ error: "AI Sponsori nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
     }
 
     const userId = (session.user as any).id;

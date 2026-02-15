@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { formatCurrency, formatDate, getInitials } from "@/lib/utils";
+import { PlanGate } from "@/components/dashboard/plan-gate";
 import {
   Search,
   Plus,
@@ -147,6 +148,16 @@ export default function CompaniesPage() {
   const totalDonatedAll = companies.reduce((sum, c) => sum + c.totalDonated, 0);
 
   return (
+    <PlanGate
+      requiredPlan="ELITE"
+      featureName="Firme & Sponsori CRM"
+      featureDescription="Gestioneaza relatiile cu firmele sponsoare, urmareste donatiile corporate si dezvolta parteneriate strategice."
+      features={[
+        { icon: Building2, title: "CRM Corporate", description: "Baza de date dedicata pentru firme, cu detalii de contact si istoric.", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+        { icon: TrendingUp, title: "Tracking Donatii", description: "Urmareste donatiile si sponsorizarile de la fiecare firma.", iconBg: "bg-green-100", iconColor: "text-green-600" },
+        { icon: Users, title: "Contacte Multiple", description: "Gestioneaza mai multe persoane de contact per firma.", iconBg: "bg-purple-100", iconColor: "text-purple-600" },
+      ]}
+    >
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -437,5 +448,6 @@ export default function CompaniesPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </PlanGate>
   );
 }

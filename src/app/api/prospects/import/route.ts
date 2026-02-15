@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 // POST /api/prospects/import — Token-authenticated endpoint for Chrome extension
 export async function POST(request: NextRequest) {
@@ -28,6 +29,11 @@ export async function POST(request: NextRequest) {
 
     const ngoId = apiToken.ngoId;
     const userId = apiToken.userId;
+
+    const plan = await fetchEffectivePlan(ngoId);
+    if (!hasFeature(plan, "linkedin_prospects")) {
+      return NextResponse.json({ error: "LinkedIn Prospects nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
+    }
 
     const body = await request.json();
     const { prospects } = body;

@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { campaignSchema } from "@/lib/validations";
 import { createAuditLog } from "@/lib/audit";
-import { hasPermission } from "@/lib/permissions";
+import { hasPermission, hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 export async function GET(
   request: NextRequest,
@@ -24,6 +24,11 @@ export async function GET(
     const role = (session.user as any).role;
     if (!hasPermission(role, "campaigns:read")) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    }
+
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "campaigns_email", role)) {
+      return NextResponse.json({ error: "Campaniile nu sunt disponibile pe planul tau. Fa upgrade la PRO." }, { status: 403 });
     }
 
     const campaign = await prisma.campaign.findFirst({
@@ -73,6 +78,11 @@ export async function PUT(
     const role = (session.user as any).role;
     if (!hasPermission(role, "campaigns:write")) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    }
+
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "campaigns_email", role)) {
+      return NextResponse.json({ error: "Campaniile nu sunt disponibile pe planul tau. Fa upgrade la PRO." }, { status: 403 });
     }
 
     const existing = await prisma.campaign.findFirst({
@@ -155,6 +165,11 @@ export async function DELETE(
     const role = (session.user as any).role;
     if (!hasPermission(role, "campaigns:write")) {
       return NextResponse.json({ error: "Insufficient permissions" }, { status: 403 });
+    }
+
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "campaigns_email", role)) {
+      return NextResponse.json({ error: "Campaniile nu sunt disponibile pe planul tau. Fa upgrade la PRO." }, { status: 403 });
     }
 
     const existing = await prisma.campaign.findFirst({

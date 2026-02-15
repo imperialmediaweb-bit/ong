@@ -2,11 +2,19 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import { callAI, parseAiJson, getAvailableProviders } from "@/lib/ai-providers";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session) {
+  if (!session?.user) {
     return NextResponse.json({ error: "Neautorizat" }, { status: 401 });
+  }
+
+  const ngoId = (session.user as any).ngoId;
+  const role = (session.user as any).role;
+  const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+  if (!hasFeature(plan, "ai_generator", role)) {
+    return NextResponse.json({ error: "Agentul AI pentru campanii nu este disponibil pe planul tau. Fa upgrade la PRO." }, { status: 403 });
   }
 
   try {

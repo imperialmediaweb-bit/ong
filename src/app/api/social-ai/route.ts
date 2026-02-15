@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import OpenAI from "openai";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 function getOpenAI(): OpenAI {
   return new OpenAI({
@@ -19,6 +20,12 @@ export async function POST(req: NextRequest) {
   const ngoId = (session.user as any).ngoId;
   if (!ngoId) {
     return NextResponse.json({ error: "NGO negasit" }, { status: 400 });
+  }
+
+  const role = (session.user as any).role;
+  const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+  if (!hasFeature(plan, "social_ai", role)) {
+    return NextResponse.json({ error: "Social AI nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
   }
 
   const body = await req.json();
