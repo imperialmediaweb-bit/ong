@@ -12,7 +12,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog";
-import { Search, Plus, Pencil, Power, Users } from "lucide-react";
+import { Search, Plus, Pencil, Power, Users, Trash2 } from "lucide-react";
 
 interface User {
   id: string;
@@ -53,6 +53,10 @@ export default function AdminUsersPage() {
   const [editUserId, setEditUserId] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editNgoId, setEditNgoId] = useState("");
+
+  // Delete confirmation dialog
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteUser, setDeleteUser] = useState<User | null>(null);
 
   useEffect(() => {
     fetchUsers();
@@ -171,6 +175,30 @@ export default function AdminUsersPage() {
     setEditRole(user.role);
     setEditNgoId(user.ngoId || "");
     setShowEditDialog(true);
+  };
+
+  const openDeleteDialog = (user: User) => {
+    setDeleteUser(user);
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteUser) return;
+    try {
+      const res = await fetch(`/api/admin/users/${deleteUser.id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Eroare la stergere");
+      }
+      showSuccessMsg("Utilizatorul a fost sters definitiv din sistem");
+      setShowDeleteDialog(false);
+      setDeleteUser(null);
+      fetchUsers();
+    } catch (err: any) {
+      showErrorMsg(err.message || "Eroare la stergerea utilizatorului");
+    }
   };
 
   const roleColors: Record<string, string> = {
@@ -310,6 +338,15 @@ export default function AdminUsersPage() {
                             <Power className="h-3.5 w-3.5 mr-1" />
                             {user.isActive ? "Dezactiveaza" : "Activeaza"}
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openDeleteDialog(user)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-1" />
+                            Sterge
+                          </Button>
                         </div>
                       </td>
                     </tr>
@@ -417,6 +454,37 @@ export default function AdminUsersPage() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>Anuleaza</Button>
             <Button onClick={handleEditUser}>Salveaza</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Sterge utilizator</DialogTitle>
+            <DialogDescription>
+              Aceasta actiune este ireversibila. Utilizatorul va fi sters definitiv din baza de date.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteUser && (
+            <div className="py-4">
+              <p className="text-sm">
+                Sunteti sigur ca doriti sa stergeti utilizatorul <strong>{deleteUser.name}</strong> ({deleteUser.email})?
+              </p>
+              <p className="text-sm text-red-600 mt-2">
+                Toate datele asociate (sesiuni, conexiuni, mesaje directe, postari blog) vor fi sterse.
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setShowDeleteDialog(false); setDeleteUser(null); }}>
+              Anuleaza
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteUser}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Sterge definitiv
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
