@@ -183,6 +183,30 @@ export default async function MiniSitePage({ params }: Props) {
     blogPosts = [];
   }
 
+  // Fetch confirmed press mentions for "Suntem in presa" section
+  let pressMentions: any[] = [];
+  try {
+    pressMentions = await prisma.mention.findMany({
+      where: {
+        ngoId: ngo.id,
+        status: "CONFIRMED",
+      },
+      orderBy: { publishedAt: "desc" },
+      take: 12,
+      select: {
+        id: true,
+        title: true,
+        url: true,
+        snippet: true,
+        publishedAt: true,
+        sourceType: true,
+        entities: true,
+      },
+    });
+  } catch {
+    pressMentions = [];
+  }
+
   // Dynamic campaigns from miniSiteCampaigns field
   const miniSiteCampaigns: any[] = Array.isArray((config as any)?.miniSiteCampaigns)
     ? (config as any).miniSiteCampaigns.filter((c: any) => c.isActive)
@@ -190,6 +214,7 @@ export default async function MiniSitePage({ params }: Props) {
 
   const showRedirectImpozit = showFormular230 || showContract;
   const showCampaigns = miniSiteCampaigns.length > 0 && canShowSection("campaigns");
+  const showPressMentions = pressMentions.length > 0;
 
   // ── New section data (premium sections gated by plan) ──────────
   const urgentBanner = (config as any)?.urgentBanner;
@@ -325,6 +350,14 @@ export default async function MiniSitePage({ params }: Props) {
                 Blog
               </a>
             )}
+            {showPressMentions && (
+              <a
+                href="#presa"
+                className="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors duration-200 hover:bg-gray-50 hover:text-gray-900"
+              >
+                In presa
+              </a>
+            )}
             {showContact && hasContact && (
               <a
                 href="#contact"
@@ -390,6 +423,14 @@ export default async function MiniSitePage({ params }: Props) {
                 className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
                 Blog
+              </a>
+            )}
+            {showPressMentions && (
+              <a
+                href="#presa"
+                className="rounded-md px-3 py-1.5 text-xs font-medium text-gray-500 transition-colors hover:bg-gray-50 hover:text-gray-900"
+              >
+                In presa
               </a>
             )}
             {showContact && hasContact && (
@@ -1581,6 +1622,71 @@ export default async function MiniSitePage({ params }: Props) {
                     style={{ border: "none" }}
                   />
                 </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── Suntem in presa Section ─────────────────────────────────── */}
+        {showPressMentions && (
+          <section id="presa" className="scroll-mt-20 bg-white py-16 sm:py-20">
+            <div className="mx-auto max-w-6xl px-4 sm:px-6">
+              <div className="mb-12 text-center">
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                >
+                  <Newspaper className="h-7 w-7" style={{ color: primaryColor }} />
+                </div>
+                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
+                  Suntem in presa
+                </h2>
+                <p className="mx-auto mt-3 max-w-2xl text-base text-gray-500 sm:text-lg">
+                  Articole si mentiuni despre activitatea noastra in publicatiile din Romania
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {pressMentions.map((mention: any) => {
+                  const sourceName = mention.entities?.sourceName || (() => {
+                    try { return new URL(mention.url).hostname.replace(/^www\./, ""); } catch { return ""; }
+                  })();
+                  return (
+                    <a
+                      key={mention.id}
+                      href={mention.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative overflow-hidden rounded-2xl bg-gray-50 p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                      style={{ border: `1px solid rgba(${primaryRgb}, 0.1)` }}
+                    >
+                      <div className="mb-3 flex items-center gap-2">
+                        <div
+                          className="flex h-8 w-8 items-center justify-center rounded-lg"
+                          style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
+                        >
+                          <Newspaper className="h-4 w-4" style={{ color: primaryColor }} />
+                        </div>
+                        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          {sourceName}
+                        </span>
+                      </div>
+                      <h3 className="text-sm font-bold text-gray-900 leading-snug line-clamp-2 group-hover:text-gray-700 transition-colors">
+                        {mention.title}
+                      </h3>
+                      {mention.snippet && (
+                        <p className="mt-2 text-xs text-gray-500 leading-relaxed line-clamp-2">
+                          {mention.snippet}
+                        </p>
+                      )}
+                      {mention.publishedAt && (
+                        <p className="mt-3 text-[11px] text-gray-400">
+                          {new Date(mention.publishedAt).toLocaleDateString("ro-RO", { day: "numeric", month: "long", year: "numeric" })}
+                        </p>
+                      )}
+                    </a>
+                  );
+                })}
               </div>
             </div>
           </section>

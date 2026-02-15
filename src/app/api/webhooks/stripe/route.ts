@@ -27,8 +27,64 @@ export async function POST(req: NextRequest) {
         const session = event.data.object as any;
         const { ngoId, plan, invoiceId, type: sessionType } = session.metadata || {};
 
+        // Handle direct credit purchase (from /dashboard/campaigns credits tab)
+        if (sessionType === "credit_purchase" && ngoId) {
+          const { packageId, emailCredits, smsCredits, packageName: pkgName } = session.metadata || {};
+          const emailCr = parseInt(emailCredits || "0", 10);
+          const smsCr = parseInt(smsCredits || "0", 10);
+
+          if (emailCr > 0 || smsCr > 0) {
+            // Add credits to NGO
+            const updateData: any = {};
+            if (emailCr > 0) updateData.emailCredits = { increment: emailCr };
+            if (smsCr > 0) updateData.smsCredits = { increment: smsCr };
+
+            await prisma.ngo.update({
+              where: { id: ngoId },
+              data: updateData,
+            });
+
+            // Log credit transactions
+            if (emailCr > 0) {
+              const ngoAfter = await prisma.ngo.findUnique({ where: { id: ngoId }, select: { emailCredits: true } });
+              await prisma.creditTransaction.create({
+                data: {
+                  ngoId,
+                  type: "PURCHASE",
+                  channel: "EMAIL",
+                  amount: emailCr,
+                  balance: ngoAfter?.emailCredits ?? emailCr,
+                  description: `Achizitie pachet ${pkgName || packageId} (Stripe)`,
+                },
+              });
+            }
+            if (smsCr > 0) {
+              const ngoAfter = await prisma.ngo.findUnique({ where: { id: ngoId }, select: { smsCredits: true } });
+              await prisma.creditTransaction.create({
+                data: {
+                  ngoId,
+                  type: "PURCHASE",
+                  channel: "SMS",
+                  amount: smsCr,
+                  balance: ngoAfter?.smsCredits ?? smsCr,
+                  description: `Achizitie pachet ${pkgName || packageId} (Stripe)`,
+                },
+              });
+            }
+
+            await prisma.notification.create({
+              data: {
+                ngoId,
+                type: "SYSTEM",
+                title: "Credite achizitionate",
+                message: `Pachetul ${pkgName || packageId} a fost activat cu succes.`,
+                actionUrl: "/dashboard/campaigns?tab=credits",
+              },
+            });
+          }
+        }
         // Handle invoice payment (from /factura/[token] page)
-        if (sessionType === "invoice_payment" && invoiceId) {
+        else if (sessionType === "invoice_payment" && invoiceId) {
           await markInvoicePaid({
             invoiceId,
             paymentMethod: "card",

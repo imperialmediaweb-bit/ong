@@ -99,7 +99,6 @@ export default function MediaPressPage() {
   const [generatingRelease, setGeneratingRelease] = useState(false);
 
   // MediaExpress
-  const [mePackage, setMePackage] = useState("comunicat_50");
   const [selectedReleaseId, setSelectedReleaseId] = useState("");
   const [sendingToME, setSendingToME] = useState(false);
 
@@ -248,7 +247,7 @@ export default function MediaPressPage() {
         body: JSON.stringify({
           action: "send_media_express",
           releaseId: selectedReleaseId,
-          package: mePackage,
+          package: "articol_50",
         }),
       });
       await loadReleases();
@@ -803,55 +802,29 @@ export default function MediaPressPage() {
               </div>
             </CardHeader>
             <CardContent className="pt-5 space-y-4">
-              <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
-                {/* Package 1: Comunicat - 100 LEI */}
-                <Card className={`cursor-pointer transition-all duration-200 border-2 ${mePackage === "comunicat_50" ? "border-amber-500 shadow-lg bg-amber-50/50" : "border-transparent hover:border-amber-200 hover:shadow-md"}`}
-                  onClick={() => setMePackage("comunicat_50")}
-                >
+              {/* Single Package: Articol in presa - 1000 LEI */}
+              <div className="max-w-lg mx-auto">
+                <Card className="border-2 border-violet-500 shadow-lg bg-violet-50/50">
                   <CardContent className="pt-6 pb-5 text-center">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white mx-auto mb-4">
-                      <Newspaper className="h-7 w-7" />
-                    </div>
-                    <h3 className="font-bold text-xl mb-1">Comunicat de presa</h3>
-                    <p className="text-3xl font-bold text-amber-600 mb-1">100 LEI</p>
-                    <p className="text-sm text-muted-foreground mb-4">1 comunicat distribuit in ~50 site-uri de stiri</p>
-                    <div className="space-y-2 text-sm text-left">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                        <span>Publicare in ~50 site-uri de stiri</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                        <span>Include poza / imagine</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                        <span>Raport cu link-uri in 24h</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                        <span>SEO boost + backlink-uri</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Package 2: Articol - 1000 LEI */}
-                <Card className={`cursor-pointer transition-all duration-200 border-2 ${mePackage === "articol_50" ? "border-violet-500 shadow-lg bg-violet-50/50" : "border-transparent hover:border-violet-200 hover:shadow-md"}`}
-                  onClick={() => setMePackage("articol_50")}
-                >
-                  <CardContent className="pt-6 pb-5 text-center relative">
-                    <Badge className="absolute top-3 right-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white text-[10px]">Premium</Badge>
+                    <Badge className="mb-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white text-xs">Pachet unic</Badge>
                     <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-400 to-purple-500 text-white mx-auto mb-4">
                       <Star className="h-7 w-7" />
                     </div>
                     <h3 className="font-bold text-xl mb-1">Articol in presa</h3>
                     <p className="text-3xl font-bold text-violet-600 mb-1">1.000 LEI</p>
-                    <p className="text-sm text-muted-foreground mb-4">1 articol publicat in ~50 de ziare</p>
-                    <div className="space-y-2 text-sm text-left">
+                    <p className="text-sm text-muted-foreground mb-4">Articolul tau publicat in reteaua MediaExpress</p>
+                    <div className="space-y-2.5 text-sm text-left">
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                        <span>Articol complet in ~50 de ziare</span>
+                        <span>Publicare in <strong>~50 site-uri</strong> (41 locale + 9 nationale)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                        <span>Distribuire pe <strong>paginile de Facebook</strong> ale publicatiilor</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                        <span>Retea cu peste <strong>300.000 de cititori</strong></span>
                       </div>
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
@@ -863,7 +836,7 @@ export default function MediaPressPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                        <span>Vizibilitate nationala garantata</span>
+                        <span>SEO boost + backlink-uri + vizibilitate nationala</span>
                       </div>
                     </div>
                   </CardContent>
@@ -896,8 +869,7 @@ export default function MediaPressPage() {
                     <div className="grid gap-2">
                       <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Pachet selectat</Label>
                       <div className="flex items-center gap-2 h-10 px-3 rounded-lg bg-background border text-sm">
-                        {mePackage === "comunicat_50" && "Comunicat - 100 LEI (~50 site-uri)"}
-                        {mePackage === "articol_50" && "Articol - 1.000 LEI (~50 ziare)"}
+                        Articol in presa - 1.000 LEI (~50 site-uri)
                       </div>
                     </div>
                   </div>
@@ -922,7 +894,7 @@ export default function MediaPressPage() {
                 <div className="grid grid-cols-4 gap-4">
                   {[
                     { step: "1", title: "Scrie comunicatul", desc: "Creeaza sau genereaza cu AI", icon: FileText },
-                    { step: "2", title: "Alege pachetul", desc: "Comunicat 100 LEI sau Articol 1.000 LEI", icon: Package },
+                    { step: "2", title: "Alege pachetul", desc: "Articol in presa - 1.000 LEI", icon: Package },
                     { step: "3", title: "Trimite comanda", desc: "Se proceseaza automat", icon: Send },
                     { step: "4", title: "Primesti raport", desc: "Link-uri in 24h", icon: CheckCircle2 },
                   ].map((item) => (

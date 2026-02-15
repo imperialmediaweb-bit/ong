@@ -5,6 +5,8 @@ import prisma from "@/lib/db";
 import { CREDIT_PACKAGES } from "@/lib/campaign-templates";
 import { createCreditInvoice } from "@/lib/invoice-generator";
 
+const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://binevo.ro";
+
 // GET - get credit balance and packages
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -41,7 +43,7 @@ export async function GET() {
   }
 }
 
-// POST - purchase credit package (creates invoice + returns payment URL)
+// POST - purchase credit package (direct Stripe checkout or invoice fallback)
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -60,7 +62,55 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Pachet invalid" }, { status: 400 });
     }
 
-    // Create invoice for this credit package
+    // Try direct Stripe checkout first for instant payment
+    try {
+      const { getStripe } = await import("@/lib/stripe");
+      const stripe = await getStripe();
+
+      const parts: string[] = [];
+      if (pkg.emailCredits > 0) parts.push(`${pkg.emailCredits.toLocaleString("ro-RO")} emailuri`);
+      if (pkg.smsCredits > 0) parts.push(`${pkg.smsCredits.toLocaleString("ro-RO")} SMS-uri`);
+
+      const checkoutSession = await stripe.checkout.sessions.create({
+        mode: "payment",
+        payment_method_types: ["card"],
+        line_items: [
+          {
+            price_data: {
+              currency: "ron",
+              product_data: {
+                name: `Pachet credite: ${pkg.name}`,
+                description: parts.join(" + "),
+              },
+              unit_amount: Math.round(pkg.price * 100),
+            },
+            quantity: 1,
+          },
+        ],
+        success_url: `${APP_URL}/dashboard/campaigns?tab=credits&purchased=${pkg.id}`,
+        cancel_url: `${APP_URL}/dashboard/campaigns?tab=credits&cancelled=true`,
+        metadata: {
+          type: "credit_purchase",
+          ngoId,
+          packageId: pkg.id,
+          packageName: pkg.name,
+          emailCredits: String(pkg.emailCredits),
+          smsCredits: String(pkg.smsCredits),
+          price: String(pkg.price),
+        },
+      });
+
+      if (checkoutSession.url) {
+        return NextResponse.json({
+          message: "Redirectionare catre Stripe...",
+          paymentUrl: checkoutSession.url,
+        });
+      }
+    } catch (stripeErr: any) {
+      console.log("Stripe direct checkout not available, falling back to invoice:", stripeErr.message);
+    }
+
+    // Fallback: Create invoice for this credit package
     const invoiceResult = await createCreditInvoice({
       ngoId,
       packageId: pkg.id,

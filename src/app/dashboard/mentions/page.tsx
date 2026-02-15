@@ -74,6 +74,7 @@ export default function MentionsPage() {
   const [filterSentiment, setFilterSentiment] = useState("all");
   const [filterSource, setFilterSource] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterRelevance, setFilterRelevance] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Settings
@@ -174,6 +175,17 @@ export default function MentionsPage() {
     } catch {
       // silently fail
     }
+  };
+
+  const handleDeleteMention = async (mentionId: string) => {
+    try {
+      await fetch("/api/mentions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete_mention", mentionId }),
+      });
+      setMentions(prev => prev.filter(m => m.id !== mentionId));
+    } catch { /* silently fail */ }
   };
 
   const handleSaveSettings = async () => {
@@ -487,6 +499,18 @@ export default function MentionsPage() {
                     <SelectItem value="NEEDS_REVIEW">Necesita revizuire</SelectItem>
                   </SelectContent>
                 </Select>
+                <Select value={filterRelevance} onValueChange={setFilterRelevance}>
+                  <SelectTrigger className="w-[140px] h-9 rounded-lg">
+                    <SelectValue placeholder="Relevanta" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toate</SelectItem>
+                    <SelectItem value="90">&gt; 90%</SelectItem>
+                    <SelectItem value="80">&gt; 80%</SelectItem>
+                    <SelectItem value="70">&gt; 70%</SelectItem>
+                    <SelectItem value="50">&gt; 50%</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Button variant="outline" size="sm" className="h-9 rounded-lg" onClick={() => {/* TODO: export */}}>
                   <Download className="h-3.5 w-3.5 mr-1" />
                   Export
@@ -518,7 +542,9 @@ export default function MentionsPage() {
             </Card>
           ) : (
             <div className="space-y-3">
-              {mentions.map((mention) => (
+              {mentions
+                .filter(m => filterRelevance === "all" || (m.relevanceScore && m.relevanceScore > parseInt(filterRelevance)))
+                .map((mention) => (
                 <Card key={mention.id} className="border-0 shadow-md hover:shadow-lg transition-all duration-200 overflow-hidden">
                   <CardContent className="py-4">
                     <div className="flex items-start gap-3">
@@ -566,12 +592,43 @@ export default function MentionsPage() {
                         </div>
 
                         {/* Expanded content */}
-                        {expandedId === mention.id && mention.summary && (
-                          <div className="mt-3 p-3 bg-muted/30 rounded-lg">
-                            <p className="text-xs font-medium text-muted-foreground mb-1">Rezumat AI:</p>
-                            <p className="text-sm">{mention.summary}</p>
+                        {expandedId === mention.id && (
+                          <div className="mt-3 p-3 bg-muted/30 rounded-lg space-y-3">
+                            {mention.summary && (
+                              <div>
+                                <p className="text-xs font-medium text-muted-foreground mb-1">Rezumat AI:</p>
+                                <p className="text-sm">{mention.summary}</p>
+                              </div>
+                            )}
+                            {/* URL edit section */}
+                            <div className="flex items-center gap-2">
+                              <Globe className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                              <Input
+                                value={mention.url || ""}
+                                onChange={(e) => {
+                                  setMentions(prev => prev.map(m => m.id === mention.id ? { ...m, url: e.target.value } : m));
+                                }}
+                                placeholder="https://..."
+                                className="h-8 text-xs rounded-lg flex-1"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 rounded-lg text-xs"
+                                onClick={async () => {
+                                  await fetch("/api/mentions", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" },
+                                    body: JSON.stringify({ action: "update_mention", mentionId: mention.id, url: mention.url }),
+                                  });
+                                }}
+                              >
+                                <Save className="h-3 w-3 mr-1" />
+                                Salveaza
+                              </Button>
+                            </div>
                             {mention.entities && (
-                              <div className="mt-2 flex flex-wrap gap-1">
+                              <div className="flex flex-wrap gap-1">
                                 {mention.entities.project && <Badge variant="outline" className="text-xs">Proiect: {mention.entities.project}</Badge>}
                                 {mention.entities.location && <Badge variant="outline" className="text-xs">Locatie: {mention.entities.location}</Badge>}
                                 {mention.entities.persons?.map((p: string, i: number) => (
@@ -613,6 +670,14 @@ export default function MentionsPage() {
                             </Button>
                           </>
                         )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700"
+                          onClick={() => handleDeleteMention(mention.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </CardContent>
