@@ -77,6 +77,8 @@ interface MiniSiteState {
   registrationNr: string;
   bankAccount: string;
   bankName: string;
+  legalRepresentative: string;
+  legalRepresentativeRole: string;
   contactAddress: string;
   contactEmail: string;
   contactPhone: string;
@@ -169,7 +171,8 @@ interface CounterStat { id: string; label: string; value: number; suffix: string
 const DEFAULT_STATE: MiniSiteState = {
   ngoName: "", slug: "", logoUrl: "", shortDescription: "", description: "",
   category: "", websiteUrl: "", coverImageUrl: "", cui: "", registrationNr: "",
-  bankAccount: "", bankName: "", contactAddress: "", contactEmail: "",
+  bankAccount: "", bankName: "", legalRepresentative: "", legalRepresentativeRole: "Presedinte",
+  contactAddress: "", contactEmail: "",
   contactPhone: "", socialFacebook: "", socialInstagram: "", socialLinkedin: "",
   socialYoutube: "", socialTiktok: "", socialTwitter: "",
   formular230EmbedCode: "", formular230PdfUrl: "",
@@ -330,7 +333,10 @@ export default function MiniSiteBuilderPage() {
           category: data.category || "", websiteUrl: data.websiteUrl || "",
           coverImageUrl: data.coverImageUrl || "", cui: data.cui || "",
           registrationNr: data.registrationNr || "", bankAccount: data.bankAccount || "",
-          bankName: data.bankName || "", contactAddress: data.contactAddress || "",
+          bankName: data.bankName || "",
+          legalRepresentative: data.legalRepresentative || "",
+          legalRepresentativeRole: data.legalRepresentativeRole || "Presedinte",
+          contactAddress: data.contactAddress || "",
           contactEmail: data.contactEmail || "", contactPhone: data.contactPhone || "",
           socialFacebook: data.socialFacebook || "", socialInstagram: data.socialInstagram || "",
           socialLinkedin: data.socialLinkedin || "", socialYoutube: data.socialYoutube || "",
@@ -428,6 +434,8 @@ export default function MiniSiteBuilderPage() {
           shortDescription: state.shortDescription, category: state.category,
           cui: state.cui, registrationNr: state.registrationNr,
           bankAccount: state.bankAccount, bankName: state.bankName,
+          legalRepresentative: state.legalRepresentative,
+          legalRepresentativeRole: state.legalRepresentativeRole,
           contactEmail: state.contactEmail, contactPhone: state.contactPhone,
           contactAddress: state.contactAddress,
           socialFacebook: state.socialFacebook, socialInstagram: state.socialInstagram,
@@ -739,6 +747,16 @@ export default function MiniSiteBuilderPage() {
             <div className="space-y-2">
               <Label>Numar inregistrare</Label>
               <Input placeholder="J40/1234/2020" value={state.registrationNr} onChange={(e) => updateField("registrationNr", e.target.value)} />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Reprezentant legal</Label>
+              <Input placeholder="Ion Popescu" value={state.legalRepresentative} onChange={(e) => updateField("legalRepresentative", e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label>Functia reprezentantului</Label>
+              <Input placeholder="Presedinte" value={state.legalRepresentativeRole} onChange={(e) => updateField("legalRepresentativeRole", e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

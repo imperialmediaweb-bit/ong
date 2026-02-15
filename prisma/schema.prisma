@@ -682,10 +682,12 @@ model MiniSiteConfig {
   contactAddress  String?
 
   // Legal / Association data
-  cui             String?
-  registrationNr  String?
-  bankAccount     String?
-  bankName        String?
+  cui                     String?
+  registrationNr          String?
+  bankAccount             String?
+  bankName                String?
+  legalRepresentative     String?
+  legalRepresentativeRole String?  @default("Presedinte")
 
   // Social links
   socialFacebook  String?
