@@ -1,21 +1,41 @@
 /**
  * Stripe Integration for Subscription Payments
  * Handles checkout, webhooks, and subscription management
+ *
+ * Keys are resolved from env vars first, then PlatformSettings DB as fallback.
  */
 
 import Stripe from "stripe";
+import { getStripeKeys } from "@/lib/stripe-keys";
 
 let _stripe: Stripe | null = null;
+let _stripeKeyUsed: string | null = null;
 
-export function getStripe(): Stripe {
-  if (!_stripe) {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error("STRIPE_SECRET_KEY nu este configurat");
-    }
-    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: "2024-06-20" as any,
-    });
+/**
+ * Get or create Stripe instance. Async because keys may come from DB.
+ * Re-creates instance if the secret key changed (e.g. admin updated it).
+ */
+export async function getStripe(): Promise<Stripe> {
+  const keys = await getStripeKeys();
+
+  if (!keys.secretKey) {
+    throw new Error("STRIPE_SECRET_KEY nu este configurat (nici in env, nici in PlatformSettings)");
   }
+
+  if (!keys.enabled) {
+    throw new Error("Stripe este dezactivat din setarile platformei");
+  }
+
+  // Re-create instance if key changed
+  if (_stripe && _stripeKeyUsed === keys.secretKey) {
+    return _stripe;
+  }
+
+  _stripe = new Stripe(keys.secretKey, {
+    apiVersion: "2024-06-20" as any,
+  });
+  _stripeKeyUsed = keys.secretKey;
+
   return _stripe;
 }
 
@@ -89,7 +109,7 @@ export async function createCheckoutSession(params: {
   cancelUrl: string;
   customerEmail?: string;
 }): Promise<string> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
   const planConfig = PLAN_CONFIGS[params.plan];
 
   if (!planConfig || !planConfig.priceId) {
@@ -129,7 +149,7 @@ export async function createPortalSession(params: {
   customerId: string;
   returnUrl: string;
 }): Promise<string> {
-  const stripe = getStripe();
+  const stripe = await getStripe();
 
   const session = await stripe.billingPortal.sessions.create({
     customer: params.customerId,
@@ -142,19 +162,19 @@ export async function createPortalSession(params: {
 // ─── Subscription Management ─────────────────────────────────────
 
 export async function getSubscription(subscriptionId: string) {
-  const stripe = getStripe();
+  const stripe = await getStripe();
   return stripe.subscriptions.retrieve(subscriptionId);
 }
 
 export async function cancelSubscription(subscriptionId: string) {
-  const stripe = getStripe();
+  const stripe = await getStripe();
   return stripe.subscriptions.update(subscriptionId, {
     cancel_at_period_end: true,
   });
 }
 
 export async function resumeSubscription(subscriptionId: string) {
-  const stripe = getStripe();
+  const stripe = await getStripe();
   return stripe.subscriptions.update(subscriptionId, {
     cancel_at_period_end: false,
   });
@@ -162,18 +182,18 @@ export async function resumeSubscription(subscriptionId: string) {
 
 // ─── Webhook Signature Verification ─────────────────────────────
 
-export function constructWebhookEvent(
+export async function constructWebhookEvent(
   body: string,
   signature: string
-): Stripe.Event {
-  const stripe = getStripe();
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+): Promise<Stripe.Event> {
+  const stripe = await getStripe();
+  const keys = await getStripeKeys();
 
-  if (!webhookSecret) {
-    throw new Error("STRIPE_WEBHOOK_SECRET nu este configurat");
+  if (!keys.webhookSecret) {
+    throw new Error("STRIPE_WEBHOOK_SECRET nu este configurat (nici in env, nici in PlatformSettings)");
   }
 
-  return stripe.webhooks.constructEvent(body, signature, webhookSecret);
+  return stripe.webhooks.constructEvent(body, signature, keys.webhookSecret);
 }
 
 // ─── Check Expiration ────────────────────────────────────────────

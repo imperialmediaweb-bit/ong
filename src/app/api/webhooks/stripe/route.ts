@@ -11,10 +11,6 @@ import { markInvoicePaid, fulfillCreditPurchase } from "@/lib/invoice-generator"
 const APP_URL = process.env.APP_URL || process.env.NEXTAUTH_URL || "https://binevo.ro";
 
 export async function POST(req: NextRequest) {
-  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
-    return NextResponse.json({ error: "Stripe nu este configurat" }, { status: 400 });
-  }
-
   const body = await req.text();
   const signature = req.headers.get("stripe-signature");
 
@@ -24,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { constructWebhookEvent } = await import("@/lib/stripe");
-    const event = constructWebhookEvent(body, signature);
+    const event = await constructWebhookEvent(body, signature);
 
     switch (event.type) {
       case "checkout.session.completed": {

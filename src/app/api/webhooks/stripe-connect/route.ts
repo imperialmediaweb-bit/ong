@@ -3,13 +3,6 @@ import prisma from "@/lib/db";
 
 // POST - Webhook-uri Stripe Connect pentru evenimente legate de conturi si plati
 export async function POST(req: NextRequest) {
-  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_CONNECT_WEBHOOK_SECRET) {
-    return NextResponse.json(
-      { error: "Stripe Connect nu este configurat" },
-      { status: 400 }
-    );
-  }
-
   const body = await req.text();
   const signature = req.headers.get("stripe-signature");
 
@@ -19,7 +12,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { constructConnectWebhookEvent } = await import("@/lib/stripe-connect");
-    const event = constructConnectWebhookEvent(body, signature);
+    const event = await constructConnectWebhookEvent(body, signature);
 
     switch (event.type) {
       // ─── Cont Actualizat ────────────────────────────────────

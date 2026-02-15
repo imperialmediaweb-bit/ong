@@ -264,7 +264,7 @@ async function chargeRecurringPayment(ngoId: string, invoiceId: string): Promise
     throw new Error("Missing payment configuration for recurring charge");
   }
 
-  const stripe = getStripe();
+  const stripe = await getStripe();
 
   // Create and confirm payment intent
   const paymentIntent = await stripe.paymentIntents.create({

@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     // ─── Stripe Payment ───────────────────────────────────
     if (paymentMethod === "card") {
       const { getStripe } = await import("@/lib/stripe");
-      const stripe = getStripe();
+      const stripe = await getStripe();
 
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
