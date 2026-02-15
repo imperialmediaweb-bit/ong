@@ -28,18 +28,11 @@ import {
 import {
   Building,
   Mail,
-  MessageSquare,
   Users,
   Save,
   Loader2,
-  Eye,
-  EyeOff,
-  Plus,
-  Shield,
   CheckCircle2,
   Globe,
-  Phone,
-  Key,
   UserPlus,
   Trash2,
   CreditCard,
@@ -49,9 +42,7 @@ import {
   Banknote,
   AlertTriangle,
   ArrowUpRight,
-  Copy,
   Upload,
-  Image as ImageIcon,
   Heart,
   Pipette,
   Check,
@@ -62,22 +53,6 @@ interface ProfileSettings {
   description: string;
   logoUrl: string;
   website: string;
-}
-
-interface EmailSettings {
-  sendgridApiKey: string;
-  senderEmail: string;
-  senderName: string;
-}
-
-interface SmsSettings {
-  activeProvider: string;
-  twilioSid: string;
-  twilioAuthToken: string;
-  twilioPhoneNumber: string;
-  telnyxApiKey: string;
-  telnyxPhoneNumber: string;
-  smsSenderId: string;
 }
 
 interface TeamMember {
@@ -111,11 +86,6 @@ const roleBadgeVariant = (role: string) => {
   }
 };
 
-function maskKey(key: string): string {
-  if (!key || key.length < 8) return key ? "****" : "";
-  return key.slice(0, 4) + "****" + key.slice(-4);
-}
-
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("profile");
   const [saving, setSaving] = useState(false);
@@ -132,36 +102,6 @@ export default function SettingsPage() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [logoUploading, setLogoUploading] = useState(false);
   const logoFileRef = useRef<HTMLInputElement>(null);
-
-  // Email
-  const [email, setEmail] = useState<EmailSettings>({
-    sendgridApiKey: "",
-    senderEmail: "",
-    senderName: "",
-  });
-  const [emailLoading, setEmailLoading] = useState(true);
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [editingApiKey, setEditingApiKey] = useState(false);
-  const [newApiKey, setNewApiKey] = useState("");
-
-  // SMS
-  const [sms, setSms] = useState<SmsSettings>({
-    activeProvider: "twilio",
-    twilioSid: "",
-    twilioAuthToken: "",
-    twilioPhoneNumber: "",
-    telnyxApiKey: "",
-    telnyxPhoneNumber: "",
-    smsSenderId: "",
-  });
-  const [smsLoading, setSmsLoading] = useState(true);
-  const [showTwilioSid, setShowTwilioSid] = useState(false);
-  const [showTwilioToken, setShowTwilioToken] = useState(false);
-  const [editingTwilio, setEditingTwilio] = useState(false);
-  const [newTwilioSid, setNewTwilioSid] = useState("");
-  const [newTwilioToken, setNewTwilioToken] = useState("");
-  const [editingTelnyx, setEditingTelnyx] = useState(false);
-  const [newTelnyxApiKey, setNewTelnyxApiKey] = useState("");
 
   // Team
   const [team, setTeam] = useState<TeamMember[]>([]);
@@ -233,48 +173,6 @@ export default function SettingsPage() {
       setError(err.message);
     } finally {
       setProfileLoading(false);
-    }
-  }, []);
-
-  // Fetch email settings
-  const fetchEmail = useCallback(async () => {
-    setEmailLoading(true);
-    try {
-      const res = await fetch("/api/settings/email");
-      if (!res.ok) throw new Error("Failed to fetch email settings");
-      const data = await res.json();
-      setEmail({
-        sendgridApiKey: data.sendgridApiKey || "",
-        senderEmail: data.senderEmail || "",
-        senderName: data.senderName || "",
-      });
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setEmailLoading(false);
-    }
-  }, []);
-
-  // Fetch SMS settings
-  const fetchSms = useCallback(async () => {
-    setSmsLoading(true);
-    try {
-      const res = await fetch("/api/settings/sms");
-      if (!res.ok) throw new Error("Failed to fetch SMS settings");
-      const data = await res.json();
-      setSms({
-        activeProvider: data.activeProvider || "twilio",
-        twilioSid: data.twilioSid || "",
-        twilioAuthToken: data.twilioAuthToken || "",
-        twilioPhoneNumber: data.twilioPhoneNumber || "",
-        telnyxApiKey: data.telnyxApiKey || "",
-        telnyxPhoneNumber: data.telnyxPhoneNumber || "",
-        smsSenderId: data.smsSenderId || "",
-      });
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setSmsLoading(false);
     }
   }, []);
 
@@ -382,12 +280,6 @@ export default function SettingsPage() {
       case "profile":
         fetchProfile();
         break;
-      case "email":
-        fetchEmail();
-        break;
-      case "sms":
-        fetchSms();
-        break;
       case "team":
         fetchTeam();
         break;
@@ -401,7 +293,7 @@ export default function SettingsPage() {
         fetchPayment();
         break;
     }
-  }, [activeTab, fetchProfile, fetchEmail, fetchSms, fetchTeam, fetchMinisite, fetchSubscription, fetchPayment]);
+  }, [activeTab, fetchProfile, fetchTeam, fetchMinisite, fetchSubscription, fetchPayment]);
 
   const clearMessages = () => {
     setError(null);
@@ -450,70 +342,6 @@ export default function SettingsPage() {
     } finally {
       setLogoUploading(false);
       if (logoFileRef.current) logoFileRef.current.value = "";
-    }
-  };
-
-  const handleSaveEmail = async () => {
-    clearMessages();
-    setSaving(true);
-    try {
-      const payload: any = {
-        senderEmail: email.senderEmail,
-        senderName: email.senderName,
-      };
-      if (editingApiKey && newApiKey) {
-        payload.sendgridApiKey = newApiKey;
-      }
-      const res = await fetch("/api/settings/email", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Failed to save email settings");
-      setSuccess("Setarile email au fost salvate cu succes.");
-      setEditingApiKey(false);
-      setNewApiKey("");
-      fetchEmail();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSaveSms = async () => {
-    clearMessages();
-    setSaving(true);
-    try {
-      const payload: any = {
-        twilioPhoneNumber: sms.twilioPhoneNumber,
-        telnyxPhoneNumber: sms.telnyxPhoneNumber,
-        smsSenderId: sms.smsSenderId,
-      };
-      if (editingTwilio) {
-        if (newTwilioSid) payload.twilioSid = newTwilioSid;
-        if (newTwilioToken) payload.twilioAuthToken = newTwilioToken;
-      }
-      if (editingTelnyx) {
-        if (newTelnyxApiKey) payload.telnyxApiKey = newTelnyxApiKey;
-      }
-      const res = await fetch("/api/settings/sms", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Failed to save SMS settings");
-      setSuccess("Setarile SMS au fost salvate cu succes.");
-      setEditingTwilio(false);
-      setNewTwilioSid("");
-      setNewTwilioToken("");
-      setEditingTelnyx(false);
-      setNewTelnyxApiKey("");
-      fetchSms();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -712,7 +540,7 @@ export default function SettingsPage() {
       )}
 
       <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); clearMessages(); }}>
-        <TabsList className="grid w-full grid-cols-7 overflow-x-auto">
+        <TabsList className="grid w-full grid-cols-5 overflow-x-auto">
           <TabsTrigger value="profile" className="gap-1 text-xs">
             <Building className="h-3 w-3" />
             Profil
@@ -728,14 +556,6 @@ export default function SettingsPage() {
           <TabsTrigger value="subscription" className="gap-1 text-xs">
             <CreditCard className="h-3 w-3" />
             Abonament
-          </TabsTrigger>
-          <TabsTrigger value="email" className="gap-1 text-xs">
-            <Mail className="h-3 w-3" />
-            Email
-          </TabsTrigger>
-          <TabsTrigger value="sms" className="gap-1 text-xs">
-            <MessageSquare className="h-3 w-3" />
-            SMS
           </TabsTrigger>
           <TabsTrigger value="team" className="gap-1 text-xs">
             <Users className="h-3 w-3" />
@@ -1043,276 +863,6 @@ export default function SettingsPage() {
                   <Save className="mr-2 h-4 w-4" />
                 )}
                 Salveaza culorile
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        {/* Email Provider Tab */}
-        <TabsContent value="email">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                Configurare SendGrid
-              </CardTitle>
-              <CardDescription>
-                Configureaza integrarea SendGrid pentru trimiterea campaniilor email.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {emailLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <>
-                  <div className="grid gap-2">
-                    <Label>SendGrid API Key</Label>
-                    {!editingApiKey ? (
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
-                          <Key className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-mono">
-                            {email.sendgridApiKey ? maskKey(email.sendgridApiKey) : "Neconfigurat"}
-                          </span>
-                        </div>
-                        <Button variant="outline" onClick={() => setEditingApiKey(true)}>
-                          Schimba cheia
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="password"
-                          placeholder="SG.xxxxx..."
-                          value={newApiKey}
-                          onChange={(e) => setNewApiKey(e.target.value)}
-                        />
-                        <Button variant="ghost" onClick={() => { setEditingApiKey(false); setNewApiKey(""); }}>
-                          Anuleaza
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="senderEmail">Email expeditor</Label>
-                    <Input
-                      id="senderEmail"
-                      type="email"
-                      placeholder="noreply@your-ngo.org"
-                      value={email.senderEmail}
-                      onChange={(e) => setEmail({ ...email, senderEmail: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="senderName">Nume expeditor</Label>
-                    <Input
-                      id="senderName"
-                      placeholder="Numele ONG-ului tau"
-                      value={email.senderName}
-                      onChange={(e) => setEmail({ ...email, senderName: e.target.value })}
-                    />
-                  </div>
-                </>
-              )}
-            </CardContent>
-            <CardFooter className="border-t pt-6">
-              <Button onClick={handleSaveEmail} disabled={saving || emailLoading}>
-                {saving ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-2 h-4 w-4" />
-                )}
-                Salveaza setarile email
-              </Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        {/* SMS Provider Tab */}
-        <TabsContent value="sms">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5" />
-                Configurare SMS
-              </CardTitle>
-              <CardDescription>
-                Provider activ: <span className="font-semibold uppercase">{sms.activeProvider}</span>
-                {" "}(setat prin variabila de mediu SMS_PROVIDER)
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {smsLoading ? (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <>
-                  {/* Twilio Section */}
-                  <div className={`space-y-3 p-4 border rounded-lg ${sms.activeProvider === "twilio" ? "border-primary bg-primary/5" : "border-muted"}`}>
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Twilio</h4>
-                      {sms.activeProvider === "twilio" && (
-                        <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">Activ</span>
-                      )}
-                    </div>
-                    {!editingTwilio ? (
-                      <div className="space-y-3">
-                        <div className="grid gap-2">
-                          <Label>Account SID</Label>
-                          <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
-                            <Key className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-mono">
-                              {sms.twilioSid ? maskKey(sms.twilioSid) : "Neconfigurat"}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="grid gap-2">
-                          <Label>Auth Token</Label>
-                          <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
-                            <Key className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-mono">
-                              {sms.twilioAuthToken ? maskKey(sms.twilioAuthToken) : "Neconfigurat"}
-                            </span>
-                          </div>
-                        </div>
-                        <Button variant="outline" size="sm" onClick={() => setEditingTwilio(true)}>
-                          Actualizeaza credentialele
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3 p-3 border rounded-lg bg-muted/20">
-                        <div className="grid gap-2">
-                          <Label>Noul Account SID</Label>
-                          <Input
-                            type="password"
-                            placeholder="ACxxxxx..."
-                            value={newTwilioSid}
-                            onChange={(e) => setNewTwilioSid(e.target.value)}
-                          />
-                        </div>
-                        <div className="grid gap-2">
-                          <Label>Noul Auth Token</Label>
-                          <Input
-                            type="password"
-                            placeholder="Auth token..."
-                            value={newTwilioToken}
-                            onChange={(e) => setNewTwilioToken(e.target.value)}
-                          />
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingTwilio(false);
-                            setNewTwilioSid("");
-                            setNewTwilioToken("");
-                          }}
-                        >
-                          Anuleaza
-                        </Button>
-                      </div>
-                    )}
-                    <div className="grid gap-2">
-                      <Label htmlFor="twilioPhone">Numar telefon Twilio</Label>
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <Input
-                          id="twilioPhone"
-                          placeholder="+1234567890"
-                          value={sms.twilioPhoneNumber}
-                          onChange={(e) => setSms({ ...sms, twilioPhoneNumber: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Telnyx Section */}
-                  <div className={`space-y-3 p-4 border rounded-lg ${sms.activeProvider === "telnyx" ? "border-primary bg-primary/5" : "border-muted"}`}>
-                    <div className="flex items-center justify-between">
-                      <h4 className="font-medium">Telnyx</h4>
-                      {sms.activeProvider === "telnyx" && (
-                        <span className="text-xs bg-primary text-primary-foreground px-2 py-0.5 rounded-full">Activ</span>
-                      )}
-                    </div>
-                    {!editingTelnyx ? (
-                      <div className="space-y-3">
-                        <div className="grid gap-2">
-                          <Label>API Key</Label>
-                          <div className="flex items-center gap-2 h-10 rounded-md border bg-muted/50 px-3">
-                            <Key className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-mono">
-                              {sms.telnyxApiKey ? maskKey(sms.telnyxApiKey) : "Neconfigurat"}
-                            </span>
-                          </div>
-                        </div>
-                        <Button variant="outline" size="sm" onClick={() => setEditingTelnyx(true)}>
-                          Actualizeaza API Key
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3 p-3 border rounded-lg bg-muted/20">
-                        <div className="grid gap-2">
-                          <Label>Noul API Key</Label>
-                          <Input
-                            type="password"
-                            placeholder="KEY..."
-                            value={newTelnyxApiKey}
-                            onChange={(e) => setNewTelnyxApiKey(e.target.value)}
-                          />
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setEditingTelnyx(false);
-                            setNewTelnyxApiKey("");
-                          }}
-                        >
-                          Anuleaza
-                        </Button>
-                      </div>
-                    )}
-                    <div className="grid gap-2">
-                      <Label htmlFor="telnyxPhone">Numar telefon Telnyx</Label>
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <Input
-                          id="telnyxPhone"
-                          placeholder="+1234567890"
-                          value={sms.telnyxPhoneNumber}
-                          onChange={(e) => setSms({ ...sms, telnyxPhoneNumber: e.target.value })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Common Settings */}
-                  <div className="grid gap-2">
-                    <Label htmlFor="smsSenderId">ID expeditor SMS</Label>
-                    <Input
-                      id="smsSenderId"
-                      placeholder="YourNGO"
-                      value={sms.smsSenderId}
-                      onChange={(e) => setSms({ ...sms, smsSenderId: e.target.value })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      ID alfanumeric afisat ca expeditor SMS (maxim 11 caractere).
-                    </p>
-                  </div>
-                </>
-              )}
-            </CardContent>
-            <CardFooter className="border-t pt-6">
-              <Button onClick={handleSaveSms} disabled={saving || smsLoading}>
-                {saving ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Save className="mr-2 h-4 w-4" />
-                )}
-                Salveaza setarile SMS
               </Button>
             </CardFooter>
           </Card>
@@ -1834,11 +1384,10 @@ export default function SettingsPage() {
 
       <PageHelp items={[
         { title: "Profil ONG", description: "Seteaza numele, logo-ul, descrierea si website-ul organizatiei tale." },
-        { title: "Email (SendGrid)", description: "Configureaza cheia API SendGrid si adresa de expeditor pentru trimiterea emailurilor." },
-        { title: "SMS (Twilio/Telnyx)", description: "Alege provider-ul SMS si introdu credentialele pentru trimiterea de SMS-uri." },
+        { title: "Culori", description: "Personalizeaza culorile mini-site-ului organizatiei tale." },
+        { title: "Plati", description: "Configureaza Stripe Connect, PayPal, transfer bancar si Revolut pentru a primi donatii." },
+        { title: "Abonament", description: "Gestioneaza planul de abonament al organizatiei tale." },
         { title: "Echipa", description: "Invita membrii echipei cu roluri: ADMIN (acces total), MANAGER, MEMBER, VIEWER (doar citire)." },
-        { title: "API", description: "Genereaza chei API pentru integrari externe si webhook-uri." },
-        { title: "Credite", description: "Vezi soldul de credite email si SMS disponibile." },
       ]} />
     </div>
   );

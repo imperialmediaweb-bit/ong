@@ -41,6 +41,20 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // Verificam daca Stripe este configurat la nivel de platforma
+    const { getStripeKeys } = await import("@/lib/stripe-keys");
+    const stripeKeys = await getStripeKeys();
+    if (!stripeKeys.secretKey || !stripeKeys.enabled) {
+      return NextResponse.json({
+        connected: false,
+        status: ngo.stripeConnectStatus || "pending",
+        chargesEnabled: false,
+        payoutsEnabled: false,
+        detailsSubmitted: false,
+        message: "Platile cu cardul nu sunt disponibile momentan",
+      });
+    }
+
     // Verificam statusul real de la Stripe
     const { getAccountStatus } = await import("@/lib/stripe-connect");
     const accountStatus = await getAccountStatus(ngo.stripeConnectId);

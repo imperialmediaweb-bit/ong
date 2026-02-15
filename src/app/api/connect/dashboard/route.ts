@@ -48,6 +48,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Verificam daca Stripe este configurat la nivel de platforma
+    const { getStripeKeys } = await import("@/lib/stripe-keys");
+    const stripeKeys = await getStripeKeys();
+    if (!stripeKeys.secretKey || !stripeKeys.enabled) {
+      return NextResponse.json(
+        { error: "Platile cu cardul nu sunt disponibile momentan. Contacteaza administratorul platformei." },
+        { status: 400 }
+      );
+    }
+
     const { createDashboardLink } = await import("@/lib/stripe-connect");
     const url = await createDashboardLink(ngo.stripeConnectId);
 

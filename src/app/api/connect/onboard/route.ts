@@ -41,6 +41,22 @@ export async function POST(req: NextRequest) {
     const returnUrl = `${appUrl}/dashboard/settings?connect=success`;
     const refreshUrl = `${appUrl}/dashboard/settings?connect=refresh`;
 
+    // Verificam daca Stripe este configurat la nivel de platforma
+    const { getStripeKeys } = await import("@/lib/stripe-keys");
+    const stripeKeys = await getStripeKeys();
+    if (!stripeKeys.secretKey) {
+      return NextResponse.json(
+        { error: "Platile cu cardul nu sunt disponibile momentan. Contacteaza administratorul platformei." },
+        { status: 400 }
+      );
+    }
+    if (!stripeKeys.enabled) {
+      return NextResponse.json(
+        { error: "Platile cu cardul sunt dezactivate de catre administratorul platformei." },
+        { status: 400 }
+      );
+    }
+
     let accountId = ngo.stripeConnectId;
 
     // Daca nu exista cont Connect, il cream
