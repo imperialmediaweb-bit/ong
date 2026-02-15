@@ -146,31 +146,30 @@ export async function DELETE(
   }
 
   try {
-    // Nu permite dezactivarea propriului cont
+    // Nu permite stergerea propriului cont
     if (params.id === (session.user as any).id) {
       return NextResponse.json(
-        { error: "Nu va puteti dezactiva propriul cont" },
+        { error: "Nu va puteti sterge propriul cont" },
         { status: 400 }
       );
     }
 
-    const user = await prisma.user.update({
+    // Sterge utilizatorul definitiv din baza de date
+    const user = await prisma.user.delete({
       where: { id: params.id },
-      data: { isActive: false },
       select: {
         id: true,
         email: true,
         name: true,
-        isActive: true,
       },
     });
 
     return NextResponse.json({
       user,
-      message: "Utilizatorul a fost dezactivat cu succes",
+      message: "Utilizatorul a fost sters definitiv din sistem",
     });
   } catch (error: any) {
-    console.error("Eroare la dezactivarea utilizatorului:", error);
+    console.error("Eroare la stergerea utilizatorului:", error);
     if (error.code === "P2025") {
       return NextResponse.json(
         { error: "Utilizatorul nu a fost gasit" },
@@ -178,7 +177,7 @@ export async function DELETE(
       );
     }
     return NextResponse.json(
-      { error: "Eroare la dezactivarea utilizatorului" },
+      { error: "Eroare la stergerea utilizatorului" },
       { status: 500 }
     );
   }
