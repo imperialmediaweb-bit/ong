@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
 
   const ngo = await prisma.ngo.findUnique({
     where: { id: ngoId },
-    include: { verification: true },
+    include: { verification: true, miniSiteConfig: true },
   });
   if (!ngo) return NextResponse.json({ error: "NGO negasit" }, { status: 404 });
 
@@ -49,8 +49,8 @@ export async function POST(req: NextRequest) {
       phone: body.phone || null,
       email: body.email || null,
       ngoName: ngo.name,
-      ngoCui: ngo.verification?.fiscalCode || ngo.verification?.registrationNumber || "",
-      ngoIban: body.ngoIban || null,
+      ngoCui: ngo.miniSiteConfig?.cui || ngo.verification?.fiscalCode || ngo.verification?.registrationNumber || "",
+      ngoIban: body.ngoIban || ngo.miniSiteConfig?.bankAccount || null,
       ngoContractNr: body.ngoContractNr || null,
       taxYear: body.taxYear || new Date().getFullYear(),
       percentage: 3.5,

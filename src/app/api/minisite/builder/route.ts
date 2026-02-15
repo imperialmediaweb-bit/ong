@@ -57,6 +57,8 @@ export async function GET() {
       registrationNr: config?.registrationNr || "",
       bankAccount: config?.bankAccount || "",
       bankName: config?.bankName || "",
+      legalRepresentative: config?.legalRepresentative || "",
+      legalRepresentativeRole: config?.legalRepresentativeRole || "Presedinte",
 
       socialFacebook: config?.socialFacebook || "",
       socialInstagram: config?.socialInstagram || "",
@@ -128,6 +130,7 @@ const CONFIG_FIELDS = [
   "aboutText", "aboutImageUrl", "missionText", "impactText",
   "contactEmail", "contactPhone", "contactAddress",
   "cui", "registrationNr", "bankAccount", "bankName",
+  "legalRepresentative", "legalRepresentativeRole",
   "socialFacebook", "socialInstagram", "socialLinkedin",
   "socialTwitter", "socialYoutube", "socialTiktok",
   "primaryColor", "accentColor", "theme",

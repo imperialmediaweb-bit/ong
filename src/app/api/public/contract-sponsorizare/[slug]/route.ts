@@ -8,12 +8,14 @@ export async function POST(
   try {
     const ngo = await prisma.ngo.findUnique({
       where: { slug: params.slug },
-      include: { verification: true },
+      include: { verification: true, miniSiteConfig: true },
     });
 
     if (!ngo) {
       return NextResponse.json({ error: "NGO negasit" }, { status: 404 });
     }
+
+    const config = ngo.miniSiteConfig;
 
     const body = await req.json();
 
@@ -55,14 +57,15 @@ export async function POST(
         companyIban: body.companyIban || null,
         ngoName: ngo.name,
         ngoCui:
+          config?.cui ||
           ngo.verification?.fiscalCode ||
           ngo.verification?.registrationNumber ||
           "",
-        ngoAddress: ngo.verification?.address || null,
-        ngoRep: ngo.verification?.representativeName || null,
+        ngoAddress: config?.contactAddress || ngo.verification?.address || null,
+        ngoRep: config?.legalRepresentative || ngo.verification?.representativeName || null,
         ngoRepRole:
-          ngo.verification?.representativeRole || "Presedinte",
-        ngoIban: null,
+          config?.legalRepresentativeRole || ngo.verification?.representativeRole || "Presedinte",
+        ngoIban: config?.bankAccount || null,
         contractNumber,
         amount,
         currency: "RON",

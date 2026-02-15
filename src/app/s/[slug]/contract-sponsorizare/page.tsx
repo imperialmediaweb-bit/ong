@@ -34,6 +34,7 @@ interface NgoData {
   slug: string;
   description: string | null;
   logoUrl: string | null;
+  websiteUrl: string | null;
   verification: {
     fiscalCode: string | null;
     registrationNumber: string | null;
@@ -47,6 +48,12 @@ interface NgoData {
     bankAccount: string | null;
     bankName: string | null;
     contactEmail: string | null;
+    contactPhone: string | null;
+    contactAddress: string | null;
+    legalRepresentative: string | null;
+    legalRepresentativeRole: string | null;
+    cui: string | null;
+    registrationNr: string | null;
   } | null;
 }
 
@@ -358,16 +365,22 @@ export default function ContractSponsorizarePage() {
   }
 
   const ngoVerif = ngo.verification;
-  const ngoCui = ngoVerif?.fiscalCode || ngoVerif?.registrationNumber || "";
-  const ngoAddress = [
+  const ngoConfig = ngo.miniSiteConfig;
+  // Prefer miniSiteConfig data (edited in builder), fallback to verification
+  const ngoCui = ngoConfig?.cui || ngoVerif?.fiscalCode || ngoVerif?.registrationNumber || "";
+  const ngoRegistrationNr = ngoConfig?.registrationNr || ngoVerif?.registrationNumber || "";
+  const ngoAddress = ngoConfig?.contactAddress || [
     ngoVerif?.address,
     ngoVerif?.city,
     ngoVerif?.county ? `jud. ${ngoVerif.county}` : "",
   ].filter(Boolean).join(", ");
-  const ngoRep = ngoVerif?.representativeName || "";
-  const ngoRepRole = ngoVerif?.representativeRole || "Presedinte";
-  const ngoIban = ngo.miniSiteConfig?.bankAccount || "";
-  const ngoBank = ngo.miniSiteConfig?.bankName || "";
+  const ngoRep = ngoConfig?.legalRepresentative || ngoVerif?.representativeName || "";
+  const ngoRepRole = ngoConfig?.legalRepresentativeRole || ngoVerif?.representativeRole || "Presedinte";
+  const ngoIban = ngoConfig?.bankAccount || "";
+  const ngoBank = ngoConfig?.bankName || "";
+  const ngoPhone = ngoConfig?.contactPhone || "";
+  const ngoEmail = ngoConfig?.contactEmail || "";
+  const ngoWebsite = ngo.websiteUrl || "";
   const todayFormatted = new Date().toLocaleDateString("ro-RO", {
     day: "2-digit",
     month: "2-digit",
@@ -704,6 +717,20 @@ export default function ContractSponsorizarePage() {
                         <p className="text-sm font-semibold text-gray-900">{ngoIban}{ngoBank ? ` - ${ngoBank}` : ""}</p>
                       </div>
                     )}
+                    {(ngoPhone || ngoEmail) && (
+                      <div className="rounded-xl bg-gray-50 p-4">
+                        <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">Contact</p>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {ngoPhone}{ngoPhone && ngoEmail ? " | " : ""}{ngoEmail}
+                        </p>
+                      </div>
+                    )}
+                    {ngoWebsite && (
+                      <div className="rounded-xl bg-gray-50 p-4">
+                        <p className="text-xs font-medium uppercase tracking-wider text-gray-400 mb-1">Website</p>
+                        <p className="text-sm font-semibold text-gray-900">{ngoWebsite}</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
                 <CardFooter className="flex-col items-start gap-3">
@@ -884,17 +911,48 @@ export default function ContractSponsorizarePage() {
             <Card className="shadow-2xl border-0">
               <CardContent className="p-8 sm:p-12 lg:p-16">
                 <div ref={contractRef}>
-                  {/* Logo */}
-                  {ngo.logoUrl && (
-                    <div style={{ textAlign: "center", marginBottom: "15px" }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={ngo.logoUrl}
-                        alt={ngo.name}
-                        style={{ maxHeight: "70px", maxWidth: "180px", margin: "0 auto" }}
-                      />
+                  {/* NGO Letterhead / Antet */}
+                  <div style={{ borderBottom: "2px solid #333", paddingBottom: "15px", marginBottom: "25px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                      {ngo.logoUrl && (
+                        <div style={{ flexShrink: 0 }}>
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={ngo.logoUrl}
+                            alt={ngo.name}
+                            style={{ maxHeight: "70px", maxWidth: "160px", objectFit: "contain" }}
+                          />
+                        </div>
+                      )}
+                      <div style={{ flex: 1 }}>
+                        <h2 style={{ fontSize: "16px", fontWeight: "bold", fontFamily: "serif", margin: "0 0 4px 0", textTransform: "uppercase" }}>
+                          {ngo.name}
+                        </h2>
+                        {ngoAddress && (
+                          <p style={{ fontSize: "11px", fontFamily: "serif", margin: "0 0 2px 0", color: "#333" }}>
+                            Sediu: {ngoAddress}
+                          </p>
+                        )}
+                        <div style={{ fontSize: "11px", fontFamily: "serif", color: "#333" }}>
+                          {ngoCui && <span>CUI: {ngoCui}</span>}
+                          {ngoCui && ngoRegistrationNr && <span> | </span>}
+                          {ngoRegistrationNr && <span>Nr. inreg.: {ngoRegistrationNr}</span>}
+                        </div>
+                        <div style={{ fontSize: "11px", fontFamily: "serif", color: "#333", marginTop: "2px" }}>
+                          {ngoPhone && <span>Tel: {ngoPhone}</span>}
+                          {ngoPhone && ngoEmail && <span> | </span>}
+                          {ngoEmail && <span>Email: {ngoEmail}</span>}
+                          {(ngoPhone || ngoEmail) && ngoWebsite && <span> | </span>}
+                          {ngoWebsite && <span>Web: {ngoWebsite}</span>}
+                        </div>
+                        {ngoIban && (
+                          <p style={{ fontSize: "11px", fontFamily: "serif", margin: "2px 0 0 0", color: "#333" }}>
+                            IBAN: {ngoIban}{ngoBank ? ` - ${ngoBank}` : ""}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  )}
+                  </div>
 
                   {/* Contract header */}
                   <div style={{ textAlign: "center", marginBottom: "35px" }}>
