@@ -453,6 +453,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ crawled: processedMentions.length, saved });
   }
 
+  if (action === "delete_mention") {
+    const { mentionId } = body;
+    await prisma.mention.deleteMany({
+      where: { id: mentionId, ngoId },
+    });
+    return NextResponse.json({ success: true });
+  }
+
+  if (action === "update_mention") {
+    const { mentionId, url: newUrl } = body;
+    const mention = await prisma.mention.update({
+      where: { id: mentionId },
+      data: { url: newUrl || undefined },
+    });
+    return NextResponse.json({ mention });
+  }
+
   return NextResponse.json({ error: "Actiune necunoscuta" }, { status: 400 });
 }
 
