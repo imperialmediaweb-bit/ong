@@ -152,6 +152,7 @@ export default function NewCampaignPage() {
   // Credits
   const [emailCredits, setEmailCredits] = useState(0);
   const [smsCredits, setSmsCredits] = useState(0);
+  const [smsConfigured, setSmsConfigured] = useState(false);
 
   // Audience
   const [audienceCount, setAudienceCount] = useState<number | null>(null);
@@ -204,6 +205,7 @@ export default function NewCampaignPage() {
         const data = await res.json();
         setEmailCredits(data.emailCredits);
         setSmsCredits(data.smsCredits);
+        setSmsConfigured(data.smsConfigured || false);
       }
     } catch {
       // Credits will stay at 0
@@ -712,17 +714,19 @@ export default function NewCampaignPage() {
                   <Label>Canal de comunicare *</Label>
                   <div className="grid gap-3 sm:grid-cols-3">
                     {[
-                      { value: "EMAIL", label: "Email", icon: Mail, desc: `${emailCredits} credite disponibile`, color: "blue" },
-                      { value: "SMS", label: "SMS", icon: MessageSquare, desc: `${smsCredits} credite disponibile`, color: "green" },
-                      { value: "BOTH", label: "Email + SMS", icon: Send, desc: "Trimite pe ambele canale", color: "purple" },
+                      { value: "EMAIL", label: "Email", icon: Mail, desc: `${emailCredits} credite disponibile`, color: "blue", disabled: false },
+                      { value: "SMS", label: "SMS", icon: MessageSquare, desc: smsConfigured ? "API configurat" : "Necesita configurare API", color: "green", disabled: !smsConfigured },
+                      { value: "BOTH", label: "Email + SMS", icon: Send, desc: smsConfigured ? "Trimite pe ambele canale" : "SMS necesita configurare API", color: "purple", disabled: !smsConfigured },
                     ].map((ch) => (
                       <div
                         key={ch.value}
-                        onClick={() => updateForm({ channel: ch.value })}
-                        className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                          form.channel === ch.value
-                            ? "border-primary bg-primary/5 shadow-sm"
-                            : "border-muted hover:border-muted-foreground/30"
+                        onClick={() => !ch.disabled && updateForm({ channel: ch.value })}
+                        className={`p-4 rounded-xl border-2 transition-all ${
+                          ch.disabled
+                            ? "border-muted bg-muted/30 opacity-60 cursor-not-allowed"
+                            : form.channel === ch.value
+                              ? "border-primary bg-primary/5 shadow-sm cursor-pointer"
+                              : "border-muted hover:border-muted-foreground/30 cursor-pointer"
                         }`}
                       >
                         <ch.icon className="h-5 w-5 mb-2" />
@@ -731,6 +735,11 @@ export default function NewCampaignPage() {
                       </div>
                     ))}
                   </div>
+                  {!smsConfigured && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      Pentru a trimite SMS-uri, configureaza credentialele Twilio sau Telnyx in Setari &gt; Integrari SMS. Platesti direct catre furnizorul ales.
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid gap-2">

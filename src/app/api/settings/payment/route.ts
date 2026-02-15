@@ -34,6 +34,7 @@ export async function GET() {
         bankName: true,
         ibanRon: true,
         ibanEur: true,
+        ibanAccounts: true,
         revolutTag: true,
         revolutPhone: true,
         revolutLink: true,
@@ -74,7 +75,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { bankName, ibanRon, ibanEur, revolutTag, revolutPhone, revolutLink, paypalEmail, paypalClientId, paypalClientSecret, paypalMerchantId, paypalEnabled } = body;
+    const { bankName, ibanRon, ibanEur, ibanAccounts, revolutTag, revolutPhone, revolutLink, paypalEmail, paypalClientId, paypalClientSecret, paypalMerchantId, paypalEnabled } = body;
 
     // Basic IBAN validation (Romanian IBANs start with RO and are 24 chars)
     if (ibanRon && typeof ibanRon === "string") {
@@ -106,6 +107,15 @@ export async function PUT(req: NextRequest) {
       revolutPhone: revolutPhone || null,
       revolutLink: revolutLink || null,
     };
+
+    // Save multiple IBAN accounts
+    if (ibanAccounts && Array.isArray(ibanAccounts)) {
+      updateData.ibanAccounts = ibanAccounts.map((acc: any) => ({
+        currency: (acc.currency || "RON").toUpperCase(),
+        iban: (acc.iban || "").replace(/\s/g, "").toUpperCase(),
+        bankName: acc.bankName || "",
+      })).filter((acc: any) => acc.iban) as any;
+    }
 
     // PayPal fields
     if (paypalEmail !== undefined) updateData.paypalEmail = paypalEmail || null;

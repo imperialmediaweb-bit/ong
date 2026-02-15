@@ -22,7 +22,15 @@ export async function GET() {
   try {
     const ngo = await prisma.ngo.findUnique({
       where: { id: ngoId },
-      select: { emailCredits: true, smsCredits: true },
+      select: {
+        emailCredits: true,
+        smsCredits: true,
+        twilioAccountSid: true,
+        twilioAuthToken: true,
+        twilioPhoneNumber: true,
+        telnyxApiKey: true,
+        telnyxPhoneNumber: true,
+      },
     });
 
     const recentTransactions = await prisma.creditTransaction.findMany({
@@ -31,9 +39,16 @@ export async function GET() {
       take: 20,
     });
 
+    // SMS is configured if the NGO has their own Twilio or Telnyx credentials
+    const smsConfigured = !!(
+      (ngo?.twilioAccountSid && ngo?.twilioAuthToken && ngo?.twilioPhoneNumber) ||
+      (ngo?.telnyxApiKey && ngo?.telnyxPhoneNumber)
+    );
+
     return NextResponse.json({
       emailCredits: ngo?.emailCredits ?? 0,
       smsCredits: ngo?.smsCredits ?? 0,
+      smsConfigured,
       packages: CREDIT_PACKAGES,
       transactions: recentTransactions,
     });

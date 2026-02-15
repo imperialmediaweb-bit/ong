@@ -118,6 +118,7 @@ model Ngo {
   bankName          String?
   ibanRon           String?
   ibanEur           String?
+  ibanAccounts      Json?     // [{currency: "RON", iban: "RO...", bankName: "..."}]
   revolutTag        String?
   revolutPhone      String?
   revolutLink       String?
