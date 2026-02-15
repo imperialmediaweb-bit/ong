@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Building2, ShieldCheck, Users,
   CreditCard, FileText, Globe, Settings, LogOut, Menu, X, Shield, Mail, Bell,
-  Receipt, Landmark, Wallet, MessageSquare, FileCode,
+  Receipt, Landmark, Wallet, MessageSquare, FileCode, Zap,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
@@ -26,6 +26,7 @@ const navigation = [
   { name: "Date facturare", href: "/admin/billing", icon: Landmark },
   { name: "Facturi", href: "/admin/invoices", icon: Receipt },
   { name: "Procesatoare plati", href: "/admin/payments", icon: Wallet },
+  { name: "MediaExpress", href: "/admin/media-express", icon: Zap },
   { name: "Blog", href: "/admin/blog", icon: FileText },
   { name: "Pagini site", href: "/admin/pages", icon: Globe },
   { name: "Setari platforma", href: "/admin/settings", icon: Settings },
