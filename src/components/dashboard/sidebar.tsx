@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 import {
   Users, Mail, Zap, BarChart3,
   Shield, Settings, Home, Heart, LogOut, Menu, X, FileText,
-  Globe, Briefcase, Share2, Sparkles, ChevronRight, CircleDollarSign,
+  Globe, Briefcase, Share2, Sparkles, ChevronRight, ChevronDown, CircleDollarSign,
   Banknote, Receipt, Building2, ShieldCheck, CreditCard,
-  Eye, Newspaper, Lock, ExternalLink,
+  Eye, Newspaper, Lock, ExternalLink, LayoutGrid,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
@@ -54,7 +54,11 @@ const ngoNavGroups = [
   {
     label: "Prezenta Online",
     items: [
-      { name: "Mini-Site", href: "/dashboard/minisite", icon: Globe },
+      { name: "Mini-Site", href: "/dashboard/minisite", icon: Globe, children: [
+        { name: "Continut", href: "/dashboard/minisite/continut", icon: FileText },
+        { name: "Campanii", href: "/dashboard/minisite/campanii", icon: Heart },
+        { name: "Componente", href: "/dashboard/minisite/componente", icon: LayoutGrid },
+      ] },
       { name: "Retea & Sponsori", href: "/dashboard/retea", icon: Share2 },
     ],
   },
@@ -160,36 +164,64 @@ export function Sidebar() {
                 const isPrefixMatch = !exactMatchPaths.includes(item.href) && (pathname === item.href || pathname?.startsWith(item.href + "/"));
                 const active = isExactMatch || isPrefixMatch;
                 const requiredPlan = (item as any).requiredPlan;
+                const children = (item as any).children as { name: string; href: string; icon: any }[] | undefined;
                 const planOrder: Record<string, number> = { BASIC: 0, PRO: 1, ELITE: 2 };
                 const isLocked = requiredPlan && !isSuperAdmin && (planOrder[plan] ?? 0) < (planOrder[requiredPlan] ?? 0);
                 return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
-                      active
-                        ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-sm"
-                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  <div key={item.name}>
+                    <Link
+                      href={item.href}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
+                        active
+                          ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-sm"
+                          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                      )}
+                    >
+                      <item.icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-white" : "")} />
+                      <span className="truncate">{item.name}</span>
+                      {isLocked && (
+                        <Badge className={cn(
+                          "ml-auto text-[9px] px-1.5 py-0 h-4 text-white border-0 font-semibold",
+                          requiredPlan === "PRO"
+                            ? "bg-gradient-to-r from-violet-500 to-purple-500"
+                            : "bg-gradient-to-r from-amber-500 to-orange-500"
+                        )}>
+                          {requiredPlan}
+                        </Badge>
+                      )}
+                      {active && !isLocked && children && (
+                        <ChevronDown className="h-3 w-3 ml-auto opacity-70" />
+                      )}
+                      {active && !isLocked && !children && (
+                        <ChevronRight className="h-3 w-3 ml-auto opacity-70" />
+                      )}
+                    </Link>
+                    {active && children && (
+                      <div className="ml-7 mt-0.5 space-y-0.5 border-l-2 border-indigo-200 pl-3">
+                        {children.map((child) => {
+                          const childActive = pathname === child.href;
+                          return (
+                            <Link
+                              key={child.name}
+                              href={child.href}
+                              onClick={() => setMobileOpen(false)}
+                              className={cn(
+                                "flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200",
+                                childActive
+                                  ? "bg-indigo-50 text-indigo-700"
+                                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                              )}
+                            >
+                              <child.icon className={cn("h-3.5 w-3.5 flex-shrink-0", childActive ? "text-indigo-600" : "")} />
+                              <span className="truncate">{child.name}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     )}
-                  >
-                    <item.icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-white" : "")} />
-                    <span className="truncate">{item.name}</span>
-                    {isLocked && (
-                      <Badge className={cn(
-                        "ml-auto text-[9px] px-1.5 py-0 h-4 text-white border-0 font-semibold",
-                        requiredPlan === "PRO"
-                          ? "bg-gradient-to-r from-violet-500 to-purple-500"
-                          : "bg-gradient-to-r from-amber-500 to-orange-500"
-                      )}>
-                        {requiredPlan}
-                      </Badge>
-                    )}
-                    {active && !isLocked && (
-                      <ChevronRight className="h-3 w-3 ml-auto opacity-70" />
-                    )}
-                  </Link>
+                  </div>
                 );
               })}
             </div>
