@@ -505,8 +505,25 @@ export default function SettingsPage() {
     }
   };
 
+  const PLAN_ORDER: Record<string, number> = { BASIC: 0, PRO: 1, ELITE: 2 };
+
   const handleChangePlan = async (plan: string) => {
     clearMessages();
+    const currentPlanOrder = PLAN_ORDER[subscription.plan] ?? 0;
+    const newPlanOrder = PLAN_ORDER[plan] ?? 0;
+    const isUpgrade = newPlanOrder > currentPlanOrder;
+
+    // For upgrades, redirect to checkout page directly
+    if (isUpgrade) {
+      window.location.href = `/checkout?plan=${plan}`;
+      return;
+    }
+
+    // For downgrades, confirm and call API
+    if (!confirm(`Esti sigur ca vrei sa faci downgrade la planul ${plan}? Vei pierde acces la unele functionalitati.`)) {
+      return;
+    }
+
     setSaving(true);
     try {
       const res = await fetch("/api/subscription", {
@@ -1514,6 +1531,16 @@ export default function SettingsPage() {
                           </ul>
                           {subscription.plan === p.name ? (
                             <Badge className="w-full justify-center py-1">Plan curent</Badge>
+                          ) : (PLAN_ORDER[p.name] ?? 0) > (PLAN_ORDER[subscription.plan] ?? 0) ? (
+                            <Button
+                              size="sm"
+                              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700"
+                              onClick={() => handleChangePlan(p.name)}
+                              disabled={saving}
+                            >
+                              <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+                              Upgrade la {p.name}
+                            </Button>
                           ) : (
                             <Button
                               variant="outline"
@@ -1522,10 +1549,7 @@ export default function SettingsPage() {
                               onClick={() => handleChangePlan(p.name)}
                               disabled={saving}
                             >
-                              {subscription.plan === "ELITE" && p.name !== "ELITE"
-                                ? "Downgrade"
-                                : "Upgrade"}{" "}
-                              la {p.name}
+                              Downgrade la {p.name}
                             </Button>
                           )}
                         </div>
