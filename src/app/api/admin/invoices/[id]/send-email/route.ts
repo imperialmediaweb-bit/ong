@@ -39,21 +39,48 @@ export async function POST(
 
     // Build payment URL if invoice has a payment token
     const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "https://binevo.ro";
-    const invoiceUrl = invoice.paymentToken
+    const paymentUrl = invoice.paymentToken
       ? `${baseUrl}/factura/${invoice.paymentToken}`
       : undefined;
 
-    // Generate email content
+    // Generate full Binevo-branded invoice email with all details
     const emailContent = invoiceEmail({
-      ngoName: invoice.buyerName,
       invoiceNumber: invoice.invoiceNumber,
-      amount: invoice.totalAmount,
+      invoiceSeries: invoice.invoiceSeries || undefined,
+      // Seller
+      sellerName: invoice.sellerName,
+      sellerCui: invoice.sellerCui || undefined,
+      sellerRegCom: invoice.sellerRegCom || undefined,
+      sellerAddress: invoice.sellerAddress || undefined,
+      sellerCity: invoice.sellerCity || undefined,
+      sellerCounty: invoice.sellerCounty || undefined,
+      sellerEmail: invoice.sellerEmail || undefined,
+      sellerIban: invoice.sellerIban || undefined,
+      sellerBankName: invoice.sellerBankName || undefined,
+      sellerVatPayer: invoice.sellerVatPayer,
+      // Buyer
+      buyerName: invoice.buyerName,
+      buyerCui: invoice.buyerCui || undefined,
+      buyerRegCom: invoice.buyerRegCom || undefined,
+      buyerAddress: invoice.buyerAddress || undefined,
+      buyerCity: invoice.buyerCity || undefined,
+      buyerCounty: invoice.buyerCounty || undefined,
+      buyerEmail: invoice.buyerEmail || undefined,
+      // Invoice details
+      issueDate: invoice.issueDate,
+      dueDate: invoice.dueDate,
+      paidAt: invoice.paidAt,
+      status: invoice.status,
+      // Items & totals
+      items: (invoice.items as any[]) || [],
+      subtotal: invoice.subtotal,
+      vatAmount: invoice.vatAmount,
+      totalAmount: invoice.totalAmount,
       currency: invoice.currency,
-      plan: invoice.subscriptionPlan || "Servicii",
-      period: invoice.subscriptionMonth || new Date(invoice.issueDate).toLocaleDateString("ro-RO", { month: "long", year: "numeric" }),
-      dueDate: invoice.dueDate || undefined,
-      paidAt: invoice.paidAt || undefined,
-      invoiceUrl,
+      // Notes
+      notes: invoice.notes || undefined,
+      // Payment link
+      paymentUrl,
     });
 
     // Send email

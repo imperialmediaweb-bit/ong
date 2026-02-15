@@ -86,6 +86,12 @@ export default function MentionsPage() {
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
+  // NGO info for mini-site link
+  const ngoSlug = (session?.user as any)?.ngoSlug;
+  const ngoName = (session?.user as any)?.ngoName;
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const miniSiteUrl = ngoSlug ? `${baseUrl}/s/${ngoSlug}` : "";
+
   // Expanded mention
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -689,6 +695,41 @@ export default function MentionsPage() {
 
         {/* Settings Tab */}
         <TabsContent value="settings" className="space-y-4 mt-4">
+          {/* Mini-Site & Website Info */}
+          {miniSiteUrl && (
+            <Card className="border-0 shadow-lg overflow-hidden">
+              <CardContent className="py-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md shrink-0">
+                    <Globe className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold">Pagina ta publica (Mini-Site)</p>
+                    <a
+                      href={miniSiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-indigo-600 hover:text-indigo-700 flex items-center gap-1 truncate"
+                    >
+                      {miniSiteUrl}
+                      <ExternalLink className="h-3 w-3 shrink-0" />
+                    </a>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg text-xs shrink-0"
+                    onClick={() => {
+                      navigator.clipboard.writeText(miniSiteUrl);
+                    }}
+                  >
+                    Copiaza link
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="border-0 shadow-lg overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-950/30 dark:to-slate-950/30 border-b">
               <div className="flex items-center gap-3">
@@ -699,15 +740,45 @@ export default function MentionsPage() {
                   <CardTitle className="text-lg">Termeni de cautare</CardTitle>
                   <CardDescription>
                     Adauga numele organizatiei, proiectelor, campaniilor si persoanelor pe care vrei sa le monitorizezi.
+                    Pune termenii intre ghilimele pentru cautare exacta (ex: &quot;Asociatia Binevo&quot;).
                   </CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-3 pt-5">
+              {/* Quick suggestions */}
+              {searchTerms.length <= 1 && searchTerms[0] === "" && ngoName && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+                  <p className="text-xs font-semibold text-blue-700">Sugestii rapide - apasa pentru a adauga:</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs rounded-lg border-blue-300 text-blue-700 hover:bg-blue-100"
+                      onClick={() => setSearchTerms([`"${ngoName}"`, ...searchTerms.filter(s => s.trim())])}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      &quot;{ngoName}&quot;
+                    </Button>
+                    {ngoSlug && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs rounded-lg border-blue-300 text-blue-700 hover:bg-blue-100"
+                        onClick={() => setSearchTerms([...searchTerms.filter(s => s.trim()), `site:binevo.ro/s/${ngoSlug}`])}
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        site:binevo.ro/s/{ngoSlug}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {searchTerms.map((term, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <Input
-                    placeholder={i === 0 ? 'Ex: "Asociatia Binevo"' : 'Ex: "Proiectul Speranta"'}
+                    placeholder={i === 0 ? `Ex: "${ngoName || "Asociatia Binevo"}"` : 'Ex: "Proiectul Speranta" OR "Campania X"'}
                     value={term}
                     onChange={(e) => {
                       const updated = [...searchTerms];
@@ -728,15 +799,21 @@ export default function MentionsPage() {
                   )}
                 </div>
               ))}
-              <Button
-                variant="outline"
-                size="sm"
-                className="rounded-lg"
-                onClick={() => setSearchTerms([...searchTerms, ""])}
-              >
-                <Plus className="h-3.5 w-3.5 mr-1" />
-                Adauga termen
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg"
+                  onClick={() => setSearchTerms([...searchTerms, ""])}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1" />
+                  Adauga termen
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Sfaturi: Foloseste ghilimele (&quot; &quot;) pentru cautare exacta. Adauga &quot;site:domeniu.ro&quot; pentru a cauta doar pe un anumit site.
+                Poti combina cu OR (ex: &quot;Asociatia X&quot; OR &quot;Proiectul Y&quot;).
+              </p>
             </CardContent>
           </Card>
 

@@ -20,7 +20,6 @@ export async function GET() {
     const ngo = await prisma.ngo.findUnique({
       where: { id: ngoId },
       select: {
-        sendgridApiKey: true,
         senderEmail: true,
         senderName: true,
       },
@@ -31,7 +30,6 @@ export async function GET() {
     }
 
     return NextResponse.json({
-      sendgridApiKey: ngo.sendgridApiKey ? "••••••" + ngo.sendgridApiKey.slice(-4) : "",
       senderEmail: ngo.senderEmail || "",
       senderName: ngo.senderName || "",
     });
@@ -55,14 +53,11 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { sendgridApiKey, senderEmail, senderName } = body;
+    const { senderEmail, senderName } = body;
 
     const updateData: any = {};
     if (senderEmail !== undefined) updateData.senderEmail = senderEmail;
     if (senderName !== undefined) updateData.senderName = senderName;
-    if (sendgridApiKey && !sendgridApiKey.startsWith("••")) {
-      updateData.sendgridApiKey = sendgridApiKey;
-    }
 
     await prisma.ngo.update({
       where: { id: ngoId },

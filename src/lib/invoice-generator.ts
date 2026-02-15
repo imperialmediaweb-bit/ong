@@ -182,6 +182,7 @@ export async function createSubscriptionInvoice(params: {
     period: periodLabel,
     dueDate,
     invoiceUrl: `${APP_URL}/factura/${paymentToken}`,
+    invoiceId: invoice.id,
   }).catch(console.error);
 
   return {
@@ -768,6 +769,7 @@ export async function createCreditInvoice(params: {
     period: `Pachet credite: ${creditsDescription}`,
     dueDate,
     invoiceUrl: `${APP_URL}/factura/${paymentToken}`,
+    invoiceId: invoice.id,
   }).catch(console.error);
 
   return {

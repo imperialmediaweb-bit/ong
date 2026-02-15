@@ -136,7 +136,7 @@ async function executeAction(
             fromName: ngo.senderName || ngo.name,
             unsubscribeUrl: unsubUrl,
           },
-          ngo.sendgridApiKey || undefined
+          undefined
         );
       }
       break;

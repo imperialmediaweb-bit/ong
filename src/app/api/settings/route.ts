@@ -32,7 +32,6 @@ export async function GET() {
         senderName: true,
         smsSenderId: true,
         // Don't return API keys directly
-        sendgridApiKey: true,
         twilioAccountSid: true,
         twilioPhoneNumber: true,
         miniSiteConfig: {
@@ -57,7 +56,6 @@ export async function GET() {
     // Mask sensitive fields
     const masked = {
       ...ngo,
-      sendgridApiKey: ngo.sendgridApiKey ? "••••••" + ngo.sendgridApiKey.slice(-4) : null,
       twilioAccountSid: ngo.twilioAccountSid ? "••••••" + ngo.twilioAccountSid.slice(-4) : null,
       twilioAuthToken: ngo.twilioAccountSid ? "••••••••" : null,
     };
@@ -116,7 +114,7 @@ export async function PUT(request: NextRequest) {
     const {
       name, description, logoUrl, websiteUrl,
       senderEmail, senderName, smsSenderId,
-      sendgridApiKey, twilioAccountSid, twilioAuthToken, twilioPhoneNumber,
+      twilioAccountSid, twilioAuthToken, twilioPhoneNumber,
     } = body;
 
     const updateData: any = {};
@@ -130,9 +128,6 @@ export async function PUT(request: NextRequest) {
     if (smsSenderId !== undefined) updateData.smsSenderId = smsSenderId;
 
     // Only update API keys if new values provided (not masked)
-    if (sendgridApiKey && !sendgridApiKey.startsWith("••")) {
-      updateData.sendgridApiKey = sendgridApiKey;
-    }
     if (twilioAccountSid && !twilioAccountSid.startsWith("••")) {
       updateData.twilioAccountSid = twilioAccountSid;
     }

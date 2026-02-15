@@ -279,7 +279,7 @@ export async function POST(
               fromName: ngo.senderName || ngo.name,
               unsubscribeUrl,
             },
-            ngo.sendgridApiKey ? decrypt(ngo.sendgridApiKey) : undefined
+            undefined
           );
 
           await prisma.messageRecipient.create({

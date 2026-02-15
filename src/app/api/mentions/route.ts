@@ -384,12 +384,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "NGO negasit" }, { status: 404 });
     }
 
-    const searchQueries = (config?.searchQueries as string[] | null) || [ngo.name];
+    const configQueries = (config?.searchQueries as string[] | null) || [];
+    // Build effective search queries: use configured ones, or default to NGO name with exact match
+    const searchQueries = configQueries.length > 0
+      ? configQueries
+      : [`"${ngo.name}"`]; // Default to exact match of NGO name
+
+    // Also add NGO website/slug-based searches if not already covered
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || "https://binevo.ro";
+    const miniSiteUrl = `${baseUrl}/s/${ngo.slug}`;
+    const additionalQueries: string[] = [];
+    if (ngo.websiteUrl) {
+      const domain = getDomainFromUrl(ngo.websiteUrl);
+      const hasDomainQuery = searchQueries.some(q => q.includes(domain));
+      if (!hasDomainQuery) {
+        additionalQueries.push(`"${domain}"`);
+      }
+    }
+    const allSearchQueries = [...searchQueries, ...additionalQueries];
+
     const rssSources = (config?.rssSources as string[] | null) || [];
     const threshold = config?.relevanceThreshold || 70;
 
     // Fetch real mentions from Google News and custom RSS feeds
-    const rawMentions = await fetchRealMentions(ngo.name, searchQueries, rssSources);
+    const rawMentions = await fetchRealMentions(ngo.name, allSearchQueries, rssSources);
 
     if (rawMentions.length === 0) {
       // Update last crawl time even if no results
