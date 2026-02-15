@@ -101,7 +101,7 @@ export async function POST(
         from: ngo.senderEmail || undefined,
         fromName: ngo.senderName || ngo.name,
       },
-      ngo.sendgridApiKey || undefined
+      undefined
     );
 
     if (!emailResult.success) {

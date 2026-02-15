@@ -51,7 +51,7 @@ export async function GET(
     }
 
     const donationTotal = ngo.donations.reduce((sum, d) => sum + d.amount, 0);
-    const { donations, sendgridApiKey, twilioAccountSid, twilioAuthToken, ...safeNgo } = ngo;
+    const { donations, twilioAccountSid, twilioAuthToken, ...safeNgo } = ngo;
 
     return NextResponse.json({
       ...safeNgo,

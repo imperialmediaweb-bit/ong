@@ -164,7 +164,6 @@ model Ngo {
   pressReleases       PressRelease[]
 
   // Provider settings (encrypted)
-  sendgridApiKey    String?
   twilioAccountSid  String?
   twilioAuthToken   String?
   twilioPhoneNumber String?

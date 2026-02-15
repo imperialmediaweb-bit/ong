@@ -96,7 +96,7 @@ export async function sendCampaign(campaignId: string): Promise<SendCampaignResu
             fromName: campaign.ngo.senderName || campaign.ngo.name,
             unsubscribeUrl: unsubUrl,
           },
-          campaign.ngo.sendgridApiKey || undefined
+          undefined
         );
 
         await prisma.messageRecipient.create({
