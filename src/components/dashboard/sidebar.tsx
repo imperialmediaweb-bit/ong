@@ -8,7 +8,7 @@ import {
   Shield, Settings, Home, Heart, LogOut, Menu, X, FileText,
   Globe, Briefcase, Share2, Sparkles, ChevronRight, CircleDollarSign,
   Banknote, Receipt, Building2, ShieldCheck, CreditCard,
-  Eye, Newspaper, Lock,
+  Eye, Newspaper, Lock, ExternalLink,
 } from "lucide-react";
 import { signOut, useSession } from "next-auth/react";
 import { useState } from "react";
@@ -84,6 +84,7 @@ export function Sidebar() {
   const isSuperAdmin = userRole === "SUPER_ADMIN";
   const plan = (session?.user as any)?.plan || "BASIC";
   const ngoLogoUrl = (session?.user as any)?.ngoLogoUrl;
+  const ngoSlug = (session?.user as any)?.ngoSlug;
   const navGroups = isSuperAdmin ? superAdminNavGroups : ngoNavGroups;
 
   const planColor = plan === "ELITE"
@@ -96,23 +97,53 @@ export function Sidebar() {
     <div className="flex h-full flex-col">
       {/* Logo Header */}
       <div className="flex items-center gap-3 px-5 py-5 border-b">
-        {ngoLogoUrl ? (
-          <img
-            src={ngoLogoUrl}
-            alt={(session?.user as any)?.ngoName || "ONG"}
-            className="h-10 w-10 rounded-lg object-cover border shadow-sm flex-shrink-0"
-          />
+        {ngoSlug ? (
+          <a
+            href={`/s/${ngoSlug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 min-w-0 group"
+          >
+            {ngoLogoUrl ? (
+              <img
+                src={ngoLogoUrl}
+                alt={(session?.user as any)?.ngoName || "ONG"}
+                className="h-10 w-10 rounded-lg object-cover border shadow-sm flex-shrink-0 group-hover:ring-2 group-hover:ring-indigo-300 transition-all"
+              />
+            ) : (
+              <BinevoLogo size="sm" showText={false} />
+            )}
+            <div className="min-w-0">
+              <h1 className="text-base font-bold tracking-tight truncate max-w-[150px] group-hover:text-indigo-600 transition-colors">
+                {(session?.user as any)?.ngoName || "Binevo"}
+              </h1>
+              <p className="text-[11px] text-muted-foreground truncate max-w-[150px] flex items-center gap-1">
+                Powered by Binevo
+                <ExternalLink className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </p>
+            </div>
+          </a>
         ) : (
-          <BinevoLogo size="sm" showText={false} />
+          <div className="flex items-center gap-3 min-w-0">
+            {ngoLogoUrl ? (
+              <img
+                src={ngoLogoUrl}
+                alt={(session?.user as any)?.ngoName || "ONG"}
+                className="h-10 w-10 rounded-lg object-cover border shadow-sm flex-shrink-0"
+              />
+            ) : (
+              <BinevoLogo size="sm" showText={false} />
+            )}
+            <div className="min-w-0">
+              <h1 className="text-base font-bold tracking-tight truncate max-w-[150px]">
+                {(session?.user as any)?.ngoName || "Binevo"}
+              </h1>
+              <p className="text-[11px] text-muted-foreground truncate max-w-[150px]">
+                Powered by Binevo
+              </p>
+            </div>
+          </div>
         )}
-        <div className="min-w-0">
-          <h1 className="text-base font-bold tracking-tight truncate max-w-[150px]">
-            {(session?.user as any)?.ngoName || "Binevo"}
-          </h1>
-          <p className="text-[11px] text-muted-foreground truncate max-w-[150px]">
-            Powered by Binevo
-          </p>
-        </div>
       </div>
 
       {/* Navigation */}
