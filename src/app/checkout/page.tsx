@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { BinevoLogo } from "@/components/BinevoLogo";
 import { Button } from "@/components/ui/button";
@@ -19,9 +19,12 @@ import {
   Zap,
 } from "lucide-react";
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
-  const [selectedPlan, setSelectedPlan] = useState<"PRO" | "ELITE">("PRO");
+  const searchParams = useSearchParams();
+  const planFromUrl = searchParams.get("plan");
+  const initialPlan = planFromUrl === "ELITE" ? "ELITE" : "PRO";
+  const [selectedPlan, setSelectedPlan] = useState<"PRO" | "ELITE">(initialPlan);
   const [paymentMethod, setPaymentMethod] = useState<"recurring_card" | "invoice">("recurring_card");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -293,5 +296,17 @@ export default function CheckoutPage() {
         </Card>
       </main>
     </div>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }

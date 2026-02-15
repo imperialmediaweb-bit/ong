@@ -28,7 +28,7 @@ const ngoNavGroups = [
     label: "Donatori & Donatii",
     items: [
       { name: "Donatori", href: "/dashboard/donors", icon: Users },
-      { name: "Firme & Sponsori", href: "/dashboard/donors/companies", icon: Building2 },
+      { name: "Firme & Sponsori", href: "/dashboard/donors/companies", icon: Building2, requiredPlan: "ELITE" as const },
       { name: "Donatii", href: "/dashboard/donations", icon: CircleDollarSign },
       { name: "Verificare plati", href: "/dashboard/donations/pledges", icon: Banknote },
       { name: "Formular 230", href: "/dashboard/formular-230", icon: FileText },
@@ -37,11 +37,11 @@ const ngoNavGroups = [
   {
     label: "Marketing",
     items: [
-      { name: "Campanii", href: "/dashboard/campaigns", icon: Mail },
-      { name: "Automatizari", href: "/dashboard/automations", icon: Zap },
-      { name: "AI & Social Media", href: "/dashboard/social-ai", icon: Sparkles },
+      { name: "Campanii", href: "/dashboard/campaigns", icon: Mail, requiredPlan: "PRO" as const },
+      { name: "Automatizari", href: "/dashboard/automations", icon: Zap, requiredPlan: "PRO" as const },
+      { name: "AI & Social Media", href: "/dashboard/social-ai", icon: Sparkles, requiredPlan: "PRO" as const },
       { name: "Monitorizare Mentiuni", href: "/dashboard/mentions", icon: Eye, requiredPlan: "ELITE" as const },
-      { name: "Retea Media & Presa", href: "/dashboard/media-press", icon: Newspaper },
+      { name: "Retea Media & Presa", href: "/dashboard/media-press", icon: Newspaper, requiredPlan: "ELITE" as const },
     ],
   },
   {
@@ -160,7 +160,8 @@ export function Sidebar() {
                 const isPrefixMatch = !exactMatchPaths.includes(item.href) && (pathname === item.href || pathname?.startsWith(item.href + "/"));
                 const active = isExactMatch || isPrefixMatch;
                 const requiredPlan = (item as any).requiredPlan;
-                const isLocked = requiredPlan && plan !== requiredPlan && !isSuperAdmin;
+                const planOrder: Record<string, number> = { BASIC: 0, PRO: 1, ELITE: 2 };
+                const isLocked = requiredPlan && !isSuperAdmin && (planOrder[plan] ?? 0) < (planOrder[requiredPlan] ?? 0);
                 return (
                   <Link
                     key={item.name}
@@ -176,8 +177,13 @@ export function Sidebar() {
                     <item.icon className={cn("h-4 w-4 flex-shrink-0", active ? "text-white" : "")} />
                     <span className="truncate">{item.name}</span>
                     {isLocked && (
-                      <Badge className="ml-auto text-[9px] px-1.5 py-0 h-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 font-semibold">
-                        ELITE
+                      <Badge className={cn(
+                        "ml-auto text-[9px] px-1.5 py-0 h-4 text-white border-0 font-semibold",
+                        requiredPlan === "PRO"
+                          ? "bg-gradient-to-r from-violet-500 to-purple-500"
+                          : "bg-gradient-to-r from-amber-500 to-orange-500"
+                      )}>
+                        {requiredPlan}
                       </Badge>
                     )}
                     {active && !isLocked && (
