@@ -383,12 +383,20 @@ export default function AdminSmsPage() {
       </Card>
 
       {/* Test SMS */}
-      <Card className="border-green-200">
+      <Card className={`${isConfigured() ? "border-green-200" : "border-slate-200 opacity-60"}`}>
         <CardContent className="p-6">
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-            <Send className="h-5 w-5 text-green-600" />
+            <Send className={`h-5 w-5 ${isConfigured() ? "text-green-600" : "text-slate-400"}`} />
             Trimite SMS de Test
           </h2>
+          {!isConfigured() && (
+            <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-sm text-amber-800">
+                <AlertTriangle className="h-4 w-4 inline mr-1" />
+                Functia de test nu este disponibila. Configurati mai intai credentialele Twilio sau Telnyx si salvati.
+              </p>
+            </div>
+          )}
           <div className="flex gap-3">
             <Input
               type="tel"
@@ -396,10 +404,11 @@ export default function AdminSmsPage() {
               onChange={(e) => setTestPhone(e.target.value)}
               placeholder="+40712345678"
               className="max-w-sm"
+              disabled={!isConfigured()}
             />
             <Button
               onClick={handleTest}
-              disabled={testing || !testPhone}
+              disabled={testing || !testPhone || !isConfigured()}
               variant="outline"
               className="border-green-300 text-green-700 hover:bg-green-50"
             >
