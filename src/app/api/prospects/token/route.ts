@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import crypto from "crypto";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 function generateToken(): string {
   return `ngo_${crypto.randomBytes(32).toString("hex")}`;
@@ -19,6 +20,12 @@ export async function GET() {
     const ngoId = (session.user as any).ngoId;
     if (!ngoId) {
       return NextResponse.json({ error: "No NGO associated" }, { status: 403 });
+    }
+
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "linkedin_prospects", role)) {
+      return NextResponse.json({ error: "LinkedIn Prospects nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
     }
 
     const tokens = await prisma.apiToken.findMany({
@@ -61,6 +68,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No NGO associated" }, { status: 403 });
     }
 
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "linkedin_prospects", role)) {
+      return NextResponse.json({ error: "LinkedIn Prospects nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
+    }
+
     const body = await request.json().catch(() => ({}));
     const name = body.name || "Chrome Extension";
 
@@ -98,6 +111,12 @@ export async function DELETE(request: NextRequest) {
     const ngoId = (session.user as any).ngoId;
     if (!ngoId) {
       return NextResponse.json({ error: "No NGO associated" }, { status: 403 });
+    }
+
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "linkedin_prospects", role)) {
+      return NextResponse.json({ error: "LinkedIn Prospects nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url);

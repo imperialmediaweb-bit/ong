@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 // GET - check compliance status
 export async function GET() {
@@ -10,6 +11,12 @@ export async function GET() {
 
   const ngoId = (session.user as any).ngoId;
   if (!ngoId) return NextResponse.json({ error: "Fara ONG" }, { status: 403 });
+
+  const role = (session.user as any).role;
+  const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+  if (!hasFeature(plan, "campaigns_email", role)) {
+    return NextResponse.json({ error: "Campaniile nu sunt disponibile pe planul tau. Fa upgrade la PRO." }, { status: 403 });
+  }
 
   try {
     const ngo = await prisma.ngo.findUnique({
@@ -55,6 +62,12 @@ export async function POST(request: NextRequest) {
   const ngoId = (session.user as any).ngoId;
   const userId = (session.user as any).id;
   if (!ngoId) return NextResponse.json({ error: "Fara ONG" }, { status: 403 });
+
+  const role = (session.user as any).role;
+  const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+  if (!hasFeature(plan, "campaigns_email", role)) {
+    return NextResponse.json({ error: "Campaniile nu sunt disponibile pe planul tau. Fa upgrade la PRO." }, { status: 403 });
+  }
 
   try {
     const { acceptTos, acceptGdpr, acceptAntiSpam, legalRepresentative, cui } = await request.json();

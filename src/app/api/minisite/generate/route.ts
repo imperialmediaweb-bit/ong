@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { callAI, parseAiJson } from "@/lib/ai-providers";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 const CATEGORY_COLORS: Record<string, { primary: string; accent: string }[]> = {
   Social: [
@@ -102,6 +103,12 @@ export async function POST(request: NextRequest) {
     const ngoId = (session.user as any).ngoId;
     if (!ngoId) {
       return NextResponse.json({ error: "No NGO associated" }, { status: 403 });
+    }
+
+    const role = (session.user as any).role;
+    const effectivePlan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(effectivePlan, "ai_generator", role)) {
+      return NextResponse.json({ error: "Generarea AI a mini-site-ului nu este disponibila pe planul tau. Fa upgrade la PRO." }, { status: 403 });
     }
 
     const body = await request.json();

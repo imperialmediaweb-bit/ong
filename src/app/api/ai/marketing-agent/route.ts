@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/db";
 import OpenAI from "openai";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 function getOpenAI(): OpenAI {
   return new OpenAI({
@@ -20,6 +21,12 @@ export async function POST(request: NextRequest) {
     const ngoId = (session.user as any).ngoId;
     if (!ngoId) {
       return NextResponse.json({ error: "No NGO associated" }, { status: 403 });
+    }
+
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "ai_generator", role)) {
+      return NextResponse.json({ error: "Agentul AI de marketing nu este disponibil pe planul tau. Fa upgrade la PRO." }, { status: 403 });
     }
 
     if (!process.env.OPENAI_API_KEY) {

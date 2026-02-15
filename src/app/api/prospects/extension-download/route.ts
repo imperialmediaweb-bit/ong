@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 
@@ -121,6 +122,17 @@ export async function GET() {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const ngoId = (session.user as any).ngoId;
+    if (!ngoId) {
+      return NextResponse.json({ error: "No NGO associated" }, { status: 403 });
+    }
+
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "linkedin_prospects", role)) {
+      return NextResponse.json({ error: "LinkedIn Prospects nu este disponibil pe planul tau. Fa upgrade la ELITE." }, { status: 403 });
     }
 
     const extensionDir = join(process.cwd(), "chrome-extension");

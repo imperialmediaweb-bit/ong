@@ -26,6 +26,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatDate, formatDateTime } from "@/lib/utils";
+import { PlanGate } from "@/components/dashboard/plan-gate";
+import { Zap as AutoIcon, Mail as MailIcon, Clock as ClockIcon } from "lucide-react";
 import {
   Plus,
   Zap,
@@ -164,6 +166,16 @@ export default function AutomationsPage() {
   };
 
   return (
+    <PlanGate
+      requiredPlan="PRO"
+      featureName="Automatizari"
+      featureDescription="Configureaza actiuni automate: trimitere email, SMS sau tag-uri cand se intampla un eveniment important."
+      features={[
+        { icon: AutoIcon, title: "Workflow-uri Automate", description: "Seteaza triggere si actiuni care se executa automat.", iconBg: "bg-purple-100", iconColor: "text-purple-600" },
+        { icon: MailIcon, title: "Email & SMS Automat", description: "Trimite mesaje automate la donatie noua, abonat nou, etc.", iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+        { icon: ClockIcon, title: "Actiuni Programate", description: "Adauga pasi cu delay (ore, zile) intre actiuni.", iconBg: "bg-green-100", iconColor: "text-green-600" },
+      ]}
+    >
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -374,5 +386,6 @@ export default function AutomationsPage() {
         { title: "Automatizare noua", description: "Click pe + Automatizare noua pentru a configura trigger-ul si pasii (email, SMS, asteptare, tag-uri)." },
       ]} />
     </div>
+    </PlanGate>
   );
 }

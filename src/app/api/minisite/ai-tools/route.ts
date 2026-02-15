@@ -2,12 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { callAI, parseAiJson, getAvailableProviders } from "@/lib/ai-providers";
+import { hasFeature, fetchEffectivePlan } from "@/lib/permissions";
 
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const ngoId = (session.user as any).ngoId;
+    const role = (session.user as any).role;
+    const plan = await fetchEffectivePlan(ngoId, (session.user as any).plan, role);
+    if (!hasFeature(plan, "ai_generator", role)) {
+      return NextResponse.json({ error: "Instrumentele AI nu sunt disponibile pe planul tau. Fa upgrade la PRO." }, { status: 403 });
     }
 
     const body = await request.json();
