@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import prisma from "@/lib/db";
 import { ArrowLeft, Calendar, Tag, Clock, Eye } from "lucide-react";
 import { ShareButtons } from "@/components/minisite/share-buttons";
@@ -12,6 +13,50 @@ function hexToRgb(hex: string): string {
   const g = parseInt(cleaned.substring(2, 4), 16);
   const b = parseInt(cleaned.substring(4, 6), 16);
   return `${r}, ${g}, ${b}`;
+}
+
+export async function generateMetadata({ params }: { params: { slug: string; postSlug: string } }): Promise<Metadata> {
+  const ngo: any = await prisma.ngo.findUnique({
+    where: { slug: params.slug, isActive: true },
+    select: { id: true, name: true, logoUrl: true, coverImageUrl: true },
+  });
+  if (!ngo) return { title: "Articol negasit - Binevo" };
+
+  let post: any = null;
+  try {
+    post = await prisma.blogPost.findFirst({
+      where: { slug: params.postSlug, ngoId: ngo.id, status: "PUBLISHED" },
+    });
+  } catch {
+    // table might not exist
+  }
+
+  if (!post) return { title: "Articol negasit - Binevo" };
+
+  const title = post.title;
+  const description = (post.excerpt || post.title).slice(0, 160);
+  const ogImage = post.coverImage
+    || ngo.coverImageUrl
+    || ngo.logoUrl
+    || `/api/og?title=${encodeURIComponent(title)}&subtitle=${encodeURIComponent(ngo.name)}`;
+
+  return {
+    title: `${title} - ${ngo.name} | Binevo`,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      siteName: "Binevo",
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+  };
 }
 
 export default async function BlogPostPage({ params }: { params: { slug: string; postSlug: string } }) {

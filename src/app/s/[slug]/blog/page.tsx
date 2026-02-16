@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import prisma from "@/lib/db";
 import { ArrowLeft, Calendar, Tag, ArrowRight, Newspaper } from "lucide-react";
 import { ShareButtons } from "@/components/minisite/share-buttons";
@@ -16,6 +17,38 @@ function hexToRgb(hex: string): string {
   const g = parseInt(cleaned.substring(2, 4), 16);
   const b = parseInt(cleaned.substring(4, 6), 16);
   return `${r}, ${g}, ${b}`;
+}
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const ngo: any = await prisma.ngo.findUnique({
+    where: { slug: params.slug, isActive: true },
+    select: { name: true, logoUrl: true, coverImageUrl: true },
+  });
+  if (!ngo) return { title: "Blog - Binevo" };
+
+  const title = `Blog - ${ngo.name}`;
+  const description = `Ultimele noutati si articole de la ${ngo.name}`;
+  const ogImage = ngo.coverImageUrl
+    || ngo.logoUrl
+    || `/api/og?title=${encodeURIComponent("Blog")}&subtitle=${encodeURIComponent(ngo.name)}`;
+
+  return {
+    title: `${title} | Binevo`,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+      siteName: "Binevo",
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
+    },
+  };
 }
 
 export default async function BlogListPage({ params }: { params: { slug: string } }) {
