@@ -1883,6 +1883,7 @@ export default async function MiniSitePage({ params }: Props) {
               <MiniSiteNewsletter
                 ngoSlug={ngo.slug}
                 consentTexts={consentTexts}
+                primaryColor={primaryColor}
               />
             </div>
           </section>
