@@ -46,6 +46,8 @@ export const campaignSchema = z.object({
     "NEWSLETTER", "REACTIVATION", "CORPORATE_OUTREACH", "CUSTOM",
   ]),
   channel: z.enum(["EMAIL", "SMS", "BOTH"]),
+  description: z.string().optional().or(z.literal("")),
+  imageUrl: z.string().optional().or(z.literal("")),
   subject: z.string().optional().or(z.literal("")),
   emailBody: z.string().optional().or(z.literal("")),
   smsBody: z.string().optional().or(z.literal("")),

@@ -146,6 +146,8 @@ export async function POST(request: NextRequest) {
         name: data.name,
         type: data.type,
         channel: data.channel,
+        description: data.description || null,
+        imageUrl: data.imageUrl || null,
         subject: data.subject || null,
         emailBody: data.emailBody || null,
         previewText: data.previewText || null,

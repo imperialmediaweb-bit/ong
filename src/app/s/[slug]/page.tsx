@@ -271,7 +271,7 @@ export default async function MiniSitePage({ params }: Props) {
           scrollBehavior: "smooth",
         } as React.CSSProperties
       }
-      className="min-h-screen bg-gray-50 antialiased"
+      className="min-h-screen overflow-x-hidden bg-gray-50 antialiased"
     >
       {/* ── Urgent Banner (above everything) ───────────────────────── */}
       {showUrgentBanner && (

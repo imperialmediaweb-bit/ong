@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -38,6 +40,11 @@ import {
   Search,
   ExternalLink,
   Share2,
+  Megaphone,
+  Plus,
+  Trash2,
+  ImageIcon,
+  CalendarDays,
 } from "lucide-react";
 import {
   BarChart,
@@ -55,6 +62,8 @@ import {
 interface CampaignDetail {
   id: string;
   name: string;
+  description: string | null;
+  imageUrl: string | null;
   type: string;
   channel: string;
   status: string;
@@ -77,6 +86,14 @@ interface CampaignDetail {
   currentAmount: number;
   createdAt: string;
   updatedAt: string;
+}
+
+interface CampaignUpdateItem {
+  id: string;
+  title: string;
+  content: string;
+  imageUrl: string | null;
+  createdAt: string;
 }
 
 interface Recipient {
@@ -106,6 +123,7 @@ export default function CampaignDetailPage() {
 
   const [campaign, setCampaign] = useState<CampaignDetail | null>(null);
   const [recipients, setRecipients] = useState<Recipient[]>([]);
+  const [updates, setUpdates] = useState<CampaignUpdateItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
@@ -113,13 +131,21 @@ export default function CampaignDetailPage() {
   const [recipientStatusFilter, setRecipientStatusFilter] = useState("all");
   const [linkCopied, setLinkCopied] = useState(false);
 
+  // Update form states
+  const [showUpdateForm, setShowUpdateForm] = useState(false);
+  const [updateTitle, setUpdateTitle] = useState("");
+  const [updateContent, setUpdateContent] = useState("");
+  const [updateImageUrl, setUpdateImageUrl] = useState("");
+  const [updateSaving, setUpdateSaving] = useState(false);
+
   const fetchCampaign = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const [campaignRes, recipientsRes] = await Promise.all([
+      const [campaignRes, recipientsRes, updatesRes] = await Promise.all([
         fetch(`/api/campaigns/${campaignId}`),
         fetch(`/api/campaigns/${campaignId}/recipients`),
+        fetch(`/api/campaigns/${campaignId}/updates`),
       ]);
       if (!campaignRes.ok) throw new Error("Failed to fetch campaign");
       const campaignData = await campaignRes.json();
@@ -129,12 +155,44 @@ export default function CampaignDetailPage() {
         const recipientsData = await recipientsRes.json();
         setRecipients(recipientsData.recipients || []);
       }
+
+      if (updatesRes.ok) {
+        const updatesData = await updatesRes.json();
+        setUpdates(updatesData.data || []);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   }, [campaignId]);
+
+  const handleAddUpdate = async () => {
+    if (!updateTitle.trim() || !updateContent.trim()) return;
+    setUpdateSaving(true);
+    try {
+      const res = await fetch(`/api/campaigns/${campaignId}/updates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: updateTitle,
+          content: updateContent,
+          imageUrl: updateImageUrl || null,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to add update");
+      const data = await res.json();
+      setUpdates((prev) => [data.data, ...prev]);
+      setUpdateTitle("");
+      setUpdateContent("");
+      setUpdateImageUrl("");
+      setShowUpdateForm(false);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setUpdateSaving(false);
+    }
+  };
 
   useEffect(() => {
     fetchCampaign();
@@ -411,6 +469,10 @@ export default function CampaignDetailPage() {
             <Mail className="h-3 w-3" />
             Continut
           </TabsTrigger>
+          <TabsTrigger value="updates" className="gap-1">
+            <Megaphone className="h-3 w-3" />
+            Noutati ({updates.length})
+          </TabsTrigger>
         </TabsList>
 
         {/* Performance Tab */}
@@ -640,6 +702,117 @@ export default function CampaignDetailPage() {
                 </CardContent>
               </Card>
             )}
+          </div>
+        </TabsContent>
+
+        {/* Updates Tab */}
+        <TabsContent value="updates">
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-base">Noutati campanie</CardTitle>
+                    <CardDescription>
+                      Adauga noutati despre progresul campaniei. Acestea vor fi vizibile pe pagina publica.
+                    </CardDescription>
+                  </div>
+                  <Button onClick={() => setShowUpdateForm(!showUpdateForm)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Adauga noutate
+                  </Button>
+                </div>
+              </CardHeader>
+
+              {showUpdateForm && (
+                <CardContent className="border-t pt-6">
+                  <div className="space-y-4 max-w-2xl">
+                    <div>
+                      <Label htmlFor="update-title">Titlu</Label>
+                      <Input
+                        id="update-title"
+                        placeholder="Ex: Am atins 50% din obiectiv!"
+                        value={updateTitle}
+                        onChange={(e) => setUpdateTitle(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="update-content">Continut</Label>
+                      <Textarea
+                        id="update-content"
+                        placeholder="Descrierati progresul, ce s-a realizat, ce urmeaza..."
+                        value={updateContent}
+                        onChange={(e) => setUpdateContent(e.target.value)}
+                        rows={4}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="update-image">URL imagine (optional)</Label>
+                      <Input
+                        id="update-image"
+                        placeholder="https://example.com/image.jpg"
+                        value={updateImageUrl}
+                        onChange={(e) => setUpdateImageUrl(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button onClick={handleAddUpdate} disabled={updateSaving || !updateTitle.trim() || !updateContent.trim()}>
+                        {updateSaving ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Se salveaza...
+                          </>
+                        ) : (
+                          "Publica noutatea"
+                        )}
+                      </Button>
+                      <Button variant="outline" onClick={() => {
+                        setShowUpdateForm(false);
+                        setUpdateTitle("");
+                        setUpdateContent("");
+                        setUpdateImageUrl("");
+                      }}>
+                        Anuleaza
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+
+            {updates.length === 0 && !showUpdateForm && (
+              <Card>
+                <CardContent className="py-10 text-center">
+                  <Megaphone className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                  <p className="text-muted-foreground">Nu ai adaugat noutati inca.</p>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Adauga noutati despre progresul campaniei pentru a tine donatorii informati.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {updates.map((update) => (
+              <Card key={update.id}>
+                <CardContent className="pt-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        {formatDate(update.createdAt)}
+                      </div>
+                      <h3 className="font-semibold text-lg mb-2">{update.title}</h3>
+                      <p className="text-muted-foreground whitespace-pre-wrap">{update.content}</p>
+                      {update.imageUrl && (
+                        <div className="mt-3 rounded-lg overflow-hidden border max-w-md">
+                          <img src={update.imageUrl} alt={update.title} className="w-full h-auto object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </TabsContent>
       </Tabs>
