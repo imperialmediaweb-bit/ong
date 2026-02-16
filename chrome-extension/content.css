@@ -13,3 +13,305 @@
     opacity: 1;
   }
 }
+
+/* ─── Floating Action Button ───────────────── */
+#binevo-fab {
+  position: fixed;
+  bottom: 24px;
+  left: 20px;
+  z-index: 999998;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  border: none;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  color: white;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(79, 70, 229, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  user-select: none;
+}
+#binevo-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(79, 70, 229, 0.6);
+}
+#binevo-fab.binevo-fab--active {
+  border-radius: 12px;
+  background: linear-gradient(135deg, #3730a3, #4f46e5);
+}
+
+/* Pulse animation when disconnected */
+#binevo-fab.binevo-fab--pulse::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #ef4444;
+  border: 2px solid #0f0f23;
+}
+#binevo-fab.binevo-fab--connected::after {
+  content: '';
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid #0f0f23;
+}
+
+/* ─── Floating Panel ───────────────────────── */
+#binevo-panel {
+  position: fixed;
+  bottom: 84px;
+  left: 20px;
+  z-index: 999998;
+  width: 340px;
+  background: #0f0f23;
+  border-radius: 16px;
+  border: 1px solid #2a2a5e;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #e0e0ff;
+  overflow: hidden;
+  animation: binevo-panel-open 0.2s ease-out;
+}
+#binevo-panel.binevo-panel--hidden {
+  display: none;
+}
+
+@keyframes binevo-panel-open {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Panel Header */
+.binevo-panel__header {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed, #2563eb);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.binevo-panel__header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.binevo-panel__logo {
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+.binevo-panel__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+}
+.binevo-panel__subtitle {
+  font-size: 10px;
+  color: rgba(255,255,255,0.7);
+  margin-top: 1px;
+}
+.binevo-panel__close {
+  background: rgba(255,255,255,0.15);
+  border: none;
+  color: white;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.binevo-panel__close:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+/* Panel Body */
+.binevo-panel__body {
+  padding: 14px;
+}
+
+/* Status */
+.binevo-panel__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+.binevo-panel__status--ok {
+  background: rgba(16, 185, 129, 0.15);
+  color: #6ee7b7;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.binevo-panel__status--err {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.binevo-panel__status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.binevo-panel__status-dot--green { background: #10b981; }
+.binevo-panel__status-dot--red { background: #ef4444; }
+
+/* Stats Grid */
+.binevo-panel__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.binevo-panel__stat {
+  background: #1a1a3e;
+  padding: 10px 8px;
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid #2a2a5e;
+}
+.binevo-panel__stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #a5b4fc;
+}
+.binevo-panel__stat-label {
+  font-size: 10px;
+  color: #8b8bc7;
+  margin-top: 2px;
+}
+
+/* Buttons */
+.binevo-panel__actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.binevo-panel__btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.binevo-panel__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.binevo-panel__btn--primary {
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: white;
+}
+.binevo-panel__btn--primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #4338ca, #4f46e5);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+.binevo-panel__btn--auto {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: white;
+}
+.binevo-panel__btn--auto:hover:not(:disabled) {
+  background: linear-gradient(135deg, #047857, #059669);
+  transform: translateY(-1px);
+}
+.binevo-panel__btn--stop {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: white;
+  width: 100%;
+}
+.binevo-panel__btn--link {
+  background: #1a1a3e;
+  color: #a0a0d0;
+  border: 1px solid #2a2a5e;
+  width: 100%;
+  font-size: 11px;
+}
+.binevo-panel__btn--link:hover {
+  background: #2a2a5e;
+  color: #c0c0ff;
+}
+
+/* Log */
+.binevo-panel__log {
+  max-height: 80px;
+  overflow-y: auto;
+  background: #12122e;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 10px;
+  font-family: monospace, monospace;
+  color: #8b8bc7;
+  line-height: 1.5;
+  margin-top: 10px;
+  border: 1px solid #2a2a5e;
+}
+.binevo-panel__log-success { color: #6ee7b7; }
+.binevo-panel__log-error { color: #fca5a5; }
+.binevo-panel__log-info { color: #93c5fd; }
+
+/* Setup form (shown when disconnected) */
+.binevo-panel__setup {
+  margin-bottom: 12px;
+}
+.binevo-panel__field {
+  margin-bottom: 8px;
+}
+.binevo-panel__label {
+  display: block;
+  font-size: 11px;
+  color: #a0a0d0;
+  margin-bottom: 3px;
+}
+.binevo-panel__input {
+  width: 100%;
+  padding: 8px 10px;
+  background: #12122e;
+  border: 1px solid #3a3a6e;
+  border-radius: 8px;
+  color: #e0e0ff;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.binevo-panel__input:focus {
+  border-color: #6366f1;
+}
