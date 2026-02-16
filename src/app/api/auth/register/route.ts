@@ -78,7 +78,9 @@ export async function POST(request: NextRequest) {
     notifyWelcomeUser({
       userName: name || email,
       userEmail: email,
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error("Failed to send welcome email to", email, err);
+    });
 
     // Alert super admins about new NGO registration (non-blocking)
     notifyNewNgoRegistration({
@@ -86,7 +88,9 @@ export async function POST(request: NextRequest) {
       ngoId: result.ngo.id,
       adminEmail: email,
       registeredBy: name || email,
-    }).catch(() => {});
+    }).catch((err) => {
+      console.error("Failed to send NGO registration alert:", err);
+    });
 
     return NextResponse.json(
       {
