@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { ShareButtons } from "@/components/minisite/share-buttons";
 import { MiniSiteDonation } from "@/components/minisite/donation-form";
+import { EmbedRenderer } from "@/components/minisite/embed-renderer";
 
 interface Props {
   params: { slug: string };
@@ -188,9 +189,9 @@ export default function FormularAnafPage({ params }: Props) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
-                <div
+                <EmbedRenderer
+                  html={ngo.formular230EmbedCode}
                   className="formular230-embed w-full"
-                  dangerouslySetInnerHTML={{ __html: ngo.formular230EmbedCode }}
                 />
               </CardContent>
             </Card>
