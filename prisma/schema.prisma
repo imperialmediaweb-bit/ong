@@ -164,6 +164,9 @@ model Ngo {
   pressContacts       PressContact[]
   pressReleases       PressRelease[]
 
+  // Blog
+  blogPosts           BlogPost[]
+
   // Provider settings (encrypted)
   twilioAccountSid  String?
   twilioAuthToken   String?
@@ -904,6 +907,8 @@ model BlogPost {
   coverImage  String?
   authorId    String
   author      User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  ngoId       String?
+  ngo         Ngo?          @relation(fields: [ngoId], references: [id], onDelete: Cascade)
   status      PostStatus    @default(DRAFT)
   category    String?
   tags        String[]      @default([])
@@ -917,6 +922,7 @@ model BlogPost {
   @@index([slug])
   @@index([publishedAt])
   @@index([category])
+  @@index([ngoId])
 }
 
 enum PostStatus {

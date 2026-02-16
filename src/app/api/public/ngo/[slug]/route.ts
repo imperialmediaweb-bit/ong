@@ -15,6 +15,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
       shortDescription: true,
       coverImageUrl: true,
       legalRepresentative: true,
+      cui: true,
       verification: {
         select: {
           fiscalCode: true,
@@ -54,7 +55,7 @@ export async function GET(req: NextRequest, { params }: { params: { slug: string
     category: ngo.category,
     shortDescription: ngo.shortDescription,
     coverImageUrl: ngo.coverImageUrl,
-    cui: ngo.miniSiteConfig?.cui || ngo.verification?.fiscalCode || ngo.verification?.registrationNumber || null,
+    cui: ngo.miniSiteConfig?.cui || ngo.verification?.fiscalCode || ngo.cui || ngo.verification?.registrationNumber || null,
     iban: ngo.miniSiteConfig?.bankAccount || null,
     address: ngo.verification?.address || null,
     county: ngo.verification?.county || null,
