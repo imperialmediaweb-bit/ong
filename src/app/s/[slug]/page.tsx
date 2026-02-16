@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import prisma from "@/lib/db";
 import { getEffectivePlan, isSectionAllowedForPlan } from "@/lib/permissions";
-import { MiniSiteDonation } from "@/components/minisite/donation-form";
 import { MiniSiteNewsletter } from "@/components/minisite/newsletter-form";
 import { CounterAnimation } from "@/components/minisite/counter-animation";
 import { FaqAccordion } from "@/components/minisite/faq-accordion";
@@ -369,9 +368,9 @@ export default async function MiniSitePage({ params }: Props) {
           </div>
 
           {/* CTA Button */}
-          {(showDonation || showCampaigns) && (
+          {showCampaigns && (
             <a
-              href={showCampaigns ? "#campanii" : "#donatie"}
+              href="#campanii"
               className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg"
               style={{
                 backgroundColor: primaryColor,
@@ -536,21 +535,6 @@ export default async function MiniSitePage({ params }: Props) {
 
               {/* CTA Buttons */}
               <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-                {showDonation && (
-                  <a
-                    href="#donatie"
-                    className="inline-flex items-center gap-2.5 rounded-full px-8 py-4 text-base font-bold shadow-xl transition-all duration-300 hover:scale-105 hover:shadow-2xl sm:text-lg"
-                    style={{
-                      backgroundColor: accentColor,
-                      color: "white",
-                      boxShadow: `0 8px 30px rgba(${accentRgb}, 0.4)`,
-                    }}
-                  >
-                    <Heart className="h-5 w-5" />
-                    {heroCtaText}
-                    <ArrowRight className="h-4 w-4" />
-                  </a>
-                )}
                 {(showAbout || showMission) && (
                   <a
                     href="#despre"
@@ -1890,75 +1874,7 @@ export default async function MiniSitePage({ params }: Props) {
           </section>
         )}
 
-        {/* Placeholder if no blog posts */}
-        {blogPosts.length === 0 && showNewsletter && (
-          <section id="blog" className="scroll-mt-20 bg-gray-50 py-16 sm:py-20">
-            <div className="mx-auto max-w-6xl px-4 sm:px-6">
-              <div className="mx-auto max-w-2xl text-center">
-                <div
-                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-                  style={{ backgroundColor: `rgba(${primaryRgb}, 0.1)` }}
-                >
-                  <Newspaper className="h-7 w-7" style={{ color: primaryColor }} />
-                </div>
-                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
-                  Ramai la curent
-                </h2>
-                <p className="mt-3 text-base text-gray-500">
-                  Aboneaza-te la newsletter-ul nostru pentru a primi cele mai noi stiri
-                  si actualizari despre proiectele noastre.
-                </p>
-                <a
-                  href="#newsletter"
-                  className="mt-6 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg"
-                  style={{
-                    backgroundColor: primaryColor,
-                    boxShadow: `0 4px 14px rgba(${primaryRgb}, 0.3)`,
-                  }}
-                >
-                  <Mail className="h-4 w-4" />
-                  Aboneaza-te
-                  <ArrowRight className="h-4 w-4" />
-                </a>
-              </div>
-            </div>
-          </section>
-        )}
 
-        {/* ── Donation Section ───────────────────────────────────────── */}
-        {showDonation && (
-          <section
-            id="donatie"
-            className="scroll-mt-20 py-16 sm:py-20"
-            style={{
-              background: `linear-gradient(135deg, ${primaryColor}05, ${accentColor}08, ${primaryColor}05)`,
-            }}
-          >
-            <div className="mx-auto max-w-4xl px-4 sm:px-6">
-              <div className="mb-8 text-center">
-                <div
-                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-                  style={{
-                    background: `linear-gradient(135deg, rgba(${accentRgb}, 0.15), rgba(${primaryRgb}, 0.15))`,
-                  }}
-                >
-                  <Heart className="h-7 w-7" style={{ color: accentColor }} />
-                </div>
-                <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl lg:text-4xl">
-                  Sustine cauza noastra
-                </h2>
-                <p className="mx-auto mt-3 max-w-xl text-base text-gray-500 sm:text-lg">
-                  Fiecare donatie conteaza si face o diferenta reala in viata celor care au nevoie
-                </p>
-              </div>
-              <MiniSiteDonation
-                ngoSlug={ngo.slug}
-                ngoName={ngo.name}
-                consentTexts={consentTexts}
-              />
-            </div>
-          </section>
-        )}
 
         {/* ── Newsletter Section ─────────────────────────────────────── */}
         {showNewsletter && (
