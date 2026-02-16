@@ -55,7 +55,15 @@ async function getNotifySettings(): Promise<NotifyConfig> {
       smtpFromEmail: true,
     },
   });
-  settingsCache = settings || {};
+  // Default all notification flags to true when PlatformSettings doesn't exist
+  settingsCache = settings || {
+    notifyOnRegistration: true,
+    notifyOnVerification: true,
+    notifyOnSubscription: true,
+    notifyOnDonation: true,
+    notifyOnInvoice: true,
+    notifyWelcomeEmail: true,
+  };
   settingsCacheTime = Date.now();
   return settingsCache;
 }
