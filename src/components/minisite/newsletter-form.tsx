@@ -11,9 +11,10 @@ import { Mail, Check, Phone } from "lucide-react";
 interface Props {
   ngoSlug: string;
   consentTexts: Record<string, string>;
+  primaryColor?: string;
 }
 
-export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
+export function MiniSiteNewsletter({ ngoSlug, consentTexts, primaryColor = "#6366f1" }: Props) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -71,7 +72,7 @@ export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Mail className="h-5 w-5 text-primary" />
+          <Mail className="h-5 w-5" style={{ color: primaryColor }} />
           Ramai la curent
         </CardTitle>
         <CardDescription>Aboneaza-te la newsletter pentru actualizari si rapoarte de impact</CardDescription>
@@ -129,7 +130,12 @@ export function MiniSiteNewsletter({ ngoSlug, consentTexts }: Props) {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full text-white"
+            style={{ backgroundColor: primaryColor }}
+            disabled={loading}
+          >
             {loading ? "Se aboneaza..." : "Aboneaza-te"}
           </Button>
         </form>
