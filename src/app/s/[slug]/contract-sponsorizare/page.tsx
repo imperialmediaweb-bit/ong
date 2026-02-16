@@ -27,6 +27,8 @@ import {
   Mail,
   Send,
 } from "lucide-react";
+import { ShareButtons } from "@/components/minisite/share-buttons";
+import { MiniSiteDonation } from "@/components/minisite/donation-form";
 
 interface NgoData {
   id: string;
@@ -390,14 +392,17 @@ export default function ContractSponsorizarePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50">
       <div className="container mx-auto px-4 py-8 max-w-5xl">
-        {/* Back link */}
-        <a
-          href={`/s/${ngo.slug}`}
-          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-900"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Inapoi la {ngo.name}
-        </a>
+        {/* Back link + Share */}
+        <div className="mb-6 flex items-center justify-between">
+          <a
+            href={`/s/${ngo.slug}`}
+            className="inline-flex items-center gap-2 text-sm font-medium text-gray-500 transition-colors hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Inapoi la {ngo.name}
+          </a>
+          <ShareButtons title={`Contract Sponsorizare - ${ngo.name}`} />
+        </div>
 
         {/* Header */}
         <header className="mb-10 text-center">
@@ -1294,6 +1299,27 @@ export default function ContractSponsorizarePage() {
           <p>Contract generat automat. Respecta prevederile Legii nr. 32/1994 privind sponsorizarea si ale Codului Civil.</p>
         </footer>
       </div>
+
+      {/* ── Donation Section ── */}
+      <section
+        className="py-16 sm:py-20 border-t bg-gray-50"
+      >
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <div className="mb-8 text-center">
+            <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
+              Sustine cauza noastra
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-base text-gray-500">
+              Fiecare donatie conteaza si face o diferenta reala in viata celor care au nevoie
+            </p>
+          </div>
+          <MiniSiteDonation
+            ngoSlug={slug}
+            ngoName={ngo.name}
+            consentTexts={{}}
+          />
+        </div>
+      </section>
     </div>
   );
 }

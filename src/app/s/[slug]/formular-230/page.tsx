@@ -7,6 +7,8 @@ import {
   Download, Info, Mail, BadgeCheck, ExternalLink, Globe,
   Phone, Calendar, Users, FileImage, Send
 } from "lucide-react";
+import { ShareButtons } from "@/components/minisite/share-buttons";
+import { MiniSiteDonation } from "@/components/minisite/donation-form";
 
 interface Props {
   params: { slug: string };
@@ -85,10 +87,7 @@ export default function FormularAnafPage({ params }: Props) {
             <ArrowLeft className="h-4 w-4" />
             Inapoi la {ngo.name}
           </a>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Shield className="h-3.5 w-3.5" />
-            Formular securizat
-          </div>
+          <ShareButtons title={`Formular 230 - ${ngo?.name || ""}`} primaryColor={primaryColor} />
         </div>
       </div>
 
@@ -398,6 +397,28 @@ export default function FormularAnafPage({ params }: Props) {
           </a>
         </div>
       </div>
+
+      {/* ── Donation Section ── */}
+      <section
+        className="py-16 sm:py-20 border-t"
+        style={{ background: `linear-gradient(135deg, ${primaryColor}05, ${accentColor}08, ${primaryColor}05)` }}
+      >
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <div className="mb-8 text-center">
+            <h2 className="text-2xl font-extrabold text-gray-900 sm:text-3xl">
+              Sustine cauza noastra
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-base text-gray-500">
+              Fiecare donatie conteaza si face o diferenta reala in viata celor care au nevoie
+            </p>
+          </div>
+          <MiniSiteDonation
+            ngoSlug={params.slug}
+            ngoName={ngo.name}
+            consentTexts={{}}
+          />
+        </div>
+      </section>
 
       <style jsx>{`
         .formular230-embed iframe {

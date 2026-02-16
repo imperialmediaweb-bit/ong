@@ -54,6 +54,7 @@ const ngoNavGroups = [
   {
     label: "Prezenta Online",
     items: [
+      { name: "Blog", href: "/dashboard/blog", icon: Newspaper, requiredPlan: "PRO" as const },
       { name: "Mini-Site", href: "/dashboard/minisite", icon: Globe, children: [
         { name: "Continut", href: "/dashboard/minisite/continut", icon: FileText },
         { name: "Campanii", href: "/dashboard/minisite/campanii", icon: Heart },

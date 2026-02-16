@@ -164,7 +164,7 @@ export default async function MiniSitePage({ params }: Props) {
     blogPosts = [];
   } else try {
     blogPosts = await (prisma as any).blogPost.findMany({
-      where: { status: "PUBLISHED" },
+      where: { status: "PUBLISHED", ngoId: ngo.id },
       orderBy: { publishedAt: "desc" },
       take: 3,
       select: {
@@ -1805,7 +1805,8 @@ export default async function MiniSitePage({ params }: Props) {
                     : null;
 
                   return (
-                    <article
+                    <a
+                      href={`/s/${ngo.slug}/blog/${post.slug}`}
                       key={post.id}
                       className="group flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
                     >
@@ -1866,9 +1867,24 @@ export default async function MiniSitePage({ params }: Props) {
                           </span>
                         </div>
                       </div>
-                    </article>
+                    </a>
                   );
                 })}
+              </div>
+
+              {/* See all blog posts link */}
+              <div className="mt-10 text-center">
+                <a
+                  href={`/s/${ngo.slug}/blog`}
+                  className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition-all duration-300 hover:shadow-lg"
+                  style={{
+                    color: primaryColor,
+                    border: `2px solid ${primaryColor}`,
+                  }}
+                >
+                  Toate articolele
+                  <ArrowRight className="h-4 w-4" />
+                </a>
               </div>
             </div>
           </section>
