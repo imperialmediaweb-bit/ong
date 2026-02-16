@@ -861,29 +861,25 @@ export default async function MiniSitePage({ params }: Props) {
                 </h2>
               </div>
 
-              {/* About section with optional image */}
-              {showAbout && config?.aboutText && (
+              {/* About image - full width when present */}
+              {showAbout && config?.aboutText && config?.aboutImageUrl && (
                 <div className="mb-10">
-                  <div className={`overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100 ${config?.aboutImageUrl ? "" : "mx-auto max-w-3xl"}`}>
+                  <div className="overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100">
                     <div
                       className="h-1.5"
                       style={{
                         background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
                       }}
                     />
-                    <div className={config?.aboutImageUrl ? "grid lg:grid-cols-2" : ""}>
-                      {/* Image side */}
-                      {config?.aboutImageUrl && (
-                        <div className="relative h-64 lg:h-full lg:min-h-[320px]">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={config.aboutImageUrl}
-                            alt="Despre noi"
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                      )}
-                      {/* Text side */}
+                    <div className="grid lg:grid-cols-2">
+                      <div className="relative h-64 lg:h-full lg:min-h-[320px]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={config.aboutImageUrl}
+                          alt="Despre noi"
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
                       <div className="p-6 sm:p-8 md:p-10">
                         <div className="mb-6 flex items-center gap-3">
                           <div
@@ -910,8 +906,93 @@ export default async function MiniSitePage({ params }: Props) {
                 </div>
               )}
 
-              {/* Mission Card */}
-              {showMission && config?.missionText && (
+              {/* Side-by-side cards when no about image */}
+              {(!config?.aboutImageUrl) && (showAbout || showMission) && (
+                <div className={`grid gap-8 ${
+                  showAbout && config?.aboutText && showMission && config?.missionText
+                    ? "lg:grid-cols-2"
+                    : "mx-auto max-w-3xl"
+                }`}>
+                  {/* About Card - "Povestea noastra" */}
+                  {showAbout && config?.aboutText && (
+                    <div className="flex">
+                      <div className="flex flex-col overflow-hidden rounded-2xl bg-gray-50 shadow-sm ring-1 ring-gray-100 w-full">
+                        <div
+                          className="h-1.5 flex-shrink-0"
+                          style={{
+                            background: `linear-gradient(90deg, ${primaryColor}, ${accentColor})`,
+                          }}
+                        />
+                        <div className="flex-1 p-6 sm:p-8">
+                          <div className="mb-5 flex items-center gap-3">
+                            <div
+                              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl"
+                              style={{
+                                backgroundColor: `rgba(${primaryRgb}, 0.12)`,
+                              }}
+                            >
+                              <Heart
+                                className="h-5 w-5"
+                                style={{ color: primaryColor }}
+                              />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900">
+                              Povestea noastra
+                            </h3>
+                          </div>
+                          <p className="text-base leading-relaxed text-gray-600">
+                            {config.aboutText}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mission Card - "Misiunea noastra" */}
+                  {showMission && config?.missionText && (
+                    <div className="flex">
+                      <div
+                        className="flex flex-col overflow-hidden rounded-2xl shadow-sm w-full"
+                        style={{
+                          backgroundColor: `rgba(${primaryRgb}, 0.04)`,
+                          border: `1px solid rgba(${primaryRgb}, 0.12)`,
+                        }}
+                      >
+                        <div
+                          className="h-1.5 flex-shrink-0"
+                          style={{
+                            background: `linear-gradient(90deg, ${accentColor}, ${primaryColor})`,
+                          }}
+                        />
+                        <div className="flex-1 p-6 sm:p-8">
+                          <div className="mb-5 flex items-center gap-3">
+                            <div
+                              className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl"
+                              style={{
+                                backgroundColor: `rgba(${primaryRgb}, 0.12)`,
+                              }}
+                            >
+                              <Target
+                                className="h-5 w-5"
+                                style={{ color: primaryColor }}
+                              />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900">
+                              Misiunea noastra
+                            </h3>
+                          </div>
+                          <p className="text-base leading-relaxed text-gray-600">
+                            {config.missionText}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Mission Card below image layout */}
+              {config?.aboutImageUrl && showMission && config?.missionText && (
                 <div className="mx-auto max-w-3xl">
                   <div
                     className="overflow-hidden rounded-2xl shadow-sm"
