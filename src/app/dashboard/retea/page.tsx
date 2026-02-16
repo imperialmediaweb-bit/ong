@@ -13,6 +13,8 @@ import {
   UserSearch, ArrowRight, Phone, AlertTriangle, Settings, Zap,
   Download, Trash2, Eye, Key, RefreshCw, Star, TrendingUp, Brain,
   Clock, Filter, MoreHorizontal, ChevronDown, ChevronUp,
+  Plus, Link, Shield, Monitor, Puzzle, CheckCircle, Info,
+  FileDown, Chrome, MousePointer, Lightbulb, BarChart3, Award,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { SponsorCRM } from "@/components/dashboard/sponsor-crm";
@@ -187,6 +189,18 @@ export default function ReteaPage() {
   const [linkedinShowToken, setLinkedinShowToken] = useState(false);
   const [linkedinNewToken, setLinkedinNewToken] = useState<string | null>(null);
   const [linkedinTokenLoading, setLinkedinTokenLoading] = useState(false);
+
+  // Manual add state
+  const [manualAddUrl, setManualAddUrl] = useState("");
+  const [manualAddName, setManualAddName] = useState("");
+  const [manualAddCompany, setManualAddCompany] = useState("");
+  const [manualAddHeadline, setManualAddHeadline] = useState("");
+  const [manualAddLoading, setManualAddLoading] = useState(false);
+  const [manualAddError, setManualAddError] = useState("");
+  const [manualAddSuccess, setManualAddSuccess] = useState(false);
+  const [showManualAdd, setShowManualAdd] = useState(false);
+  const [extensionWizardStep, setExtensionWizardStep] = useState(0);
+  const [showExtensionWizard, setShowExtensionWizard] = useState(false);
 
   // Discover state
   const [discoverResults, setDiscoverResults] = useState<DiscoverItem[]>([]);
@@ -673,6 +687,43 @@ export default function ReteaPage() {
       await fetchLinkedinProspects(linkedinPage, linkedinSearch, linkedinStatusFilter);
     } catch (err) {
       console.error("Error deleting prospect:", err);
+    }
+  };
+
+  // ─── Manual Add: Add LinkedIn prospect by URL ──
+  const handleManualAdd = async () => {
+    if (!manualAddUrl.trim()) return;
+    setManualAddLoading(true);
+    setManualAddError("");
+    setManualAddSuccess(false);
+    try {
+      const res = await fetch("/api/prospects/add-manual", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          linkedinUrl: manualAddUrl.trim(),
+          fullName: manualAddName.trim() || undefined,
+          company: manualAddCompany.trim() || undefined,
+          headline: manualAddHeadline.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setManualAddError(data.error || "Eroare la adaugare");
+        return;
+      }
+      setManualAddSuccess(true);
+      setManualAddUrl("");
+      setManualAddName("");
+      setManualAddCompany("");
+      setManualAddHeadline("");
+      await fetchLinkedinProspects(linkedinPage, linkedinSearch, linkedinStatusFilter);
+      setTimeout(() => { setManualAddSuccess(false); setShowManualAdd(false); }, 2000);
+    } catch (err) {
+      console.error("Manual add error:", err);
+      setManualAddError("Eroare de conexiune. Incearca din nou.");
+    } finally {
+      setManualAddLoading(false);
     }
   };
 
@@ -1218,110 +1269,392 @@ export default function ReteaPage() {
           {/* LINKEDIN MODE */}
           {searchMode === "linkedin" && (
             <div className="space-y-4">
-              {/* Chrome Extension Setup */}
-              <Card className="border-0 shadow-sm">
+              {/* ═══ Header Bar with Actions ═══ */}
+              <Card className="border-0 shadow-sm overflow-hidden">
                 <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Linkedin className="h-5 w-5 text-[#0A66C2]" />
-                      <span className="font-semibold text-sm">LinkedIn Galaxy</span>
-                      <span className="text-xs text-muted-foreground">- Importa prospecte din LinkedIn cu extensia Chrome</span>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-[#0A66C2] to-[#004182] flex items-center justify-center shadow-md">
+                        <Linkedin className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-sm">LinkedIn Galaxy</h3>
+                        <p className="text-xs text-muted-foreground">Importa si analizeaza prospecte din LinkedIn</p>
+                      </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => setLinkedinShowToken(!linkedinShowToken)}>
-                        <Key className="h-3 w-3 mr-1" /> {linkedinShowToken ? "Ascunde" : "Extensie Chrome"}
+                      <Button size="sm" variant="outline" className="text-xs h-8 gap-1.5" onClick={() => { setShowManualAdd(!showManualAdd); setShowExtensionWizard(false); }}>
+                        <Plus className="h-3.5 w-3.5" /> Adauga Manual
                       </Button>
-                      <Button size="sm" className="text-xs h-7" onClick={() => fetchLinkedinProspects(linkedinPage, linkedinSearch, linkedinStatusFilter)} disabled={linkedinLoading}>
-                        <RefreshCw className={`h-3 w-3 mr-1 ${linkedinLoading ? "animate-spin" : ""}`} /> Actualizeaza
+                      <Button size="sm" variant="outline" className="text-xs h-8 gap-1.5 border-[#0A66C2]/30 text-[#0A66C2] hover:bg-[#0A66C2]/5"
+                        onClick={() => { setShowExtensionWizard(!showExtensionWizard); setShowManualAdd(false); }}>
+                        <Puzzle className="h-3.5 w-3.5" /> {showExtensionWizard ? "Ascunde Ghid" : "Extensie Chrome"}
+                      </Button>
+                      <Button size="sm" className="text-xs h-8 bg-[#0A66C2] hover:bg-[#004182]" onClick={() => fetchLinkedinProspects(linkedinPage, linkedinSearch, linkedinStatusFilter)} disabled={linkedinLoading}>
+                        <RefreshCw className={`h-3.5 w-3.5 mr-1 ${linkedinLoading ? "animate-spin" : ""}`} /> Actualizeaza
                       </Button>
                     </div>
                   </div>
 
-                  {/* Token Section */}
-                  {linkedinShowToken && (
-                    <div className="bg-slate-50 rounded-lg p-4 border space-y-3 mt-3">
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <a href="/api/prospects/extension-download" download
-                          className="bg-white rounded-lg p-3 border text-center hover:border-blue-300 hover:bg-blue-50/50 transition-colors cursor-pointer group block">
-                          <div className="w-7 h-7 rounded-full bg-blue-100 flex items-center justify-center mx-auto text-blue-600 font-bold text-xs mb-1">1</div>
-                          <p className="text-xs font-semibold">Descarca extensia</p>
-                          <p className="text-[10px] text-muted-foreground">Click pentru .zip</p>
-                        </a>
-                        <div className="bg-white rounded-lg p-3 border text-center">
-                          <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center mx-auto text-indigo-600 font-bold text-xs mb-1">2</div>
-                          <p className="text-xs font-semibold">Incarca in Chrome</p>
-                          <p className="text-[10px] text-muted-foreground">chrome://extensions &gt; Developer mode</p>
-                        </div>
-                        <div className="bg-white rounded-lg p-3 border text-center">
-                          <div className="w-7 h-7 rounded-full bg-emerald-100 flex items-center justify-center mx-auto text-emerald-600 font-bold text-xs mb-1">3</div>
-                          <p className="text-xs font-semibold">Introdu tokenul</p>
-                          <p className="text-[10px] text-muted-foreground">Copiaza tokenul in extensie</p>
-                        </div>
-                      </div>
-
+                  {/* ═══ Manual Add LinkedIn URL Form ═══ */}
+                  {showManualAdd && (
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-5 border border-blue-200 mb-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <p className="text-xs font-semibold text-slate-600">Tokeni API activi</p>
-                        <Button size="sm" onClick={handleGenerateToken} disabled={linkedinTokenLoading} className="bg-[#0A66C2] hover:bg-[#004182] text-xs h-7">
-                          {linkedinTokenLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Key className="h-3 w-3 mr-1" />}
-                          Genereaza Token
+                        <div className="flex items-center gap-2">
+                          <Link className="h-4 w-4 text-[#0A66C2]" />
+                          <p className="font-semibold text-sm">Adauga prospect manual din LinkedIn</p>
+                        </div>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setShowManualAdd(false)}>
+                          <X className="h-3.5 w-3.5" />
                         </Button>
                       </div>
-
-                      {linkedinNewToken && (
-                        <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-2.5">
-                          <p className="text-xs font-semibold text-emerald-800 mb-1">Token nou (copiaza-l acum):</p>
-                          <div className="flex items-center gap-2">
-                            <code className="text-xs bg-white px-2 py-1 rounded border flex-1 break-all font-mono">{linkedinNewToken}</code>
-                            <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => navigator.clipboard.writeText(linkedinNewToken)}>
-                              <Copy className="h-3 w-3" />
-                            </Button>
-                          </div>
+                      <p className="text-xs text-muted-foreground">Lipeste link-ul profilului sau al companiei de pe LinkedIn. Poti adauga si factori de decizie direct.</p>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-medium text-slate-600 mb-1 block">Link LinkedIn *</label>
+                          <Input
+                            placeholder="https://linkedin.com/in/nume-persoana sau /company/firma"
+                            value={manualAddUrl}
+                            onChange={(e) => { setManualAddUrl(e.target.value); setManualAddError(""); }}
+                            className="h-9 bg-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-slate-600 mb-1 block">Nume complet (optional)</label>
+                          <Input placeholder="Ion Popescu" value={manualAddName} onChange={(e) => setManualAddName(e.target.value)} className="h-9 bg-white" />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-slate-600 mb-1 block">Companie (optional)</label>
+                          <Input placeholder="Numele companiei" value={manualAddCompany} onChange={(e) => setManualAddCompany(e.target.value)} className="h-9 bg-white" />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="text-xs font-medium text-slate-600 mb-1 block">Rol / Titlu (optional)</label>
+                          <Input placeholder="CEO, Director CSR, Marketing Manager..." value={manualAddHeadline} onChange={(e) => setManualAddHeadline(e.target.value)} className="h-9 bg-white" />
+                        </div>
+                      </div>
+                      {manualAddError && (
+                        <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 rounded-lg p-2 border border-red-200">
+                          <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" /> {manualAddError}
                         </div>
                       )}
+                      {manualAddSuccess && (
+                        <div className="flex items-center gap-2 text-xs text-emerald-600 bg-emerald-50 rounded-lg p-2 border border-emerald-200">
+                          <CheckCircle className="h-3.5 w-3.5 flex-shrink-0" /> Prospect adaugat cu succes! Acum il poti analiza cu AI.
+                        </div>
+                      )}
+                      <div className="flex items-center gap-3">
+                        <Button size="sm" className="bg-[#0A66C2] hover:bg-[#004182] text-xs h-8"
+                          onClick={handleManualAdd} disabled={manualAddLoading || !manualAddUrl.trim()}>
+                          {manualAddLoading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Plus className="h-3.5 w-3.5 mr-1.5" />}
+                          Adauga Prospect
+                        </Button>
+                        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                          <Info className="h-3 w-3" />
+                          <span>Dupa adaugare, apasa <Brain className="h-3 w-3 inline mx-0.5 text-purple-600" /> pentru analiza psihologica AI</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                      {linkedinTokens.length > 0 ? (
-                        <div className="space-y-1">
-                          {linkedinTokens.map((t: any) => (
-                            <div key={t.id} className="flex items-center gap-2 bg-white rounded-lg p-2 border text-xs">
-                              <Key className="h-3 w-3 text-slate-400" />
-                              <code className="font-mono text-slate-600">{t.tokenPreview}</code>
-                              <span className="text-muted-foreground">{t.name}</span>
-                              {t.lastUsedAt && <span className="text-[10px] text-muted-foreground ml-auto">Folosit: {new Date(t.lastUsedAt).toLocaleDateString("ro-RO")}</span>}
-                              <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-red-400 hover:text-red-600" onClick={() => handleDeleteToken(t.id)}>
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                  {/* ═══ Chrome Extension Installation Wizard ═══ */}
+                  {showExtensionWizard && (
+                    <div className="bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 rounded-xl border border-blue-200 overflow-hidden mb-4">
+                      <div className="p-5 space-y-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Puzzle className="h-5 w-5 text-[#0A66C2]" />
+                            <div>
+                              <p className="font-bold text-sm">Instaleaza Extensia Chrome - LinkedIn Galaxy</p>
+                              <p className="text-xs text-muted-foreground">Importa automat sute de prospecte direct din LinkedIn</p>
                             </div>
+                          </div>
+                          <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => setShowExtensionWizard(false)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+
+                        {/* Step indicators */}
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                          {[
+                            { label: "Descarca", icon: FileDown },
+                            { label: "Instaleaza", icon: Monitor },
+                            { label: "Activeaza", icon: Puzzle },
+                            { label: "Conecteaza", icon: Key },
+                            { label: "Importa", icon: Linkedin },
+                          ].map((step, i) => (
+                            <button key={i} onClick={() => setExtensionWizardStep(i)}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
+                                extensionWizardStep === i ? "bg-[#0A66C2] text-white shadow-md" :
+                                extensionWizardStep > i ? "bg-emerald-100 text-emerald-700" :
+                                "bg-white text-slate-500 border hover:border-blue-300"
+                              }`}>
+                              {extensionWizardStep > i ? <Check className="h-3 w-3" /> : <step.icon className="h-3 w-3" />}
+                              <span>{i + 1}. {step.label}</span>
+                            </button>
                           ))}
                         </div>
-                      ) : (
-                        <p className="text-xs text-muted-foreground italic">Niciun token. Genereaza unul pentru extensia Chrome.</p>
-                      )}
+
+                        {/* Step content */}
+                        <div className="bg-white rounded-xl border p-4 min-h-[180px]">
+                          {extensionWizardStep === 0 && (
+                            <div className="space-y-3">
+                              <div className="flex items-start gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                  <FileDown className="h-5 w-5 text-blue-600" />
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-sm mb-1">Pasul 1: Descarca extensia</h4>
+                                  <p className="text-xs text-muted-foreground mb-3">Descarca fisierul .zip cu extensia Chrome LinkedIn Galaxy. Acesta contine tot ce ai nevoie pentru a importa prospecte automat.</p>
+                                </div>
+                              </div>
+                              <a href="/api/prospects/extension-download" download
+                                className="flex items-center gap-3 bg-gradient-to-r from-[#0A66C2] to-[#004182] text-white rounded-xl p-4 hover:shadow-lg transition-all group cursor-pointer">
+                                <div className="h-12 w-12 rounded-xl bg-white/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                  <Download className="h-6 w-6" />
+                                </div>
+                                <div>
+                                  <p className="font-bold text-sm">Descarca LinkedIn Galaxy Extension</p>
+                                  <p className="text-xs text-white/80">linkedin-galaxy-extension.zip (~15KB)</p>
+                                </div>
+                                <ArrowRight className="h-5 w-5 ml-auto group-hover:translate-x-1 transition-transform" />
+                              </a>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-amber-50 rounded-lg p-2 border border-amber-200">
+                                <Shield className="h-4 w-4 text-amber-600 flex-shrink-0" />
+                                <span>Extensia e sigura si privata - codul sursa e verificabil. Functioneaza doar pe linkedin.com.</span>
+                              </div>
+                            </div>
+                          )}
+
+                          {extensionWizardStep === 1 && (
+                            <div className="space-y-3">
+                              <div className="flex items-start gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                                  <Monitor className="h-5 w-5 text-indigo-600" />
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-sm mb-1">Pasul 2: Deschide Chrome Extensions</h4>
+                                  <p className="text-xs text-muted-foreground mb-3">Deschide pagina de extensii din Chrome pentru a incarca extensia descarcata.</p>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-3 border">
+                                  <div className="h-7 w-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">A</div>
+                                  <div className="flex-1">
+                                    <p className="text-xs font-medium">Deschide in bara de adrese Chrome:</p>
+                                    <code className="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-mono mt-0.5 inline-block">chrome://extensions</code>
+                                  </div>
+                                  <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px]" onClick={() => navigator.clipboard.writeText("chrome://extensions")}>
+                                    <Copy className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                                <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-3 border">
+                                  <div className="h-7 w-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">B</div>
+                                  <div className="flex-1">
+                                    <p className="text-xs font-medium">Activeaza &quot;Developer mode&quot; (coltul din dreapta sus)</p>
+                                    <p className="text-[10px] text-muted-foreground">Comutatorul trebuie sa fie albastru/activ</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3 bg-emerald-50 rounded-lg p-3 border border-emerald-200">
+                                  <div className="h-7 w-7 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-xs">C</div>
+                                  <div className="flex-1">
+                                    <p className="text-xs font-medium text-emerald-800">Dezarhiveaza fisierul .zip descarcat intr-un folder</p>
+                                    <p className="text-[10px] text-emerald-600">Click dreapta pe .zip &gt; &quot;Extract All&quot; / &quot;Dezarhiveaza&quot;</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {extensionWizardStep === 2 && (
+                            <div className="space-y-3">
+                              <div className="flex items-start gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                  <Puzzle className="h-5 w-5 text-purple-600" />
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-sm mb-1">Pasul 3: Incarca extensia in Chrome</h4>
+                                  <p className="text-xs text-muted-foreground mb-3">Incarca extensia din folderul dezarhivat.</p>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-3 border">
+                                  <div className="h-7 w-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xs">1</div>
+                                  <div className="flex-1">
+                                    <p className="text-xs font-medium">Apasa butonul &quot;Load unpacked&quot; (stanga sus)</p>
+                                    <p className="text-[10px] text-muted-foreground">Pe pagina chrome://extensions</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3 bg-slate-50 rounded-lg p-3 border">
+                                  <div className="h-7 w-7 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold text-xs">2</div>
+                                  <div className="flex-1">
+                                    <p className="text-xs font-medium">Selecteaza folderul dezarhivat cu extensia</p>
+                                    <p className="text-[10px] text-muted-foreground">Folderul care contine manifest.json</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3 bg-emerald-50 rounded-lg p-3 border border-emerald-200">
+                                  <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                                  <div className="flex-1">
+                                    <p className="text-xs font-medium text-emerald-800">Extensia apare in lista! Asigura-te ca e activata.</p>
+                                    <p className="text-[10px] text-emerald-600">Vei vedea iconita LinkedIn Galaxy in bara de extensii Chrome</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {extensionWizardStep === 3 && (
+                            <div className="space-y-3">
+                              <div className="flex items-start gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                  <Key className="h-5 w-5 text-amber-600" />
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-sm mb-1">Pasul 4: Genereaza si introdu tokenul API</h4>
+                                  <p className="text-xs text-muted-foreground mb-2">Tokenul conecteaza extensia la contul tau. Genereaza unul si copiaza-l in extensie.</p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center justify-between bg-slate-50 rounded-lg p-3 border">
+                                <p className="text-xs font-semibold text-slate-600">Tokeni API activi ({linkedinTokens.length})</p>
+                                <Button size="sm" onClick={handleGenerateToken} disabled={linkedinTokenLoading} className="bg-[#0A66C2] hover:bg-[#004182] text-xs h-8">
+                                  {linkedinTokenLoading ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Key className="h-3.5 w-3.5 mr-1.5" />}
+                                  Genereaza Token Nou
+                                </Button>
+                              </div>
+
+                              {linkedinNewToken && (
+                                <div className="bg-emerald-50 border-2 border-emerald-300 rounded-xl p-4 animate-in fade-in duration-300">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <CheckCircle className="h-4 w-4 text-emerald-600" />
+                                    <p className="text-xs font-bold text-emerald-800">Token generat! Copiaza-l si lipeste-l in extensie:</p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <code className="text-xs bg-white px-3 py-2 rounded-lg border-2 border-emerald-200 flex-1 break-all font-mono text-emerald-800 select-all">{linkedinNewToken}</code>
+                                    <Button size="sm" className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700" onClick={() => navigator.clipboard.writeText(linkedinNewToken)}>
+                                      <Copy className="h-3.5 w-3.5 mr-1" /> Copiaza
+                                    </Button>
+                                  </div>
+                                  <p className="text-[10px] text-emerald-600 mt-2">Deschide extensia LinkedIn Galaxy din bara Chrome si lipeste acest token.</p>
+                                </div>
+                              )}
+
+                              {linkedinTokens.length > 0 && (
+                                <div className="space-y-1.5">
+                                  {linkedinTokens.map((t: any) => (
+                                    <div key={t.id} className="flex items-center gap-2 bg-white rounded-lg p-2.5 border text-xs">
+                                      <Key className="h-3.5 w-3.5 text-amber-500" />
+                                      <code className="font-mono text-slate-600">{t.tokenPreview}</code>
+                                      <Badge variant="outline" className="text-[10px] h-4">{t.name}</Badge>
+                                      {t.lastUsedAt && <span className="text-[10px] text-muted-foreground ml-auto">Folosit: {new Date(t.lastUsedAt).toLocaleDateString("ro-RO")}</span>}
+                                      <Button size="sm" variant="ghost" className="h-5 w-5 p-0 text-red-400 hover:text-red-600" onClick={() => handleDeleteToken(t.id)}>
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {linkedinTokens.length === 0 && !linkedinNewToken && (
+                                <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2 border border-amber-200 flex items-center gap-1.5">
+                                  <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" /> Niciun token activ. Genereaza unul apasand butonul de mai sus.
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {extensionWizardStep === 4 && (
+                            <div className="space-y-3">
+                              <div className="flex items-start gap-3">
+                                <div className="h-10 w-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                                  <Linkedin className="h-5 w-5 text-emerald-600" />
+                                </div>
+                                <div>
+                                  <h4 className="font-bold text-sm mb-1">Pasul 5: Incepe sa importi prospecte!</h4>
+                                  <p className="text-xs text-muted-foreground mb-2">Mergi pe LinkedIn, cauta persoane sau companii, iar extensia le va importa automat.</p>
+                                </div>
+                              </div>
+                              <div className="grid gap-2 sm:grid-cols-3">
+                                <a href="https://www.linkedin.com/search/results/people/?keywords=CSR%20Romania&origin=GLOBAL_SEARCH_HEADER" target="_blank" rel="noopener noreferrer"
+                                  className="bg-slate-50 rounded-lg p-3 border text-center hover:border-[#0A66C2] hover:bg-blue-50/50 transition-colors group cursor-pointer block">
+                                  <UserSearch className="h-5 w-5 text-purple-500 mx-auto mb-1.5" />
+                                  <p className="text-xs font-semibold">Cauta persoane CSR</p>
+                                  <p className="text-[10px] text-muted-foreground">Factori de decizie CSR</p>
+                                </a>
+                                <a href="https://www.linkedin.com/search/results/companies/?keywords=Romania&origin=GLOBAL_SEARCH_HEADER" target="_blank" rel="noopener noreferrer"
+                                  className="bg-slate-50 rounded-lg p-3 border text-center hover:border-[#0A66C2] hover:bg-blue-50/50 transition-colors group cursor-pointer block">
+                                  <Building className="h-5 w-5 text-blue-500 mx-auto mb-1.5" />
+                                  <p className="text-xs font-semibold">Cauta companii</p>
+                                  <p className="text-[10px] text-muted-foreground">Companii din Romania</p>
+                                </a>
+                                <a href="https://www.linkedin.com/search/results/people/?keywords=Director%20General%20Romania&origin=GLOBAL_SEARCH_HEADER" target="_blank" rel="noopener noreferrer"
+                                  className="bg-slate-50 rounded-lg p-3 border text-center hover:border-[#0A66C2] hover:bg-blue-50/50 transition-colors group cursor-pointer block">
+                                  <Briefcase className="h-5 w-5 text-amber-500 mx-auto mb-1.5" />
+                                  <p className="text-xs font-semibold">CEO / Directori</p>
+                                  <p className="text-[10px] text-muted-foreground">Directori executivi</p>
+                                </a>
+                              </div>
+                              <div className="bg-blue-50 rounded-lg p-3 border border-blue-200 text-xs text-blue-700 space-y-1">
+                                <p className="font-semibold flex items-center gap-1.5"><Lightbulb className="h-3.5 w-3.5" /> Cum functioneaza:</p>
+                                <ul className="space-y-0.5 text-blue-600 ml-5">
+                                  <li>Extensia scrolleaza automat prin rezultatele LinkedIn</li>
+                                  <li>Profilurile sunt importate automat (max 150/zi)</li>
+                                  <li>Revino aici si apasa &quot;Actualizeaza&quot; sa vezi prospectele noi</li>
+                                  <li>Apoi analizeaza fiecare cu AI pentru profil psihologic</li>
+                                </ul>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Navigation buttons */}
+                        <div className="flex items-center justify-between">
+                          <Button size="sm" variant="outline" className="text-xs h-7"
+                            onClick={() => setExtensionWizardStep(Math.max(0, extensionWizardStep - 1))}
+                            disabled={extensionWizardStep === 0}>
+                            Inapoi
+                          </Button>
+                          <div className="flex items-center gap-1">
+                            {[0,1,2,3,4].map(i => (
+                              <div key={i} className={`h-1.5 rounded-full transition-all ${extensionWizardStep === i ? "w-6 bg-[#0A66C2]" : extensionWizardStep > i ? "w-1.5 bg-emerald-400" : "w-1.5 bg-slate-300"}`} />
+                            ))}
+                          </div>
+                          <Button size="sm" className="text-xs h-7 bg-[#0A66C2] hover:bg-[#004182]"
+                            onClick={() => setExtensionWizardStep(Math.min(4, extensionWizardStep + 1))}
+                            disabled={extensionWizardStep === 4}>
+                            Urmatorul Pas <ArrowRight className="h-3 w-3 ml-1" />
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </CardContent>
               </Card>
 
-              {/* Stats mini cards */}
-              <div className="grid gap-2 grid-cols-4">
-                <div className="bg-white rounded-lg p-3 border shadow-sm text-center">
-                  <p className="text-xl font-bold">{linkedinStats.total || 0}</p>
-                  <p className="text-[10px] text-muted-foreground">Total</p>
+              {/* ═══ Stats mini cards ═══ */}
+              <div className="grid gap-2 grid-cols-2 sm:grid-cols-4">
+                <div className="bg-white rounded-xl p-3 border shadow-sm text-center relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-400 to-blue-600" />
+                  <p className="text-2xl font-bold mt-1">{linkedinStats.total || 0}</p>
+                  <p className="text-[10px] text-muted-foreground font-medium">Total Prospecte</p>
                 </div>
-                <div className="bg-white rounded-lg p-3 border shadow-sm text-center">
-                  <p className="text-xl font-bold text-emerald-600">{linkedinStats.avgMatchScore || 0}%</p>
-                  <p className="text-[10px] text-muted-foreground">Scor Mediu</p>
+                <div className="bg-white rounded-xl p-3 border shadow-sm text-center relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-400 to-emerald-600" />
+                  <p className="text-2xl font-bold text-emerald-600 mt-1">{linkedinStats.avgMatchScore || 0}%</p>
+                  <p className="text-[10px] text-muted-foreground font-medium">Scor Mediu AI</p>
                 </div>
-                <div className="bg-white rounded-lg p-3 border shadow-sm text-center">
-                  <p className="text-xl font-bold text-amber-600">{linkedinStats.importedToday || 0}</p>
-                  <p className="text-[10px] text-muted-foreground">Azi</p>
+                <div className="bg-white rounded-xl p-3 border shadow-sm text-center relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-400 to-amber-600" />
+                  <p className="text-2xl font-bold text-amber-600 mt-1">{linkedinStats.importedToday || 0}</p>
+                  <p className="text-[10px] text-muted-foreground font-medium">Importate Azi</p>
                 </div>
-                <div className="bg-white rounded-lg p-3 border shadow-sm text-center">
-                  <p className="text-xl font-bold text-purple-600">{linkedinStats.dailyRemaining ?? 150}</p>
-                  <p className="text-[10px] text-muted-foreground">Ramase</p>
+                <div className="bg-white rounded-xl p-3 border shadow-sm text-center relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-400 to-purple-600" />
+                  <p className="text-2xl font-bold text-purple-600 mt-1">{linkedinStats.dailyRemaining ?? 150}</p>
+                  <p className="text-[10px] text-muted-foreground font-medium">Ramase Azi</p>
                 </div>
               </div>
 
-              {/* Search + Filter */}
+              {/* ═══ Search + Filter ═══ */}
               <div className="flex flex-wrap gap-2 items-center">
                 <div className="relative flex-1 min-w-[200px]">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1342,19 +1675,67 @@ export default function ReteaPage() {
                 </div>
               </div>
 
-              {/* Prospects List */}
+              {/* ═══ Prospects List ═══ */}
               {linkedinLoading ? (
                 <div className="flex items-center justify-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-[#0A66C2]" />
                 </div>
               ) : linkedinProspects.length === 0 ? (
-                <div className="text-center py-12">
-                  <Linkedin className="h-12 w-12 text-[#0A66C2]/30 mx-auto mb-3" />
-                  <p className="font-semibold mb-1">Niciun prospect LinkedIn</p>
-                  <p className="text-sm text-muted-foreground mb-3">Instaleaza extensia Chrome si importa prospecte</p>
-                  <Button onClick={() => setLinkedinShowToken(true)} className="bg-[#0A66C2] hover:bg-[#004182]">
-                    <Download className="h-4 w-4 mr-1.5" /> Configureaza Extensia
-                  </Button>
+                <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                  {/* Hero empty state with gradient */}
+                  <div className="bg-gradient-to-br from-[#0A66C2]/5 via-blue-50 to-indigo-50 p-8 text-center">
+                    <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-[#0A66C2] to-[#004182] flex items-center justify-center mx-auto mb-4 shadow-lg">
+                      <Linkedin className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="font-bold text-lg mb-2">Incepe sa construiesti reteaua de sponsori</h3>
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+                      Importa prospecte din LinkedIn automat cu extensia Chrome sau adauga manual link-uri de profil.
+                      AI-ul va analiza psihologic fiecare factor de decizie.
+                    </p>
+
+                    {/* Two main CTAs */}
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-lg mx-auto">
+                      <Button size="lg" className="bg-[#0A66C2] hover:bg-[#004182] text-sm flex-1 h-12 shadow-md"
+                        onClick={() => { setShowExtensionWizard(true); setExtensionWizardStep(0); }}>
+                        <Puzzle className="h-5 w-5 mr-2" /> Instaleaza Extensia Chrome
+                      </Button>
+                      <Button size="lg" variant="outline" className="text-sm flex-1 h-12 border-2"
+                        onClick={() => setShowManualAdd(true)}>
+                        <Link className="h-5 w-5 mr-2" /> Adauga Link LinkedIn
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Features grid */}
+                  <div className="grid gap-0 sm:grid-cols-3 border-t">
+                    <div className="p-5 border-b sm:border-b-0 sm:border-r">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="h-8 w-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                          <Brain className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <p className="font-semibold text-sm">Profil Psihologic AI</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Analizeaza psihologic fiecare factor de decizie: personalitate, motivatii, stil de comunicare, si triggere de persuasiune.</p>
+                    </div>
+                    <div className="p-5 border-b sm:border-b-0 sm:border-r">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                          <Target className="h-4 w-4 text-emerald-600" />
+                        </div>
+                        <p className="font-semibold text-sm">Matching ONG-Companie</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">AI calculeaza scorul de compatibilitate intre ONG-ul tau si fiecare companie, cu argumente specifice.</p>
+                    </div>
+                    <div className="p-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                          <Mail className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <p className="font-semibold text-sm">Mesaje Personalizate</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">Genereaza mesaje persuasive adaptate profilului psihologic al fiecarui factor de decizie.</p>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -1447,53 +1828,242 @@ export default function ReteaPage() {
                                 </Button>
                               </div>
 
-                              {/* AI Analysis */}
+                              {/* AI Analysis - Enhanced Psychological Profile */}
                               {hasAnalysis && (
-                                <div className="grid gap-2 sm:grid-cols-3">
-                                  <div className="bg-purple-50 rounded-lg p-2.5">
-                                    <p className="text-[10px] font-semibold text-purple-700 uppercase mb-1">Profil Psihologic</p>
-                                    {prospect.aiAnalysis.psychologicalProfile?.personalityType && (
-                                      <p className="text-xs text-purple-600 mb-1">{prospect.aiAnalysis.psychologicalProfile.personalityType}</p>
-                                    )}
-                                    {prospect.aiAnalysis.psychologicalProfile?.motivations?.map((m: string, i: number) => (
-                                      <p key={i} className="text-xs text-purple-600">- {m}</p>
-                                    ))}
-                                    {prospect.aiAnalysis.psychologicalProfile?.values && (
-                                      <div className="flex flex-wrap gap-1 mt-1">
-                                        {prospect.aiAnalysis.psychologicalProfile.values.map((v: string, i: number) => (
-                                          <span key={i} className="text-[10px] bg-purple-100 text-purple-700 rounded-full px-1.5 py-0.5">{v}</span>
-                                        ))}
+                                <div className="space-y-3">
+                                  {/* Match Score & Summary Header */}
+                                  <div className="bg-gradient-to-r from-purple-50 via-blue-50 to-emerald-50 rounded-xl p-4 border">
+                                    <div className="flex items-center gap-3 mb-3">
+                                      <div className={`h-14 w-14 rounded-xl border-2 flex flex-col items-center justify-center font-bold ${scoreColor}`}>
+                                        <span className="text-lg leading-none">{score || "?"}</span>
+                                        {score && <span className="text-[8px] font-normal">match</span>}
                                       </div>
-                                    )}
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <Brain className="h-4 w-4 text-purple-600" />
+                                          <span className="font-bold text-sm">Analiza Factor de Decizie</span>
+                                          {prospect.aiAnalysis.riskLevel && (
+                                            <Badge className={`text-[10px] h-5 ${
+                                              prospect.aiAnalysis.riskLevel === "low" ? "bg-green-100 text-green-700" :
+                                              prospect.aiAnalysis.riskLevel === "medium" ? "bg-amber-100 text-amber-700" :
+                                              "bg-red-100 text-red-700"
+                                            }`}>
+                                              {prospect.aiAnalysis.riskLevel === "low" ? "Sansa mare" :
+                                               prospect.aiAnalysis.riskLevel === "medium" ? "Sansa medie" : "Sansa mica"}
+                                            </Badge>
+                                          )}
+                                          {prospect.aiAnalysis.conversionEstimate && (
+                                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                              <Clock className="h-3 w-3" /> {prospect.aiAnalysis.conversionEstimate}
+                                            </span>
+                                          )}
+                                        </div>
+                                        {prospect.aiMatchReasons && (
+                                          <div className="flex flex-wrap gap-1">
+                                            {(prospect.aiMatchReasons as string[]).map((r: string, i: number) => (
+                                              <span key={i} className="text-[10px] bg-white border rounded-full px-2 py-0.5 text-slate-600">{r}</span>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="bg-blue-50 rounded-lg p-2.5">
-                                    <p className="text-[10px] font-semibold text-blue-700 uppercase mb-1">Strategie</p>
-                                    {prospect.aiAnalysis.approachStrategy?.bestChannel && <p className="text-xs text-blue-600">Canal: {prospect.aiAnalysis.approachStrategy.bestChannel}</p>}
-                                    {prospect.aiAnalysis.approachStrategy?.toneOfVoice && <p className="text-xs text-blue-600">Ton: {prospect.aiAnalysis.approachStrategy.toneOfVoice}</p>}
-                                    {prospect.aiAnalysis.approachStrategy?.openingHook && (
-                                      <p className="text-xs text-blue-600 italic mt-1">&quot;{prospect.aiAnalysis.approachStrategy.openingHook}&quot;</p>
-                                    )}
-                                  </div>
-                                  <div className="bg-emerald-50 rounded-lg p-2.5">
-                                    <p className="text-[10px] font-semibold text-emerald-700 uppercase mb-1">Companie</p>
-                                    {prospect.aiAnalysis.companyInsights?.industry && <p className="text-xs text-emerald-600">Industrie: {prospect.aiAnalysis.companyInsights.industry}</p>}
-                                    {prospect.aiAnalysis.companyInsights?.estimatedSize && <p className="text-xs text-emerald-600">Marime: {prospect.aiAnalysis.companyInsights.estimatedSize}</p>}
-                                    {prospect.aiAnalysis.companyInsights?.csrPotential && <p className="text-xs text-emerald-600">CSR: {prospect.aiAnalysis.companyInsights.csrPotential}</p>}
-                                    {prospect.aiAnalysis.riskLevel && (
-                                      <p className={`text-xs mt-1 ${prospect.aiAnalysis.riskLevel === "low" ? "text-green-600" : prospect.aiAnalysis.riskLevel === "medium" ? "text-amber-600" : "text-red-600"}`}>
-                                        Risc: {prospect.aiAnalysis.riskLevel}
-                                      </p>
-                                    )}
-                                  </div>
-                                  {prospect.aiMatchReasons && (
-                                    <div className="sm:col-span-3 bg-slate-50 rounded-lg p-2.5">
-                                      <div className="flex flex-wrap gap-1">
-                                        {(prospect.aiMatchReasons as string[]).map((r: string, i: number) => (
-                                          <span key={i} className="text-xs bg-white border rounded-full px-2 py-0.5 text-slate-600">{r}</span>
-                                        ))}
+
+                                  {/* Psychological Profile - Full Width Prominent Section */}
+                                  {prospect.aiAnalysis.psychologicalProfile && (
+                                    <div className="bg-purple-50 rounded-xl border border-purple-200 overflow-hidden">
+                                      <div className="bg-purple-100/50 px-4 py-2 border-b border-purple-200 flex items-center gap-2">
+                                        <Brain className="h-4 w-4 text-purple-700" />
+                                        <span className="text-xs font-bold text-purple-800 uppercase tracking-wider">Profil Psihologic - Factor de Decizie</span>
+                                      </div>
+                                      <div className="p-4 grid gap-3 sm:grid-cols-2">
+                                        {prospect.aiAnalysis.psychologicalProfile.personalityType && (
+                                          <div className="sm:col-span-2 bg-white rounded-lg p-3 border border-purple-100">
+                                            <div className="flex items-center gap-2 mb-1">
+                                              <Award className="h-3.5 w-3.5 text-purple-600" />
+                                              <span className="text-[10px] font-bold text-purple-700 uppercase">Tip Personalitate</span>
+                                            </div>
+                                            <p className="text-sm text-purple-800 font-medium">{prospect.aiAnalysis.psychologicalProfile.personalityType}</p>
+                                          </div>
+                                        )}
+                                        {prospect.aiAnalysis.psychologicalProfile.motivations && prospect.aiAnalysis.psychologicalProfile.motivations.length > 0 && (
+                                          <div className="bg-white rounded-lg p-3 border border-purple-100">
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                              <Target className="h-3.5 w-3.5 text-purple-600" />
+                                              <span className="text-[10px] font-bold text-purple-700 uppercase">Motivatii Sponsorizare</span>
+                                            </div>
+                                            <ul className="space-y-1">
+                                              {prospect.aiAnalysis.psychologicalProfile.motivations.map((m: string, i: number) => (
+                                                <li key={i} className="text-xs text-purple-700 flex items-start gap-1.5">
+                                                  <span className="text-purple-400 mt-0.5">&#9679;</span> {m}
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        )}
+                                        <div className="space-y-3">
+                                          {prospect.aiAnalysis.psychologicalProfile.communicationStyle && (
+                                            <div className="bg-white rounded-lg p-3 border border-purple-100">
+                                              <div className="flex items-center gap-2 mb-1">
+                                                <MessageCircle className="h-3.5 w-3.5 text-purple-600" />
+                                                <span className="text-[10px] font-bold text-purple-700 uppercase">Stil Comunicare</span>
+                                              </div>
+                                              <p className="text-xs text-purple-700">{prospect.aiAnalysis.psychologicalProfile.communicationStyle}</p>
+                                            </div>
+                                          )}
+                                          {prospect.aiAnalysis.psychologicalProfile.decisionStyle && (
+                                            <div className="bg-white rounded-lg p-3 border border-purple-100">
+                                              <div className="flex items-center gap-2 mb-1">
+                                                <Lightbulb className="h-3.5 w-3.5 text-purple-600" />
+                                                <span className="text-[10px] font-bold text-purple-700 uppercase">Stil Decizie</span>
+                                              </div>
+                                              <p className="text-xs text-purple-700">{prospect.aiAnalysis.psychologicalProfile.decisionStyle}</p>
+                                            </div>
+                                          )}
+                                        </div>
+                                        {prospect.aiAnalysis.psychologicalProfile.values && (
+                                          <div className="sm:col-span-2">
+                                            <div className="flex items-center gap-2 mb-1.5">
+                                              <Heart className="h-3 w-3 text-purple-600" />
+                                              <span className="text-[10px] font-bold text-purple-700 uppercase">Valori</span>
+                                            </div>
+                                            <div className="flex flex-wrap gap-1.5">
+                                              {prospect.aiAnalysis.psychologicalProfile.values.map((v: string, i: number) => (
+                                                <span key={i} className="text-xs bg-purple-100 text-purple-700 rounded-full px-2.5 py-1 font-medium">{v}</span>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
                                     </div>
                                   )}
+
+                                  {/* Strategy & Company in two columns */}
+                                  <div className="grid gap-3 sm:grid-cols-2">
+                                    {/* Approach Strategy */}
+                                    {prospect.aiAnalysis.approachStrategy && (
+                                      <div className="bg-blue-50 rounded-xl border border-blue-200 overflow-hidden">
+                                        <div className="bg-blue-100/50 px-4 py-2 border-b border-blue-200 flex items-center gap-2">
+                                          <Zap className="h-3.5 w-3.5 text-blue-700" />
+                                          <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider">Strategie Abordare</span>
+                                        </div>
+                                        <div className="p-3 space-y-2 text-xs text-blue-700">
+                                          {prospect.aiAnalysis.approachStrategy.bestChannel && (
+                                            <div className="flex items-center gap-2 bg-white rounded-lg p-2 border border-blue-100">
+                                              <span className="text-[10px] font-bold text-blue-500 w-12">Canal</span>
+                                              <span>{prospect.aiAnalysis.approachStrategy.bestChannel}</span>
+                                            </div>
+                                          )}
+                                          {prospect.aiAnalysis.approachStrategy.toneOfVoice && (
+                                            <div className="flex items-center gap-2 bg-white rounded-lg p-2 border border-blue-100">
+                                              <span className="text-[10px] font-bold text-blue-500 w-12">Ton</span>
+                                              <span>{prospect.aiAnalysis.approachStrategy.toneOfVoice}</span>
+                                            </div>
+                                          )}
+                                          {prospect.aiAnalysis.approachStrategy.openingHook && (
+                                            <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                                              <span className="text-[10px] font-bold text-blue-500 block mb-0.5">Deschidere perfecta:</span>
+                                              <p className="text-blue-800 italic">&quot;{prospect.aiAnalysis.approachStrategy.openingHook}&quot;</p>
+                                            </div>
+                                          )}
+                                          {prospect.aiAnalysis.approachStrategy.keyArguments && (
+                                            <div className="bg-white rounded-lg p-2.5 border border-blue-100">
+                                              <span className="text-[10px] font-bold text-blue-500 block mb-1">Argumente cheie:</span>
+                                              <ul className="space-y-0.5">
+                                                {prospect.aiAnalysis.approachStrategy.keyArguments.map((arg: string, i: number) => (
+                                                  <li key={i} className="flex items-start gap-1">
+                                                    <span className="text-blue-400 text-[10px] mt-0.5">{i + 1}.</span> {arg}
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                            </div>
+                                          )}
+                                          {prospect.aiAnalysis.approachStrategy.callToAction && (
+                                            <div className="bg-blue-100 rounded-lg p-2.5 border border-blue-200">
+                                              <span className="text-[10px] font-bold text-blue-600 block mb-0.5">Call to Action:</span>
+                                              <p className="text-blue-800 font-medium">{prospect.aiAnalysis.approachStrategy.callToAction}</p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Company Insights */}
+                                    <div className="space-y-3">
+                                      <div className="bg-emerald-50 rounded-xl border border-emerald-200 overflow-hidden">
+                                        <div className="bg-emerald-100/50 px-4 py-2 border-b border-emerald-200 flex items-center gap-2">
+                                          <Building className="h-3.5 w-3.5 text-emerald-700" />
+                                          <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Companie & ONG Match</span>
+                                        </div>
+                                        <div className="p-3 space-y-2 text-xs">
+                                          {prospect.aiAnalysis.companyInsights?.industry && (
+                                            <div className="flex items-center justify-between bg-white rounded-lg p-2 border border-emerald-100">
+                                              <span className="text-emerald-600">Industrie</span>
+                                              <span className="font-medium text-emerald-800">{prospect.aiAnalysis.companyInsights.industry}</span>
+                                            </div>
+                                          )}
+                                          {prospect.aiAnalysis.companyInsights?.estimatedSize && (
+                                            <div className="flex items-center justify-between bg-white rounded-lg p-2 border border-emerald-100">
+                                              <span className="text-emerald-600">Marime</span>
+                                              <span className="font-medium text-emerald-800">{prospect.aiAnalysis.companyInsights.estimatedSize}</span>
+                                            </div>
+                                          )}
+                                          {prospect.aiAnalysis.companyInsights?.csrPotential && (
+                                            <div className="flex items-center justify-between bg-white rounded-lg p-2 border border-emerald-100">
+                                              <span className="text-emerald-600">Potential CSR</span>
+                                              <Badge className={`text-[10px] ${
+                                                prospect.aiAnalysis.companyInsights.csrPotential === "ridicat" ? "bg-emerald-100 text-emerald-700" :
+                                                prospect.aiAnalysis.companyInsights.csrPotential === "mediu" ? "bg-amber-100 text-amber-700" :
+                                                "bg-red-100 text-red-700"
+                                              }`}>{prospect.aiAnalysis.companyInsights.csrPotential}</Badge>
+                                            </div>
+                                          )}
+                                          {prospect.aiAnalysis.companyInsights?.budgetEstimate && (
+                                            <div className="flex items-center justify-between bg-white rounded-lg p-2 border border-emerald-100">
+                                              <span className="text-emerald-600">Buget Estimat</span>
+                                              <span className="font-medium text-emerald-800">{prospect.aiAnalysis.companyInsights.budgetEstimate}</span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {/* Follow-up Plan */}
+                                      {prospect.aiAnalysis.followUpPlan && (
+                                        <div className="bg-amber-50 rounded-xl border border-amber-200 overflow-hidden">
+                                          <div className="bg-amber-100/50 px-4 py-2 border-b border-amber-200 flex items-center gap-2">
+                                            <Clock className="h-3.5 w-3.5 text-amber-700" />
+                                            <span className="text-[10px] font-bold text-amber-800 uppercase tracking-wider">Plan Follow-up</span>
+                                          </div>
+                                          <div className="p-3 space-y-1.5">
+                                            {prospect.aiAnalysis.followUpPlan.map((step: string, i: number) => (
+                                              <div key={i} className="flex items-start gap-2 text-xs text-amber-700">
+                                                <div className="h-5 w-5 rounded-full bg-amber-200 flex items-center justify-center text-amber-800 font-bold text-[10px] flex-shrink-0 mt-0.5">{i + 1}</div>
+                                                <span>{step}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Objection Handling */}
+                                      {prospect.aiAnalysis.approachStrategy?.objectionHandling && prospect.aiAnalysis.approachStrategy.objectionHandling.length > 0 && (
+                                        <div className="bg-red-50 rounded-xl border border-red-200 overflow-hidden">
+                                          <div className="bg-red-100/50 px-4 py-2 border-b border-red-200 flex items-center gap-2">
+                                            <Shield className="h-3.5 w-3.5 text-red-700" />
+                                            <span className="text-[10px] font-bold text-red-800 uppercase tracking-wider">Obiectii & Raspunsuri</span>
+                                          </div>
+                                          <div className="p-3 space-y-2">
+                                            {prospect.aiAnalysis.approachStrategy.objectionHandling.map((oh: any, i: number) => (
+                                              <div key={i} className="text-xs">
+                                                <p className="text-red-700 font-medium mb-0.5">&quot;{oh.objection}&quot;</p>
+                                                <p className="text-red-600 bg-white rounded-lg p-2 border border-red-100">{oh.response}</p>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
                               )}
 
