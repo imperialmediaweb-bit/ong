@@ -8,6 +8,7 @@ import { FaqAccordion } from "@/components/minisite/faq-accordion";
 import { VolunteerForm } from "@/components/minisite/volunteer-form";
 import { DonationPopup } from "@/components/minisite/donation-popup";
 import { UrgentBanner } from "@/components/minisite/urgent-banner";
+import { EmbedRenderer } from "@/components/minisite/embed-renderer";
 import {
   Heart,
   Target,
@@ -138,6 +139,7 @@ export default async function MiniSitePage({ params }: Props) {
   const showDonation = config?.showDonation !== false;
   const showNewsletter = config?.showNewsletter !== false;
   const showFormular230 = config?.showFormular230 === true;
+  const formular230EmbedCode = config?.formular230EmbedCode || "";
   const showContract = config?.showContract === true;
   const showContact = config?.showContact !== false;
   const showSocial = config?.showSocial !== false;
@@ -621,8 +623,24 @@ export default async function MiniSitePage({ params }: Props) {
                 </p>
               </div>
 
+              {/* Formular 230 Embed Code - shown inline when available */}
+              {showFormular230 && formular230EmbedCode && (
+                <div className="mx-auto mb-10 max-w-4xl overflow-hidden rounded-2xl bg-white shadow-lg" style={{ border: `1px solid rgba(${accentRgb}, 0.2)` }}>
+                  <div className="border-b px-6 py-4" style={{ background: `linear-gradient(to right, rgba(${accentRgb}, 0.08), rgba(${accentRgb}, 0.15))` }}>
+                    <h3 className="flex items-center gap-2 text-lg font-bold text-gray-900">
+                      <FileText className="h-5 w-5" style={{ color: accentColor }} />
+                      Completeaza Formularul 230 Online
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Completeaza datele si trimite direct online, fara hartii. Formularul se trimite automat la ANAF.
+                    </p>
+                  </div>
+                  <EmbedRenderer html={formular230EmbedCode} className="formular230-embed w-full" />
+                </div>
+              )}
+
               <div className="mx-auto grid max-w-4xl gap-8 sm:grid-cols-2">
-                {showFormular230 && (
+                {showFormular230 && !formular230EmbedCode && (
                   <div
                     className="group relative overflow-hidden rounded-2xl bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                     style={{ border: `1px solid rgba(${accentRgb}, 0.15)` }}

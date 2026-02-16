@@ -50,3 +50,13 @@
     background: hsl(var(--muted-foreground) / 0.3);
   }
 }
+
+/* Formular 230 embed styles */
+.formular230-embed {
+  min-height: 200px;
+}
+.formular230-embed iframe {
+  width: 100% !important;
+  min-height: 700px;
+  border: none;
+}
