@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import prisma from "@/lib/db";
 import { getEffectivePlan, isSectionAllowedForPlan } from "@/lib/permissions";
 import { MiniSiteNewsletter } from "@/components/minisite/newsletter-form";
@@ -92,6 +93,52 @@ function getInitials(name: string): string {
     .join("")
     .toUpperCase()
     .substring(0, 2);
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  let ngo: any = null;
+  try {
+    ngo = await prisma.ngo.findUnique({
+      where: { slug: params.slug, isActive: true },
+      include: { miniSiteConfig: true },
+    });
+  } catch {
+    return { title: "Pagina negasita - Binevo" };
+  }
+
+  if (!ngo) {
+    return { title: "Pagina negasita - Binevo" };
+  }
+
+  const config = ngo.miniSiteConfig;
+  const title = config?.heroTitle || ngo.name;
+  const description = ngo.shortDescription || config?.shortDescription || ngo.description || `${ngo.name} - pagina oficiala pe Binevo`;
+  const metaDescription = description.slice(0, 160);
+  const coverImageUrl = ngo.coverImageUrl || config?.coverImageUrl || "";
+  const logoUrl = ngo.logoUrl || "";
+
+  // Prefer cover image (hero), fallback to logo, then dynamic OG
+  const ogImage = coverImageUrl
+    || logoUrl
+    || `/api/og?title=${encodeURIComponent(ngo.name)}&subtitle=${encodeURIComponent(metaDescription.slice(0, 80))}`;
+
+  return {
+    title: `${title} | Binevo`,
+    description: metaDescription,
+    openGraph: {
+      title,
+      description: metaDescription,
+      type: "website",
+      siteName: "Binevo",
+      images: [{ url: ogImage, width: 1200, height: 630 }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: metaDescription,
+      images: [ogImage],
+    },
+  };
 }
 
 export default async function MiniSitePage({ params }: Props) {

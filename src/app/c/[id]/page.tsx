@@ -83,6 +83,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? campaign.description.slice(0, 160)
     : `${campaign.name} - campanie de la ${campaign.ngo.name}. ${progressText}. Sustine aceasta cauza!`;
 
+  const ogImage = campaign.imageUrl
+    || campaign.ngo.logoUrl
+    || `/api/og?title=${encodeURIComponent(campaign.name)}&subtitle=${encodeURIComponent(campaign.ngo.name)}`;
+
   return {
     title: `${campaign.name} - ${campaign.ngo.name} | Binevo`,
     description: metaDescription,
@@ -91,13 +95,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: metaDescription,
       type: "website",
       siteName: "Binevo",
-      ...(campaign.imageUrl ? { images: [{ url: campaign.imageUrl }] } : {}),
+      images: [{ url: ogImage, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
       title: campaign.name,
       description: metaDescription,
-      ...(campaign.imageUrl ? { images: [campaign.imageUrl] } : {}),
+      images: [ogImage],
     },
   };
 }
