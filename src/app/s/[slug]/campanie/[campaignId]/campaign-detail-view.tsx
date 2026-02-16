@@ -278,12 +278,12 @@ export function CampaignDetailView({
 
       {/* Hero Image */}
       {campaign.imageUrl && (
-        <div className="relative w-full h-[300px] sm:h-[400px] lg:h-[450px] overflow-hidden">
+        <div className="relative w-full aspect-[2/1] sm:aspect-[21/9] max-h-[520px] overflow-hidden">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={campaign.imageUrl}
             alt={campaign.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 max-w-6xl mx-auto">
