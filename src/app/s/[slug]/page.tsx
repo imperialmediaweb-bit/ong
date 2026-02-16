@@ -708,10 +708,12 @@ export default async function MiniSitePage({ params }: Props) {
               <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
                 {miniSiteCampaigns.map((camp: any, idx: number) => {
                   const progress = camp.goalAmount > 0 ? Math.min(100, Math.round(((camp.raisedAmount || 0) / camp.goalAmount) * 100)) : 0;
+                  const campaignUrl = `/s/${ngo.slug}/campanie/${camp.id}`;
                   return (
-                    <div
+                    <a
+                      href={campaignUrl}
                       key={camp.id || idx}
-                      className="group relative overflow-hidden rounded-3xl bg-white shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl"
+                      className="group relative overflow-hidden rounded-3xl bg-white shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl block"
                       style={{ border: `1px solid rgba(${primaryRgb}, 0.1)` }}
                     >
                       {camp.imageUrl ? (
@@ -824,8 +826,7 @@ export default async function MiniSitePage({ params }: Props) {
                           </div>
                         )}
 
-                        <a
-                          href={`/donate/${ngo.slug}`}
+                        <span
                           className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white shadow-md transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
                           style={{
                             background: `linear-gradient(135deg, ${primaryColor}, ${accentColor})`,
@@ -834,9 +835,9 @@ export default async function MiniSitePage({ params }: Props) {
                         >
                           <Heart className="h-4 w-4" />
                           Doneaza acum
-                        </a>
+                        </span>
                       </div>
-                    </div>
+                    </a>
                   );
                 })}
               </div>
