@@ -74,6 +74,8 @@ interface CampaignForm {
   name: string;
   type: string;
   channel: string;
+  description: string;
+  imageUrl: string;
   subject: string;
   emailBody: string;
   previewText: string;
@@ -165,6 +167,8 @@ export default function NewCampaignPage() {
     name: "",
     type: "",
     channel: "EMAIL",
+    description: "",
+    imageUrl: "",
     subject: "",
     emailBody: "",
     previewText: "",
@@ -359,6 +363,8 @@ export default function NewCampaignPage() {
         name: form.name,
         type: form.type,
         channel: form.channel,
+        description: form.description || undefined,
+        imageUrl: form.imageUrl || undefined,
         subject: form.subject || undefined,
         emailBody: form.emailBody || undefined,
         previewText: form.previewText || undefined,
@@ -681,6 +687,29 @@ export default function NewCampaignPage() {
                     value={form.name}
                     onChange={(e) => updateForm({ name: e.target.value })}
                   />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="description">Descriere campanie (pagina publica)</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Descrierati scopul campaniei, de ce este importanta, ce impact va avea..."
+                    value={form.description}
+                    onChange={(e) => updateForm({ description: e.target.value })}
+                    rows={3}
+                  />
+                  <p className="text-xs text-muted-foreground">Aceasta descriere va fi afisata pe pagina publica a campaniei.</p>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="imageUrl">URL imagine campanie (optional)</Label>
+                  <Input
+                    id="imageUrl"
+                    placeholder="https://example.com/campaign-image.jpg"
+                    value={form.imageUrl}
+                    onChange={(e) => updateForm({ imageUrl: e.target.value })}
+                  />
+                  <p className="text-xs text-muted-foreground">Imaginea va fi afisata ca hero pe pagina publica a campaniei.</p>
                 </div>
 
                 <div className="grid gap-2">

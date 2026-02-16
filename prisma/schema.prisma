@@ -461,6 +461,10 @@ model Campaign {
   sentAt          DateTime?
   completedAt     DateTime?
 
+  // Public page content
+  description     String?         // Public description for campaign page
+  imageUrl        String?         // Hero image for campaign page
+
   // Fundraising goal
   goalAmount      Float?
   currentAmount   Float           @default(0)
@@ -492,6 +496,7 @@ model Campaign {
   donations       Donation[]
   automationSteps AutomationStep[]
   sendConsents    CampaignSendConsent[]
+  updates         CampaignUpdate[]
 
   @@index([ngoId])
   @@index([status])
@@ -807,6 +812,22 @@ model AuditLog {
   @@index([action])
   @@index([createdAt])
   @@index([entityType, entityId])
+}
+
+// ─── Campaign Updates ─────────────────────────────────────────────
+
+model CampaignUpdate {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  title       String
+  content     String   // Update text content
+  imageUrl    String?  // Optional image for the update
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([campaignId])
+  @@index([createdAt])
 }
 
 // ─── SMS Opt-Out List ─────────────────────────────────────────────

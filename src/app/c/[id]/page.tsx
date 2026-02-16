@@ -15,6 +15,8 @@ async function getCampaign(id: string) {
     select: {
       id: true,
       name: true,
+      description: true,
+      imageUrl: true,
       type: true,
       status: true,
       goalAmount: true,
@@ -48,6 +50,16 @@ async function getCampaign(id: string) {
         orderBy: { createdAt: "desc" },
         take: 20,
       },
+      updates: {
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          imageUrl: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
@@ -67,21 +79,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? `${Math.round((campaign.currentAmount / campaign.goalAmount) * 100)}% din obiectiv atins`
     : `${campaign.currentAmount.toLocaleString("ro-RO")} RON stransi`;
 
-  const description = `${campaign.name} - campanie de la ${campaign.ngo.name}. ${progressText}. Sustine aceasta cauza!`;
+  const metaDescription = campaign.description
+    ? campaign.description.slice(0, 160)
+    : `${campaign.name} - campanie de la ${campaign.ngo.name}. ${progressText}. Sustine aceasta cauza!`;
 
   return {
     title: `${campaign.name} - ${campaign.ngo.name} | Binevo`,
-    description,
+    description: metaDescription,
     openGraph: {
       title: campaign.name,
-      description,
+      description: metaDescription,
       type: "website",
       siteName: "Binevo",
+      ...(campaign.imageUrl ? { images: [{ url: campaign.imageUrl }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
       title: campaign.name,
-      description,
+      description: metaDescription,
+      ...(campaign.imageUrl ? { images: [campaign.imageUrl] } : {}),
     },
   };
 }
@@ -107,6 +123,8 @@ export default async function CampaignPublicPage({ params }: Props) {
   const data = {
     id: campaign.id,
     name: campaign.name,
+    description: campaign.description,
+    imageUrl: campaign.imageUrl,
     type: campaign.type,
     status: campaign.status,
     goalAmount: campaign.goalAmount,
@@ -127,6 +145,13 @@ export default async function CampaignPublicPage({ params }: Props) {
       currency: d.currency,
       createdAt: d.createdAt.toISOString(),
       donorName: d.donor?.name ? anonymizeName(d.donor.name) : "Anonim",
+    })),
+    updates: campaign.updates.map((u) => ({
+      id: u.id,
+      title: u.title,
+      content: u.content,
+      imageUrl: u.imageUrl,
+      createdAt: u.createdAt.toISOString(),
     })),
   };
 

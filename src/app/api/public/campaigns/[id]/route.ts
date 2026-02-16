@@ -11,6 +11,8 @@ export async function GET(
       select: {
         id: true,
         name: true,
+        description: true,
+        imageUrl: true,
         type: true,
         status: true,
         goalAmount: true,
@@ -45,6 +47,16 @@ export async function GET(
           },
           orderBy: { createdAt: "desc" },
           take: 20,
+        },
+        updates: {
+          select: {
+            id: true,
+            title: true,
+            content: true,
+            imageUrl: true,
+            createdAt: true,
+          },
+          orderBy: { createdAt: "desc" },
         },
       },
     });
@@ -85,6 +97,8 @@ export async function GET(
     return NextResponse.json({
       id: campaign.id,
       name: campaign.name,
+      description: campaign.description,
+      imageUrl: campaign.imageUrl,
       type: campaign.type,
       status: campaign.status,
       goalAmount: campaign.goalAmount,
@@ -94,6 +108,7 @@ export async function GET(
       sentAt: campaign.sentAt,
       ngo: campaign.ngo,
       recentDonations: anonymizedDonations,
+      updates: campaign.updates,
     });
   } catch (error) {
     console.error("Error fetching public campaign:", error);

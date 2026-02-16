@@ -13,11 +13,24 @@ import {
   Copy,
   ExternalLink,
   Building2,
+  Megaphone,
+  CalendarDays,
+  ImageIcon,
 } from "lucide-react";
+
+interface CampaignUpdate {
+  id: string;
+  title: string;
+  content: string;
+  imageUrl: string | null;
+  createdAt: string;
+}
 
 interface CampaignData {
   id: string;
   name: string;
+  description: string | null;
+  imageUrl: string | null;
   type: string;
   status: string;
   goalAmount: number | null;
@@ -39,6 +52,7 @@ interface CampaignData {
     createdAt: string;
     donorName: string;
   }[];
+  updates: CampaignUpdate[];
 }
 
 function formatCurrency(amount: number): string {
@@ -87,6 +101,7 @@ function getTypeLabel(type: string): string {
 export function CampaignPublicView({ campaign }: { campaign: CampaignData }) {
   const [copied, setCopied] = useState(false);
   const [showAllDonations, setShowAllDonations] = useState(false);
+  const [activeTab, setActiveTab] = useState<"despre" | "donatii" | "updates">("despre");
 
   const progressPercent = campaign.goalAmount
     ? Math.min((campaign.currentAmount / campaign.goalAmount) * 100, 100)
@@ -128,43 +143,81 @@ export function CampaignPublicView({ campaign }: { campaign: CampaignData }) {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Header Bar */}
       <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <Link href="/" className="text-lg font-bold text-primary">
             Binevo
           </Link>
-          <button
-            onClick={handleShareNative}
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
-          >
-            <Share2 className="h-4 w-4" />
-            Distribuie
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCopyLink}
+              className="inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border hover:bg-gray-50 transition-colors"
+            >
+              {copied ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  Copiat!
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copiaza link
+                </>
+              )}
+            </button>
+            <button
+              onClick={handleShareNative}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
+            >
+              <Share2 className="h-4 w-4" />
+              Distribuie
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        {/* Campaign Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
-            <Building2 className="h-4 w-4" />
-            <Link
-              href={`/s/${campaign.ngo.slug}`}
-              className="hover:underline font-medium"
-            >
-              {campaign.ngo.name}
-            </Link>
-            <span>&middot;</span>
-            <span>{getTypeLabel(campaign.type)}</span>
+      <main className="max-w-5xl mx-auto px-4 py-8">
+        {/* Hero Image */}
+        {campaign.imageUrl && (
+          <div className="relative rounded-2xl overflow-hidden mb-8 aspect-[21/9] bg-gray-100">
+            <img
+              src={campaign.imageUrl}
+              alt={campaign.name}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+              <div className="flex items-center gap-2 text-sm text-white/80 mb-2">
+                <Building2 className="h-4 w-4" />
+                <span className="font-medium">{campaign.ngo.name}</span>
+                <span>&middot;</span>
+                <span>{getTypeLabel(campaign.type)}</span>
+              </div>
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
+                {campaign.name}
+              </h1>
+            </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mb-4">
-            {campaign.name}
-          </h1>
-          {campaign.ngo.description && (
-            <p className="text-lg text-muted-foreground leading-relaxed max-w-2xl">
-              {campaign.ngo.description}
-            </p>
-          )}
-        </div>
+        )}
+
+        {/* Header without image */}
+        {!campaign.imageUrl && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+              <Building2 className="h-4 w-4" />
+              <Link
+                href={`/s/${campaign.ngo.slug}`}
+                className="hover:underline font-medium"
+              >
+                {campaign.ngo.name}
+              </Link>
+              <span>&middot;</span>
+              <span>{getTypeLabel(campaign.type)}</span>
+            </div>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900">
+              {campaign.name}
+            </h1>
+          </div>
+        )}
 
         <div className="grid gap-8 lg:grid-cols-3">
           {/* Main Content */}
@@ -234,69 +287,218 @@ export function CampaignPublicView({ campaign }: { campaign: CampaignData }) {
               </div>
             )}
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="rounded-xl border bg-white p-4 shadow-sm text-center">
-                <Target className="h-6 w-6 text-primary mx-auto mb-2" />
-                <p className="text-2xl font-bold">{campaign.totalDonors}</p>
-                <p className="text-xs text-muted-foreground">Donatori</p>
+            {/* Tabs */}
+            <div className="border-b">
+              <div className="flex gap-1">
+                <button
+                  onClick={() => setActiveTab("despre")}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === "despre"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-gray-700"
+                  }`}
+                >
+                  Despre campanie
+                </button>
+                <button
+                  onClick={() => setActiveTab("donatii")}
+                  className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === "donatii"
+                      ? "border-primary text-primary"
+                      : "border-transparent text-muted-foreground hover:text-gray-700"
+                  }`}
+                >
+                  Donatii ({campaign.totalDonors})
+                </button>
+                {campaign.updates.length > 0 && (
+                  <button
+                    onClick={() => setActiveTab("updates")}
+                    className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                      activeTab === "updates"
+                        ? "border-primary text-primary"
+                        : "border-transparent text-muted-foreground hover:text-gray-700"
+                    }`}
+                  >
+                    Noutati ({campaign.updates.length})
+                  </button>
+                )}
               </div>
-              <div className="rounded-xl border bg-white p-4 shadow-sm text-center">
-                <TrendingUp className="h-6 w-6 text-green-600 mx-auto mb-2" />
-                <p className="text-2xl font-bold">
-                  {formatCurrency(campaign.currentAmount)}
-                </p>
-                <p className="text-xs text-muted-foreground">Strans</p>
-              </div>
-              {campaign.goalAmount && campaign.goalAmount > 0 && (
-                <div className="rounded-xl border bg-white p-4 shadow-sm text-center col-span-2 md:col-span-1">
-                  <CheckCircle2 className="h-6 w-6 text-blue-600 mx-auto mb-2" />
-                  <p className="text-2xl font-bold">{progressPercent.toFixed(0)}%</p>
-                  <p className="text-xs text-muted-foreground">Obiectiv atins</p>
-                </div>
-              )}
             </div>
 
-            {/* Recent Donations */}
-            {campaign.recentDonations.length > 0 && (
-              <div className="rounded-2xl border bg-white shadow-sm">
-                <div className="p-6 pb-3">
-                  <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <Heart className="h-5 w-5 text-red-500" />
-                    Donatii recente
-                  </h2>
+            {/* Tab: About / Description */}
+            {activeTab === "despre" && (
+              <div className="space-y-6">
+                {/* Campaign Description */}
+                {campaign.description && (
+                  <div className="rounded-2xl border bg-white p-6 shadow-sm">
+                    <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <Megaphone className="h-5 w-5 text-primary" />
+                      Despre aceasta campanie
+                    </h2>
+                    <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap leading-relaxed">
+                      {campaign.description}
+                    </div>
+                  </div>
+                )}
+
+                {/* NGO Description fallback */}
+                {!campaign.description && campaign.ngo.description && (
+                  <div className="rounded-2xl border bg-white p-6 shadow-sm">
+                    <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                      <Building2 className="h-5 w-5 text-primary" />
+                      Despre {campaign.ngo.name}
+                    </h2>
+                    <p className="text-gray-700 leading-relaxed">
+                      {campaign.ngo.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Stats Cards */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="rounded-xl border bg-white p-4 shadow-sm text-center">
+                    <Target className="h-6 w-6 text-primary mx-auto mb-2" />
+                    <p className="text-2xl font-bold">{campaign.totalDonors}</p>
+                    <p className="text-xs text-muted-foreground">Donatori</p>
+                  </div>
+                  <div className="rounded-xl border bg-white p-4 shadow-sm text-center">
+                    <TrendingUp className="h-6 w-6 text-green-600 mx-auto mb-2" />
+                    <p className="text-2xl font-bold">
+                      {formatCurrency(campaign.currentAmount)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Strans</p>
+                  </div>
+                  {campaign.goalAmount && campaign.goalAmount > 0 && (
+                    <div className="rounded-xl border bg-white p-4 shadow-sm text-center col-span-2 md:col-span-1">
+                      <CheckCircle2 className="h-6 w-6 text-blue-600 mx-auto mb-2" />
+                      <p className="text-2xl font-bold">{progressPercent.toFixed(0)}%</p>
+                      <p className="text-xs text-muted-foreground">Obiectiv atins</p>
+                    </div>
+                  )}
                 </div>
-                <div className="divide-y">
-                  {visibleDonations.map((donation) => (
-                    <div
-                      key={donation.id}
-                      className="px-6 py-3 flex items-center justify-between"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-medium shrink-0">
-                          {donation.donorName[0]?.toUpperCase() || "A"}
+
+                {/* Latest update preview */}
+                {campaign.updates.length > 0 && (
+                  <div className="rounded-2xl border bg-white shadow-sm overflow-hidden">
+                    <div className="p-6 pb-3">
+                      <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <Megaphone className="h-5 w-5 text-orange-500" />
+                        Ultima noutate
+                      </h2>
+                    </div>
+                    <div className="px-6 pb-6">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                        <CalendarDays className="h-3.5 w-3.5" />
+                        {formatDate(campaign.updates[0].createdAt)}
+                      </div>
+                      <h3 className="font-semibold text-gray-900 mb-2">{campaign.updates[0].title}</h3>
+                      <p className="text-sm text-gray-600 line-clamp-3">{campaign.updates[0].content}</p>
+                      {campaign.updates.length > 1 && (
+                        <button
+                          onClick={() => setActiveTab("updates")}
+                          className="mt-3 text-sm text-primary hover:underline font-medium"
+                        >
+                          Vezi toate cele {campaign.updates.length} noutati
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tab: Donations */}
+            {activeTab === "donatii" && (
+              <div className="space-y-4">
+                {campaign.recentDonations.length > 0 ? (
+                  <div className="rounded-2xl border bg-white shadow-sm">
+                    <div className="p-6 pb-3">
+                      <h2 className="text-lg font-semibold flex items-center gap-2">
+                        <Heart className="h-5 w-5 text-red-500" />
+                        Donatii recente
+                      </h2>
+                    </div>
+                    <div className="divide-y">
+                      {visibleDonations.map((donation) => (
+                        <div
+                          key={donation.id}
+                          className="px-6 py-3 flex items-center justify-between"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-medium shrink-0">
+                              {donation.donorName[0]?.toUpperCase() || "A"}
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{donation.donorName}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {timeAgo(donation.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-sm font-semibold text-green-700">
+                            +{formatCurrency(donation.amount)}
+                          </span>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium">{donation.donorName}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {timeAgo(donation.createdAt)}
-                          </p>
+                      ))}
+                    </div>
+                    {campaign.recentDonations.length > 5 && !showAllDonations && (
+                      <div className="p-4 text-center border-t">
+                        <button
+                          onClick={() => setShowAllDonations(true)}
+                          className="text-sm text-primary hover:underline font-medium"
+                        >
+                          Vezi toate cele {campaign.recentDonations.length} donatii recente
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border bg-white p-8 shadow-sm text-center">
+                    <Heart className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                    <p className="text-muted-foreground">Inca nu sunt donatii. Fii primul care doneaza!</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tab: Updates */}
+            {activeTab === "updates" && (
+              <div className="space-y-4">
+                {campaign.updates.map((update, index) => (
+                  <div key={update.id} className="rounded-2xl border bg-white shadow-sm overflow-hidden">
+                    {update.imageUrl && (
+                      <div className="aspect-video bg-gray-100">
+                        <img
+                          src={update.imageUrl}
+                          alt={update.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="p-6">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold shrink-0">
+                          {campaign.updates.length - index}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <CalendarDays className="h-3.5 w-3.5" />
+                          {formatDate(update.createdAt)}
                         </div>
                       </div>
-                      <span className="text-sm font-semibold text-green-700">
-                        +{formatCurrency(donation.amount)}
-                      </span>
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {update.title}
+                      </h3>
+                      <p className="text-gray-600 whitespace-pre-wrap leading-relaxed">
+                        {update.content}
+                      </p>
                     </div>
-                  ))}
-                </div>
-                {campaign.recentDonations.length > 5 && !showAllDonations && (
-                  <div className="p-4 text-center border-t">
-                    <button
-                      onClick={() => setShowAllDonations(true)}
-                      className="text-sm text-primary hover:underline font-medium"
-                    >
-                      Vezi toate cele {campaign.recentDonations.length} donatii recente
-                    </button>
+                  </div>
+                ))}
+
+                {campaign.updates.length === 0 && (
+                  <div className="rounded-2xl border bg-white p-8 shadow-sm text-center">
+                    <Megaphone className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                    <p className="text-muted-foreground">Nu sunt noutati inca.</p>
                   </div>
                 )}
               </div>
@@ -419,7 +621,7 @@ export function CampaignPublicView({ campaign }: { campaign: CampaignData }) {
 
       {/* Footer */}
       <footer className="border-t mt-16 py-8">
-        <div className="max-w-4xl mx-auto px-4 text-center text-sm text-muted-foreground">
+        <div className="max-w-5xl mx-auto px-4 text-center text-sm text-muted-foreground">
           <p>
             Pagina de campanie pe{" "}
             <Link href="/" className="font-medium hover:underline text-primary">
