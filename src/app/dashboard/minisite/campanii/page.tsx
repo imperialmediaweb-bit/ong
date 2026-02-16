@@ -4,9 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +14,9 @@ import {
   Sparkles,
   Save,
   Loader2,
-  Heart,
   Plus,
   Trash2,
   Target,
-  ChevronDown,
-  ChevronRight,
   AlertCircle,
   CheckCircle2,
   Calendar,
@@ -31,6 +25,8 @@ import {
   Eye,
   EyeOff,
   ImageIcon,
+  Pencil,
+  X,
 } from "lucide-react";
 import { MinisiteSubNav } from "../_components/minisite-nav";
 
@@ -64,39 +60,6 @@ interface BuilderData {
   miniSiteCampaigns: MiniSiteCampaign[];
 }
 
-// ─── Collapsible Section Component ────────────────────────────────────
-
-function Section({ id, title, description, icon: Icon, expanded, onToggle, badge, children }: {
-  id: string; title: string; description?: string;
-  icon: React.ElementType; expanded: boolean; onToggle: (id: string) => void;
-  badge?: React.ReactNode; children: React.ReactNode;
-}) {
-  return (
-    <Card className="overflow-hidden">
-      <button type="button" className="w-full text-left" onClick={() => onToggle(id)}>
-        <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Icon className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-base">{title}</CardTitle>
-                {description && <CardDescription className="mt-0.5">{description}</CardDescription>}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {badge}
-              {expanded ? <ChevronDown className="h-5 w-5 text-muted-foreground" /> : <ChevronRight className="h-5 w-5 text-muted-foreground" />}
-            </div>
-          </div>
-        </CardHeader>
-      </button>
-      {expanded && <CardContent className="pt-0 pb-6">{children}</CardContent>}
-    </Card>
-  );
-}
-
 // ─── Social Posts Dialog ──────────────────────────────────────────────
 
 function SocialPostsModal({ posts, onClose }: { posts: { platform: string; text: string }[]; onClose: () => void }) {
@@ -123,11 +86,7 @@ function SocialPostsModal({ posts, onClose }: { posts: { platform: string; text:
             <div key={idx} className="border rounded-lg p-4 space-y-2">
               <div className="flex items-center justify-between">
                 <Badge variant="secondary">{post.platform}</Badge>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleCopy(post.text, idx)}
-                >
+                <Button variant="ghost" size="sm" onClick={() => handleCopy(post.text, idx)}>
                   {copiedIdx === idx ? (
                     <><CheckCircle2 className="h-4 w-4 mr-1 text-green-600" /> Copiat</>
                   ) : (
@@ -160,24 +119,12 @@ export default function CampaignsPage() {
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [aiToolLoading, setAiToolLoading] = useState<string | null>(null);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["campaigns"]));
   const [socialPosts, setSocialPosts] = useState<{ platform: string; text: string }[] | null>(null);
-
-  // ─── Helpers ─────────────────────────────────────────────────────
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const clearSaveMessage = useCallback(() => {
     setTimeout(() => setSaveMessage(null), 4000);
   }, []);
-
-  const toggleSection = useCallback((id: string) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  }, []);
-
-  // ─── Load data on mount ──────────────────────────────────────────
 
   useEffect(() => {
     const loadData = async () => {
@@ -187,19 +134,14 @@ export default function CampaignsPage() {
         const res = await fetch("/api/minisite/builder");
         if (!res.ok) throw new Error("Nu s-au putut incarca datele mini-site-ului.");
         const data = await res.json();
-
         setCampaigns(Array.isArray(data.miniSiteCampaigns) ? data.miniSiteCampaigns : []);
         setNgoContext({
-          ngoName: data.ngoName || "",
-          slug: data.slug || "",
-          description: data.description || "",
-          shortDescription: data.shortDescription || "",
-          category: data.category || "",
-          contactAddress: data.contactAddress || "",
+          ngoName: data.ngoName || "", slug: data.slug || "",
+          description: data.description || "", shortDescription: data.shortDescription || "",
+          category: data.category || "", contactAddress: data.contactAddress || "",
           missionText: data.missionText || "",
         });
       } catch (err) {
-        console.error("Error loading minisite data:", err);
         setLoadError(err instanceof Error ? err.message : "Eroare la incarcarea datelor.");
       } finally {
         setLoading(false);
@@ -207,8 +149,6 @@ export default function CampaignsPage() {
     };
     loadData();
   }, []);
-
-  // ─── Save ────────────────────────────────────────────────────────
 
   const handleSave = async () => {
     try {
@@ -221,12 +161,11 @@ export default function CampaignsPage() {
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => null);
-        throw new Error(errData?.error || "Eroare la salvare. Incercati din nou.");
+        throw new Error(errData?.error || "Eroare la salvare.");
       }
       setSaveMessage({ type: "success", text: "Campaniile au fost salvate cu succes!" });
       clearSaveMessage();
     } catch (err) {
-      console.error("Error saving campaigns:", err);
       setSaveMessage({ type: "error", text: err instanceof Error ? err.message : "Eroare la salvare." });
       clearSaveMessage();
     } finally {
@@ -234,214 +173,115 @@ export default function CampaignsPage() {
     }
   };
 
-  // ─── Campaign CRUD ──────────────────────────────────────────────
-
   const addCampaign = () => {
-    const newCampaign: MiniSiteCampaign = {
-      id: `camp-${Date.now()}`,
-      title: "",
-      description: "",
-      goalAmount: 5000,
-      raisedAmount: 0,
-      imageUrl: "",
-      isActive: true,
-      updates: [],
-    };
-    setCampaigns((prev) => [...prev, newCampaign]);
+    const id = `camp-${Date.now()}`;
+    setCampaigns((prev) => [...prev, {
+      id, title: "", description: "", goalAmount: 5000,
+      raisedAmount: 0, imageUrl: "", isActive: true, updates: [],
+    }]);
+    setEditingId(id);
   };
 
   const removeCampaign = (id: string) => {
     setCampaigns((prev) => prev.filter((c) => c.id !== id));
+    if (editingId === id) setEditingId(null);
   };
 
   const updateCampaign = (id: string, field: keyof MiniSiteCampaign, value: any) => {
-    setCampaigns((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, [field]: value } : c))
-    );
+    setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, [field]: value } : c)));
   };
 
   const toggleCampaignActive = (id: string) => {
-    setCampaigns((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, isActive: !c.isActive } : c))
-    );
+    setCampaigns((prev) => prev.map((c) => (c.id === id ? { ...c, isActive: !c.isActive } : c)));
   };
 
-  // ─── Campaign Updates CRUD ──────────────────────────────────────
-
   const addCampaignUpdate = (campaignId: string) => {
-    setCampaigns((prev) =>
-      prev.map((c) => {
-        if (c.id !== campaignId) return c;
-        const newUpdate: CampaignUpdate = {
-          id: `upd-${Date.now()}`,
-          date: new Date().toISOString().split("T")[0],
-          text: "",
-        };
-        return { ...c, updates: [...(c.updates || []), newUpdate] };
-      })
-    );
+    setCampaigns((prev) => prev.map((c) => {
+      if (c.id !== campaignId) return c;
+      return { ...c, updates: [...(c.updates || []), { id: `upd-${Date.now()}`, date: new Date().toISOString().split("T")[0], text: "" }] };
+    }));
   };
 
   const removeCampaignUpdate = (campaignId: string, updateId: string) => {
-    setCampaigns((prev) =>
-      prev.map((c) => {
-        if (c.id !== campaignId) return c;
-        return { ...c, updates: (c.updates || []).filter((u) => u.id !== updateId) };
-      })
-    );
+    setCampaigns((prev) => prev.map((c) => {
+      if (c.id !== campaignId) return c;
+      return { ...c, updates: (c.updates || []).filter((u) => u.id !== updateId) };
+    }));
   };
 
   const updateCampaignUpdate = (campaignId: string, updateId: string, field: keyof CampaignUpdate, value: string) => {
-    setCampaigns((prev) =>
-      prev.map((c) => {
-        if (c.id !== campaignId) return c;
-        return {
-          ...c,
-          updates: (c.updates || []).map((u) =>
-            u.id === updateId ? { ...u, [field]: value } : u
-          ),
-        };
-      })
-    );
+    setCampaigns((prev) => prev.map((c) => {
+      if (c.id !== campaignId) return c;
+      return { ...c, updates: (c.updates || []).map((u) => u.id === updateId ? { ...u, [field]: value } : u) };
+    }));
   };
 
-  // ─── AI Tools ───────────────────────────────────────────────────
+  // ─── AI Tools ─────────────────────────────────────────────────────
 
   const handleGenerateCampaigns = async () => {
     try {
       setAiToolLoading("generateCampaigns");
-      setSaveMessage(null);
       const res = await fetch("/api/minisite/ai-tools", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tool: "generateCampaigns",
-          context: {
-            name: ngoContext.ngoName,
-            description: ngoContext.description,
-            shortDescription: ngoContext.shortDescription,
-            category: ngoContext.category,
-            contactAddress: ngoContext.contactAddress,
-            missionText: ngoContext.missionText,
-          },
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tool: "generateCampaigns", context: { name: ngoContext.ngoName, description: ngoContext.description, shortDescription: ngoContext.shortDescription, category: ngoContext.category, contactAddress: ngoContext.contactAddress, missionText: ngoContext.missionText } }),
       });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        throw new Error(errData?.error || "Eroare la generarea campaniilor cu AI.");
-      }
+      if (!res.ok) throw new Error("Eroare la generarea campaniilor cu AI.");
       const raw = await res.json();
       const data = raw.result || raw;
-
       if (Array.isArray(data.campaigns)) {
         const newCampaigns = data.campaigns.map((c: any, i: number) => ({
-          id: `ai-${Date.now()}-${i}`,
-          title: c.title || "",
-          description: c.description || "",
-          goalAmount: c.goalAmount || 5000,
-          raisedAmount: 0,
-          imageUrl: c.imageUrl || "",
-          isActive: true,
-          updates: [],
+          id: `ai-${Date.now()}-${i}`, title: c.title || "", description: c.description || "",
+          goalAmount: c.goalAmount || 5000, raisedAmount: 0, imageUrl: c.imageUrl || "",
+          isActive: true, updates: [],
         }));
         setCampaigns((prev) => [...prev, ...newCampaigns]);
       }
-      setSaveMessage({ type: "success", text: "Campaniile au fost generate cu AI cu succes!" });
+      setSaveMessage({ type: "success", text: "Campaniile au fost generate cu AI!" });
       clearSaveMessage();
     } catch (err) {
-      console.error("AI generateCampaigns error:", err);
-      setSaveMessage({ type: "error", text: err instanceof Error ? err.message : "Eroare la generarea campaniilor cu AI." });
+      setSaveMessage({ type: "error", text: err instanceof Error ? err.message : "Eroare AI." });
       clearSaveMessage();
-    } finally {
-      setAiToolLoading(null);
-    }
+    } finally { setAiToolLoading(null); }
   };
 
   const handleEnhanceCampaign = async (campaignIdx: number) => {
     const campaign = campaigns[campaignIdx];
     if (!campaign) return;
-
     try {
-      setAiToolLoading(`enhanceCampaign-${campaignIdx}`);
-      setSaveMessage(null);
+      setAiToolLoading(`enhance-${campaignIdx}`);
       const res = await fetch("/api/minisite/ai-tools", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tool: "enhanceCampaign",
-          context: {
-            campaignIdx,
-            title: campaign.title,
-            description: campaign.description,
-            goalAmount: campaign.goalAmount,
-          },
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tool: "enhanceCampaign", context: { campaignIdx, title: campaign.title, description: campaign.description, goalAmount: campaign.goalAmount } }),
       });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        throw new Error(errData?.error || "Eroare la imbunatatirea campaniei cu AI.");
-      }
+      if (!res.ok) throw new Error("Eroare AI.");
       const raw = await res.json();
       const data = raw.result || raw;
-
       if (data.title || data.description) {
-        setCampaigns((prev) =>
-          prev.map((c, i) =>
-            i === campaignIdx
-              ? { ...c, title: data.title || c.title, description: data.description || c.description }
-              : c
-          )
-        );
+        setCampaigns((prev) => prev.map((c, i) => i === campaignIdx ? { ...c, title: data.title || c.title, description: data.description || c.description } : c));
       }
       setSaveMessage({ type: "success", text: "Campania a fost imbunatatita cu AI!" });
       clearSaveMessage();
     } catch (err) {
-      console.error("AI enhanceCampaign error:", err);
-      setSaveMessage({ type: "error", text: err instanceof Error ? err.message : "Eroare la imbunatatirea campaniei." });
+      setSaveMessage({ type: "error", text: err instanceof Error ? err.message : "Eroare AI." });
       clearSaveMessage();
-    } finally {
-      setAiToolLoading(null);
-    }
+    } finally { setAiToolLoading(null); }
   };
 
   const handleSocialPosts = async (campaign: MiniSiteCampaign) => {
     try {
-      setAiToolLoading(`socialPosts-${campaign.id}`);
-      setSaveMessage(null);
-      const donateUrl = ngoContext.slug ? `/s/${ngoContext.slug}` : "";
+      setAiToolLoading(`social-${campaign.id}`);
       const res = await fetch("/api/minisite/ai-tools", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          tool: "socialPosts",
-          context: {
-            title: campaign.title,
-            description: campaign.description,
-            goalAmount: campaign.goalAmount,
-            ngoName: ngoContext.ngoName,
-            donateUrl,
-          },
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tool: "socialPosts", context: { title: campaign.title, description: campaign.description, goalAmount: campaign.goalAmount, ngoName: ngoContext.ngoName, donateUrl: ngoContext.slug ? `/s/${ngoContext.slug}` : "" } }),
       });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => null);
-        throw new Error(errData?.error || "Eroare la generarea postarilor social media.");
-      }
+      if (!res.ok) throw new Error("Eroare la generarea postarilor.");
       const raw = await res.json();
       const data = raw.result || raw;
-
-      if (Array.isArray(data.posts)) {
-        setSocialPosts(data.posts);
-      }
-      setSaveMessage({ type: "success", text: "Postarile au fost generate cu succes!" });
-      clearSaveMessage();
+      if (Array.isArray(data.posts)) setSocialPosts(data.posts);
     } catch (err) {
-      console.error("AI socialPosts error:", err);
-      setSaveMessage({ type: "error", text: err instanceof Error ? err.message : "Eroare la generarea postarilor." });
+      setSaveMessage({ type: "error", text: err instanceof Error ? err.message : "Eroare." });
       clearSaveMessage();
-    } finally {
-      setAiToolLoading(null);
-    }
+    } finally { setAiToolLoading(null); }
   };
 
   // ─── Loading / Error ──────────────────────────────────────────────
@@ -451,10 +291,7 @@ export default function CampaignsPage() {
       <div className="space-y-6">
         <MinisiteSubNav />
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center space-y-4">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-            <p className="text-muted-foreground">Se incarca datele mini-site-ului...</p>
-          </div>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
     );
@@ -464,372 +301,252 @@ export default function CampaignsPage() {
     return (
       <div className="space-y-6">
         <MinisiteSubNav />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Card className="max-w-md w-full">
-            <CardContent className="pt-6">
-              <div className="text-center space-y-4">
-                <AlertCircle className="h-8 w-8 mx-auto text-destructive" />
-                <p className="text-destructive">{loadError}</p>
-                <Button variant="outline" onClick={() => window.location.reload()}>Reincarca pagina</Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="max-w-md mx-auto mt-12">
+          <CardContent className="pt-6 text-center">
+            <AlertCircle className="h-8 w-8 mx-auto text-destructive mb-4" />
+            <p className="text-destructive">{loadError}</p>
+            <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>Reincarca</Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // ─── Progress helper ────────────────────────────────────────────
-
-  const getProgressPercent = (raised: number, goal: number) => {
+  const getProgress = (raised: number, goal: number) => {
     if (!goal || goal <= 0) return 0;
     return Math.min(Math.round((raised / goal) * 100), 100);
   };
 
-  // ─── Render ──────────────────────────────────────────────────────
-
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-24">
       <MinisiteSubNav />
 
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Campanii mini-site</h1>
-        <p className="text-muted-foreground mt-1">Gestioneaza campaniile de strangere de fonduri de pe mini-site</p>
-      </div>
-
-      {/* Campaigns Section */}
-      <Section
-        id="campaigns"
-        title="Campanii de strangere de fonduri"
-        description="Adauga si gestioneaza campaniile afisate pe mini-site"
-        icon={Heart}
-        expanded={expandedSections.has("campaigns")}
-        onToggle={toggleSection}
-        badge={
-          <Badge variant="secondary">
-            {campaigns.length} {campaigns.length === 1 ? "campanie" : "campanii"}
-          </Badge>
-        }
-      >
-        {/* Top action buttons */}
-        <div className="flex flex-wrap gap-2 mb-6">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleGenerateCampaigns}
-            disabled={aiToolLoading === "generateCampaigns"}
-          >
-            {aiToolLoading === "generateCampaigns" ? (
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <Sparkles className="h-4 w-4 mr-2" />
-            )}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Campanii mini-site</h1>
+          <p className="text-muted-foreground mt-1">Gestioneaza campaniile de strangere de fonduri</p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={handleGenerateCampaigns} disabled={aiToolLoading === "generateCampaigns"}>
+            {aiToolLoading === "generateCampaigns" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
             Genereaza cu AI
           </Button>
-          <Button variant="outline" size="sm" onClick={addCampaign}>
+          <Button onClick={addCampaign}>
             <Plus className="h-4 w-4 mr-2" />
             Adauga campanie
           </Button>
         </div>
+      </div>
 
-        {/* Empty state */}
-        {campaigns.length === 0 && (
-          <div className="text-center py-12 border-2 border-dashed rounded-lg">
-            <Target className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground mb-1">Nu exista campanii inca</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Adauga o campanie manual sau genereaza cu AI
-            </p>
-            <div className="flex justify-center gap-2">
-              <Button variant="outline" size="sm" onClick={addCampaign}>
-                <Plus className="h-4 w-4 mr-2" />
-                Adauga manual
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleGenerateCampaigns}
-                disabled={aiToolLoading === "generateCampaigns"}
-              >
-                {aiToolLoading === "generateCampaigns" ? (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4 mr-2" />
-                )}
+      {/* Empty state */}
+      {campaigns.length === 0 && (
+        <Card>
+          <CardContent className="py-16 text-center">
+            <Target className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-1">Nu exista campanii inca</h3>
+            <p className="text-sm text-muted-foreground mb-6">Adauga o campanie manual sau genereaza cu AI</p>
+            <div className="flex justify-center gap-3">
+              <Button variant="outline" onClick={addCampaign}><Plus className="h-4 w-4 mr-2" /> Adauga manual</Button>
+              <Button variant="outline" onClick={handleGenerateCampaigns} disabled={aiToolLoading === "generateCampaigns"}>
+                {aiToolLoading === "generateCampaigns" ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
                 Genereaza cu AI
               </Button>
             </div>
-          </div>
-        )}
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Campaign cards */}
-        <div className="space-y-6">
-          {campaigns.map((campaign, idx) => {
-            const progress = getProgressPercent(campaign.raisedAmount, campaign.goalAmount);
+      {/* Campaign Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {campaigns.map((campaign, idx) => {
+          const progress = getProgress(campaign.raisedAmount, campaign.goalAmount);
+          const isEditing = editingId === campaign.id;
+
+          if (isEditing) {
             return (
-              <div
-                key={campaign.id}
-                className={`border rounded-xl p-5 space-y-4 transition-all ${
-                  campaign.isActive
-                    ? "border-primary/30 bg-primary/5"
-                    : "border-muted bg-muted/10 opacity-80"
-                }`}
-              >
-                {/* Campaign header */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={campaign.isActive ? "default" : "secondary"}>
-                      {campaign.isActive ? "Activa" : "Inactiva"}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      Campanie #{idx + 1}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleCampaignActive(campaign.id)}
-                      title={campaign.isActive ? "Dezactiveaza" : "Activeaza"}
-                    >
-                      {campaign.isActive ? (
-                        <Eye className="h-4 w-4" />
-                      ) : (
-                        <EyeOff className="h-4 w-4" />
-                      )}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      onClick={() => removeCampaign(campaign.id)}
-                      title="Sterge campania"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Progress bar */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {campaign.raisedAmount.toLocaleString("ro-RO")} RON strans
-                    </span>
-                    <span className="font-medium">{progress}%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
-                    <div
-                      className="bg-primary h-full rounded-full transition-all duration-500"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground text-right">
-                    Obiectiv: {campaign.goalAmount.toLocaleString("ro-RO")} RON
-                  </p>
-                </div>
-
-                {/* Form fields */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <Label htmlFor={`camp-title-${campaign.id}`}>Titlu campanie *</Label>
-                    <Input
-                      id={`camp-title-${campaign.id}`}
-                      value={campaign.title}
-                      onChange={(e) => updateCampaign(campaign.id, "title", e.target.value)}
-                      placeholder="ex: Construim o scoala pentru comunitate"
-                      required
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor={`camp-desc-${campaign.id}`}>Descriere campanie</Label>
-                    <Textarea
-                      id={`camp-desc-${campaign.id}`}
-                      value={campaign.description}
-                      onChange={(e) => updateCampaign(campaign.id, "description", e.target.value)}
-                      placeholder="Descrie scopul si impactul campaniei..."
-                      rows={3}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor={`camp-goal-${campaign.id}`}>Obiectiv (RON)</Label>
-                    <Input
-                      id={`camp-goal-${campaign.id}`}
-                      type="number"
-                      min={0}
-                      value={campaign.goalAmount}
-                      onChange={(e) => updateCampaign(campaign.id, "goalAmount", Number(e.target.value) || 0)}
-                      placeholder="5000"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor={`camp-raised-${campaign.id}`}>Suma stransa (RON)</Label>
-                    <Input
-                      id={`camp-raised-${campaign.id}`}
-                      type="number"
-                      min={0}
-                      value={campaign.raisedAmount}
-                      onChange={(e) => updateCampaign(campaign.id, "raisedAmount", Number(e.target.value) || 0)}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="md:col-span-2">
-                    <Label htmlFor={`camp-img-${campaign.id}`}>
-                      <span className="flex items-center gap-1">
-                        <ImageIcon className="h-3.5 w-3.5" />
-                        URL imagine campanie
-                      </span>
-                    </Label>
-                    <Input
-                      id={`camp-img-${campaign.id}`}
-                      value={campaign.imageUrl}
-                      onChange={(e) => updateCampaign(campaign.id, "imageUrl", e.target.value)}
-                      placeholder="https://exemplu.ro/imagine-campanie.jpg"
-                    />
-                  </div>
-                </div>
-
-                {/* Campaign Updates / Timeline */}
-                <div className="border-t pt-4 mt-2">
-                  <div className="flex items-center justify-between mb-3">
+              <Card key={campaign.id} className="col-span-full ring-2 ring-primary">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Actualizari campanie</span>
-                      <Badge variant="outline" className="text-xs">
-                        {(campaign.updates || []).length}
+                      <Pencil className="h-5 w-5 text-primary" />
+                      <h3 className="font-semibold text-lg">Editeaza campania</h3>
+                      <Badge variant={campaign.isActive ? "default" : "secondary"}>
+                        {campaign.isActive ? "Activa" : "Inactiva"}
                       </Badge>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => addCampaignUpdate(campaign.id)}
-                    >
-                      <Plus className="h-3.5 w-3.5 mr-1" />
-                      Adauga actualizare
+                    <Button variant="ghost" size="sm" onClick={() => setEditingId(null)}>
+                      <X className="h-4 w-4" />
                     </Button>
                   </div>
-                  {(campaign.updates || []).length === 0 && (
-                    <p className="text-xs text-muted-foreground italic">
-                      Nu exista actualizari. Adauga o actualizare pentru a informa donatorii.
-                    </p>
-                  )}
-                  <div className="space-y-3">
-                    {(campaign.updates || []).map((upd) => (
-                      <div key={upd.id} className="flex gap-2 items-start bg-muted/30 rounded-lg p-3">
-                        <div className="flex-1 grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-2">
-                          <div>
-                            <Label htmlFor={`upd-date-${upd.id}`} className="text-xs">Data</Label>
-                            <Input
-                              id={`upd-date-${upd.id}`}
-                              type="date"
-                              value={upd.date}
-                              onChange={(e) =>
-                                updateCampaignUpdate(campaign.id, upd.id, "date", e.target.value)
-                              }
-                              className="text-sm"
-                            />
-                          </div>
-                          <div>
-                            <Label htmlFor={`upd-text-${upd.id}`} className="text-xs">Text actualizare</Label>
-                            <Input
-                              id={`upd-text-${upd.id}`}
-                              value={upd.text}
-                              onChange={(e) =>
-                                updateCampaignUpdate(campaign.id, upd.id, "text", e.target.value)
-                              }
-                              placeholder="ex: Am achizitionat materialele de constructie"
-                              className="text-sm"
-                            />
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive mt-5"
-                          onClick={() => removeCampaignUpdate(campaign.id, upd.id)}
-                          title="Sterge actualizarea"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <Label>Titlu campanie *</Label>
+                      <Input value={campaign.title} onChange={(e) => updateCampaign(campaign.id, "title", e.target.value)} placeholder="ex: Construim o scoala" />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>Descriere campanie</Label>
+                      <Textarea value={campaign.description} onChange={(e) => updateCampaign(campaign.id, "description", e.target.value)} placeholder="Descrie scopul campaniei..." rows={3} />
+                    </div>
+                    <div>
+                      <Label>Obiectiv (RON)</Label>
+                      <Input type="number" min={0} value={campaign.goalAmount} onChange={(e) => updateCampaign(campaign.id, "goalAmount", Number(e.target.value) || 0)} />
+                    </div>
+                    <div>
+                      <Label>Suma stransa (RON)</Label>
+                      <Input type="number" min={0} value={campaign.raisedAmount} onChange={(e) => updateCampaign(campaign.id, "raisedAmount", Number(e.target.value) || 0)} />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label><span className="flex items-center gap-1"><ImageIcon className="h-3.5 w-3.5" /> URL imagine</span></Label>
+                      <Input value={campaign.imageUrl} onChange={(e) => updateCampaign(campaign.id, "imageUrl", e.target.value)} placeholder="https://exemplu.ro/imagine.jpg" />
+                    </div>
+                  </div>
+
+                  {/* Progress preview */}
+                  <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+                    <div className="flex justify-between text-sm mb-1.5">
+                      <span className="text-muted-foreground">{campaign.raisedAmount.toLocaleString("ro-RO")} RON</span>
+                      <span className="font-medium">{progress}%</span>
+                    </div>
+                    <div className="w-full bg-muted rounded-full h-2.5 overflow-hidden">
+                      <div className="bg-primary h-full rounded-full transition-all" style={{ width: `${progress}%` }} />
+                    </div>
+                  </div>
+
+                  {/* Updates */}
+                  <div className="border-t pt-4 mt-6">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">Actualizari</span>
+                        <Badge variant="outline" className="text-xs">{(campaign.updates || []).length}</Badge>
                       </div>
-                    ))}
+                      <Button variant="outline" size="sm" onClick={() => addCampaignUpdate(campaign.id)}>
+                        <Plus className="h-3.5 w-3.5 mr-1" /> Adauga
+                      </Button>
+                    </div>
+                    {(campaign.updates || []).length === 0 && (
+                      <p className="text-xs text-muted-foreground italic">Nu exista actualizari.</p>
+                    )}
+                    <div className="space-y-3">
+                      {(campaign.updates || []).map((upd) => (
+                        <div key={upd.id} className="flex gap-2 items-start bg-muted/30 rounded-lg p-3">
+                          <div className="flex-1 grid grid-cols-1 sm:grid-cols-[140px_1fr] gap-2">
+                            <div>
+                              <Label className="text-xs">Data</Label>
+                              <Input type="date" value={upd.date} onChange={(e) => updateCampaignUpdate(campaign.id, upd.id, "date", e.target.value)} className="text-sm" />
+                            </div>
+                            <div>
+                              <Label className="text-xs">Text</Label>
+                              <Input value={upd.text} onChange={(e) => updateCampaignUpdate(campaign.id, upd.id, "text", e.target.value)} placeholder="Ce s-a intamplat..." className="text-sm" />
+                            </div>
+                          </div>
+                          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive mt-5" onClick={() => removeCampaignUpdate(campaign.id, upd.id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-wrap items-center gap-2 border-t pt-4 mt-4">
+                    <Button variant="outline" size="sm" onClick={() => handleEnhanceCampaign(idx)} disabled={aiToolLoading === `enhance-${idx}`}>
+                      {aiToolLoading === `enhance-${idx}` ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                      Imbunatateste cu AI
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleSocialPosts(campaign)} disabled={aiToolLoading === `social-${campaign.id}`}>
+                      {aiToolLoading === `social-${campaign.id}` ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Share2 className="h-4 w-4 mr-2" />}
+                      Postari social media
+                    </Button>
+                    <div className="flex-1" />
+                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => removeCampaign(campaign.id)}>
+                      <Trash2 className="h-4 w-4 mr-1" /> Sterge
+                    </Button>
+                    <Button size="sm" onClick={() => setEditingId(null)}>
+                      <CheckCircle2 className="h-4 w-4 mr-1" /> Gata
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }
+
+          // Card view (not editing)
+          return (
+            <Card key={campaign.id} className={`overflow-hidden hover:shadow-md transition-all ${!campaign.isActive ? "opacity-60" : ""}`}>
+              {campaign.imageUrl ? (
+                <div className="aspect-video bg-gray-100 relative">
+                  <img src={campaign.imageUrl} alt={campaign.title} className="w-full h-full object-cover" />
+                  <div className="absolute top-2 right-2">
+                    <Badge variant={campaign.isActive ? "default" : "secondary"} className="text-xs">
+                      {campaign.isActive ? "Activa" : "Inactiva"}
+                    </Badge>
                   </div>
                 </div>
-
-                {/* AI action buttons */}
-                <div className="flex flex-wrap gap-2 border-t pt-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleEnhanceCampaign(idx)}
-                    disabled={aiToolLoading === `enhanceCampaign-${idx}`}
-                  >
-                    {aiToolLoading === `enhanceCampaign-${idx}` ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-4 w-4 mr-2" />
-                    )}
-                    Imbunatateste cu AI
+              ) : (
+                <div className="aspect-video bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center relative">
+                  <ImageIcon className="h-10 w-10 text-primary/30" />
+                  <div className="absolute top-2 right-2">
+                    <Badge variant={campaign.isActive ? "default" : "secondary"} className="text-xs">
+                      {campaign.isActive ? "Activa" : "Inactiva"}
+                    </Badge>
+                  </div>
+                </div>
+              )}
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-base mb-1 line-clamp-1">{campaign.title || "Campanie fara titlu"}</h3>
+                {campaign.description && <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{campaign.description}</p>}
+                <div className="space-y-1.5 mb-3">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">{campaign.raisedAmount.toLocaleString("ro-RO")} RON</span>
+                    <span className="font-medium">{progress}%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                    <div className="bg-primary h-full rounded-full transition-all" style={{ width: `${progress}%` }} />
+                  </div>
+                  <p className="text-xs text-muted-foreground text-right">Obiectiv: {campaign.goalAmount.toLocaleString("ro-RO")} RON</p>
+                </div>
+                {(campaign.updates || []).length > 0 && (
+                  <p className="text-xs text-muted-foreground mb-3">{(campaign.updates || []).length} actualizari</p>
+                )}
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="outline" className="flex-1" onClick={() => setEditingId(campaign.id)}>
+                    <Pencil className="h-3.5 w-3.5 mr-1.5" /> Editeaza
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleSocialPosts(campaign)}
-                    disabled={aiToolLoading === `socialPosts-${campaign.id}`}
-                  >
-                    {aiToolLoading === `socialPosts-${campaign.id}` ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Share2 className="h-4 w-4 mr-2" />
-                    )}
-                    Postari social media
+                  <Button size="sm" variant="ghost" onClick={() => toggleCampaignActive(campaign.id)} title={campaign.isActive ? "Dezactiveaza" : "Activeaza"}>
+                    {campaign.isActive ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                  </Button>
+                  <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive" onClick={() => removeCampaign(campaign.id)}>
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </Section>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
-      {/* Social Posts Modal */}
-      {socialPosts && (
-        <SocialPostsModal
-          posts={socialPosts}
-          onClose={() => setSocialPosts(null)}
-        />
-      )}
+      {socialPosts && <SocialPostsModal posts={socialPosts} onClose={() => setSocialPosts(null)} />}
 
       {/* Sticky save bar */}
       <div className="sticky bottom-0 z-40 -mx-1 px-1">
         <div className="bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border rounded-xl shadow-lg p-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
-              {saveMessage && (
-                <div className={`flex items-center gap-2 text-sm ${
-                  saveMessage.type === "success" ? "text-green-600" : "text-destructive"
-                }`}>
-                  {saveMessage.type === "success" ? (
-                    <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  ) : (
-                    <AlertCircle className="h-4 w-4 shrink-0" />
-                  )}
+              {saveMessage ? (
+                <div className={`flex items-center gap-2 text-sm ${saveMessage.type === "success" ? "text-green-600" : "text-destructive"}`}>
+                  {saveMessage.type === "success" ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <AlertCircle className="h-4 w-4 shrink-0" />}
                   <span className="truncate">{saveMessage.text}</span>
                 </div>
-              )}
-              {!saveMessage && (
-                <p className="text-sm text-muted-foreground">
-                  {campaigns.length} {campaigns.length === 1 ? "campanie" : "campanii"} configurate
-                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">{campaigns.length} {campaigns.length === 1 ? "campanie" : "campanii"} configurate</p>
               )}
             </div>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              Salveaza campaniile
+              {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+              Salveaza
             </Button>
           </div>
         </div>
