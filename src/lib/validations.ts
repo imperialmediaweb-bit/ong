@@ -12,6 +12,15 @@ export const registerSchema = z.object({
   ngoName: z.string().min(2, "NGO name is required"),
 });
 
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Adresa de email invalida"),
+});
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1, "Token-ul este obligatoriu"),
+  password: z.string().min(8, "Parola trebuie sa aiba cel putin 8 caractere"),
+});
+
 export const donorSchema = z.object({
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   phone: z.string().optional().or(z.literal("")),
