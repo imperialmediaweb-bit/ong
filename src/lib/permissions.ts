@@ -38,6 +38,7 @@ const PLAN_FEATURES: Record<SubscriptionPlan, Feature[]> = {
     "gdpr_tools", "analytics", "analytics_advanced",
     "export_csv",
     "minisite_custom_css", "minisite_premium_sections",
+    "social_ai",
   ],
   ELITE: [
     "donors_view", "donors_manage",
