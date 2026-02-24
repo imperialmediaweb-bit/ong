@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Search, ChevronLeft, ChevronRight, Pencil, Power } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Pencil, Power, Eye } from "lucide-react";
+import { useSession } from "next-auth/react";
 
 interface Ngo {
   id: string;
@@ -25,6 +26,7 @@ interface Ngo {
 
 export default function AdminNgosPage() {
   const router = useRouter();
+  const { update: updateSession } = useSession();
   const [ngos, setNgos] = useState<Ngo[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -74,6 +76,30 @@ export default function AdminNgosPage() {
         body: JSON.stringify({ isActive: !currentActive }),
       });
       fetchNgos();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleImpersonate = async (ngoId: string) => {
+    try {
+      const res = await fetch("/api/admin/impersonate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ngoId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Eroare la impersonare");
+        return;
+      }
+      await updateSession({
+        impersonateNgoId: data.ngoId,
+        impersonateNgoName: data.ngoName,
+        impersonateNgoSlug: data.ngoSlug,
+        impersonateNgoLogoUrl: data.ngoLogoUrl,
+      });
+      router.push("/dashboard");
     } catch (err) {
       console.error(err);
     }
@@ -228,6 +254,15 @@ export default function AdminNgosPage() {
                           >
                             <Pencil className="h-3.5 w-3.5 mr-1" />
                             Editeaza
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleImpersonate(ngo.id)}
+                            className="text-amber-600 hover:text-amber-700"
+                          >
+                            <Eye className="h-3.5 w-3.5 mr-1" />
+                            Vizualizeaza
                           </Button>
                           <Button
                             variant="ghost"

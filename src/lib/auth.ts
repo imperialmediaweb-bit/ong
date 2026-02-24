@@ -91,7 +91,7 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session: updateData }) {
       if (user) {
         token.id = user.id;
         token.role = (user as any).role;
@@ -101,6 +101,38 @@ export const authOptions: NextAuthOptions = {
         token.ngoLogoUrl = (user as any).ngoLogoUrl;
         token.plan = (user as any).plan;
       }
+
+      // Handle session.update() calls (used for impersonation)
+      if (trigger === "update" && updateData) {
+        // START impersonation
+        if (updateData.impersonateNgoId && token.role === "SUPER_ADMIN") {
+          if (!token.isImpersonating) {
+            token.originalNgoId = token.ngoId;
+            token.originalNgoName = token.ngoName;
+            token.originalNgoSlug = token.ngoSlug;
+            token.originalNgoLogoUrl = token.ngoLogoUrl;
+          }
+          token.ngoId = updateData.impersonateNgoId;
+          token.ngoName = updateData.impersonateNgoName;
+          token.ngoSlug = updateData.impersonateNgoSlug;
+          token.ngoLogoUrl = updateData.impersonateNgoLogoUrl;
+          token.isImpersonating = true;
+        }
+
+        // STOP impersonation
+        if (updateData.stopImpersonation && token.isImpersonating) {
+          token.ngoId = token.originalNgoId ?? null;
+          token.ngoName = token.originalNgoName;
+          token.ngoSlug = token.originalNgoSlug;
+          token.ngoLogoUrl = token.originalNgoLogoUrl;
+          token.isImpersonating = false;
+          token.originalNgoId = undefined;
+          token.originalNgoName = undefined;
+          token.originalNgoSlug = undefined;
+          token.originalNgoLogoUrl = undefined;
+        }
+      }
+
       // Ensure SUPER_ADMIN always has ELITE plan and an ngoId
       if (token.role === "SUPER_ADMIN") {
         token.plan = "ELITE";
@@ -131,6 +163,11 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).ngoSlug = token.ngoSlug;
         (session.user as any).ngoLogoUrl = token.ngoLogoUrl;
         (session.user as any).plan = token.plan;
+        (session.user as any).isImpersonating = token.isImpersonating || false;
+        (session.user as any).originalNgoId = token.originalNgoId;
+        (session.user as any).originalNgoName = token.originalNgoName;
+        (session.user as any).originalNgoSlug = token.originalNgoSlug;
+        (session.user as any).originalNgoLogoUrl = token.originalNgoLogoUrl;
       }
       return session;
     },
@@ -147,4 +184,9 @@ export type SessionUser = {
   ngoSlug?: string;
   ngoLogoUrl?: string | null;
   plan?: string;
+  isImpersonating?: boolean;
+  originalNgoId?: string | null;
+  originalNgoName?: string;
+  originalNgoSlug?: string;
+  originalNgoLogoUrl?: string | null;
 };
