@@ -58,10 +58,13 @@ export default function SocialAiPage() {
   const [analysis, setAnalysis] = useState("");
   const [optimizeLoading, setOptimizeLoading] = useState(false);
 
+  const [error, setError] = useState("");
+
   const handleGenerate = async () => {
     if (!topic.trim()) return;
     setGenerating(true);
     setVariants([]);
+    setError("");
     try {
       const res = await fetch("/api/social-ai", {
         method: "POST",
@@ -78,9 +81,13 @@ export default function SocialAiPage() {
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Eroare la generare. Incearca din nou.");
+        return;
+      }
       setVariants(data.variants || []);
     } catch {
-      setVariants(["Eroare la generare. Incearca din nou."]);
+      setError("Eroare la generare. Incearca din nou.");
     } finally {
       setGenerating(false);
     }
@@ -90,6 +97,7 @@ export default function SocialAiPage() {
     if (!question.trim()) return;
     setAdviceLoading(true);
     setAdvice("");
+    setError("");
     try {
       const res = await fetch("/api/social-ai", {
         method: "POST",
@@ -97,9 +105,13 @@ export default function SocialAiPage() {
         body: JSON.stringify({ action: "fundraising_advice", question }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Eroare la generare. Incearca din nou.");
+        return;
+      }
       setAdvice(data.advice || "");
     } catch {
-      setAdvice("Eroare la generare. Incearca din nou.");
+      setError("Eroare la generare. Incearca din nou.");
     } finally {
       setAdviceLoading(false);
     }
@@ -108,6 +120,7 @@ export default function SocialAiPage() {
   const handleStrategy = async () => {
     setStrategyLoading(true);
     setStrategy("");
+    setError("");
     try {
       const res = await fetch("/api/social-ai", {
         method: "POST",
@@ -121,9 +134,13 @@ export default function SocialAiPage() {
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Eroare la generare. Incearca din nou.");
+        return;
+      }
       setStrategy(data.strategy || "");
     } catch {
-      setStrategy("Eroare la generare. Incearca din nou.");
+      setError("Eroare la generare. Incearca din nou.");
     } finally {
       setStrategyLoading(false);
     }
@@ -133,6 +150,7 @@ export default function SocialAiPage() {
     if (!postToOptimize.trim()) return;
     setOptimizeLoading(true);
     setAnalysis("");
+    setError("");
     try {
       const res = await fetch("/api/social-ai", {
         method: "POST",
@@ -144,9 +162,13 @@ export default function SocialAiPage() {
         }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Eroare la analiza. Incearca din nou.");
+        return;
+      }
       setAnalysis(data.analysis || "");
     } catch {
-      setAnalysis("Eroare la analiza. Incearca din nou.");
+      setError("Eroare la analiza. Incearca din nou.");
     } finally {
       setOptimizeLoading(false);
     }
@@ -370,6 +392,12 @@ export default function SocialAiPage() {
             </CardFooter>
           </Card>
 
+          {error && activeTab === "generator" && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           {/* Generated variants */}
           {variants.length > 0 && (
             <div className="space-y-3">
@@ -468,6 +496,12 @@ export default function SocialAiPage() {
               </Button>
             </CardFooter>
           </Card>
+
+          {error && activeTab === "trainer" && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           {advice && (
             <Card className="border-0 shadow-lg overflow-hidden">
@@ -574,6 +608,12 @@ export default function SocialAiPage() {
             </CardFooter>
           </Card>
 
+          {error && activeTab === "strategy" && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
           {strategy && (
             <Card className="border-0 shadow-lg overflow-hidden">
               <div className="h-1 bg-gradient-to-r from-orange-500 to-amber-500" />
@@ -664,6 +704,12 @@ export default function SocialAiPage() {
               </Button>
             </CardFooter>
           </Card>
+
+          {error && activeTab === "optimize" && (
+            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
           {analysis && (
             <Card className="border-0 shadow-lg overflow-hidden">

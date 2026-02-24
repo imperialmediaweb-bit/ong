@@ -9,7 +9,13 @@ declare module "next-auth" {
       ngoId: string | null;
       ngoName?: string;
       ngoSlug?: string;
+      ngoLogoUrl?: string | null;
       plan?: string;
+      isImpersonating?: boolean;
+      originalNgoId?: string | null;
+      originalNgoName?: string;
+      originalNgoSlug?: string;
+      originalNgoLogoUrl?: string | null;
     } & DefaultSession["user"];
   }
 
@@ -18,6 +24,7 @@ declare module "next-auth" {
     ngoId: string | null;
     ngoName?: string;
     ngoSlug?: string;
+    ngoLogoUrl?: string | null;
     plan?: string;
   }
 }
@@ -29,6 +36,12 @@ declare module "next-auth/jwt" {
     ngoId: string | null;
     ngoName?: string;
     ngoSlug?: string;
+    ngoLogoUrl?: string | null;
     plan?: string;
+    isImpersonating?: boolean;
+    originalNgoId?: string | null;
+    originalNgoName?: string;
+    originalNgoSlug?: string;
+    originalNgoLogoUrl?: string | null;
   }
 }
