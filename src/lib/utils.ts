@@ -37,6 +37,11 @@ export function truncate(str: string, length: number): string {
 
 export function generateSlug(name: string): string {
   return name
+    .replace(/ț/gi, "t")
+    .replace(/ș/gi, "s")
+    .replace(/đ/gi, "d")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^\w\s-]/g, "")
     .replace(/[\s_-]+/g, "-")
